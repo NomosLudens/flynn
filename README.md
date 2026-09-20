@@ -35,6 +35,8 @@ artefatos. Não devem ser lidas como uma execução nova deste checkout.
   pelo estudo, atualizado em 2026-09-15.
 - `docs/FLYNN_DELTA_ATUALIZACAO_MAPA_DE_PERCURSO.md`: adendo posterior que
   fecha o estado do projeto após a suspensão da conta Oracle.
+- `docs/PRINTS_EVIDENCIA_VISUAL.md`: galeria de capturas históricas da
+  interface Flynn/Lethe, com proveniência e hashes.
 - `index.html`, `manifest.webmanifest`, `sw.js` e `icon.svg`: superfície
   web recuperada.
 
