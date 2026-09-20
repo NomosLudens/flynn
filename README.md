@@ -33,6 +33,8 @@ artefatos. Não devem ser lidas como uma execução nova deste checkout.
 - `docs/HISTORICO_DO_PERCURSO.md`: histórico cronológico completo da retomada.
 - `docs/MAPA_DE_PERCURSO_FLYNN.md`: mapa operacional e conceitual fornecido
   pelo estudo, atualizado em 2026-09-15.
+- `docs/FLYNN_DELTA_ATUALIZACAO_MAPA_DE_PERCURSO.md`: adendo posterior que
+  fecha o estado do projeto após a suspensão da conta Oracle.
 - `index.html`, `manifest.webmanifest`, `sw.js` e `icon.svg`: superfície
   web recuperada.
 
@@ -59,3 +61,7 @@ ser versionado. O `.gitignore` mantém esses itens fora do repositório.
 O material é um snapshot de pesquisa, não uma declaração de prontidão. Para
 qualquer afirmação operacional, verificar separadamente host, processo,
 checkout servido, banco de dados e fluxo manual real.
+
+O mapa original permanece preservado como registro histórico. O adendo
+posterior classifica o projeto como `RETIRED_FROZEN`, com o runtime residente
+interrompido externamente e sem plano atual de reconstrução.

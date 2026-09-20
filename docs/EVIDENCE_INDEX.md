@@ -18,6 +18,7 @@ __pycache__, bancos e estado de execução não fazem parte do kit.
 | Cérebro | app/brain/clock.py | fonte recuperada, dependências auxiliares ausentes |
 | E01 | research/e01/ | kit reproduzível isolado |
 | Mapa de percurso | docs/MAPA_DE_PERCURSO_FLYNN.md | fonte operacional histórica, atualizada em 2026-09-15 |
+| Adendo de encerramento | docs/FLYNN_DELTA_ATUALIZACAO_MAPA_DE_PERCURSO.md | atualização histórica posterior; projeto congelado |
 
 ## Resultados preservados
 
@@ -36,6 +37,20 @@ do produto em 2026-09-15, incluindo E01-D PASS, E01-N PARTIAL, E03 PASS,
 H01 PASS_WITH_RESEARCH_BLOCKER e trajetória residente persistente. Esses
 resultados são históricos do MAX e não substituem a verificação atual,
 bloqueada pela perda de acesso à VM.
+
+O adendo posterior registra que `ENERGY_TO_BODY_CAPACITY` foi implementado,
+que o floor de capacidade viva foi corrigido para `0.01`, que a semântica de
+locomoção foi separada de movimento geométrico do corpo e que a Caverna móvel
+foi implementada. Ele também preserva os limites: contato/consumo real não
+foram observados, a correção de crescimento linear de memória ficou
+`UNVERIFIED` e a continuidade residente foi interrompida externamente.
+
+O estado canônico posterior é `PROJECT_STATUS=RETIRED_FROZEN`,
+`RESIDENT_RUNTIME_STATUS=INTERRUPTED_EXTERNALLY` e
+`CURRENT_RESUMPTION_PLAN=NONE`. A suspensão Oracle, a perda de acesso e a
+eventual exclusão de dados continuam separadas: `RESOURCE_DELETION=UNPROVEN`
+e `DATA_PRESERVATION=UNKNOWN`. O adendo não é prova de que o runtime esteja
+operacional hoje.
 
 ## Proveniência a recuperar
 

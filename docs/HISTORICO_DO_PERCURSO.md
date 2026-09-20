@@ -521,3 +521,85 @@ de energy_reserve, feeding_drive, q, posição e body_capacity após restart.
 
 Esse item foi incorporado aqui como contexto e não foi executado nesta
 atualização. O acesso à VM continua sendo o bloqueio.
+
+## 16. Adendo posterior: encerramento e congelamento do projeto
+
+O arquivo `docs/FLYNN_DELTA_ATUALIZACAO_MAPA_DE_PERCURSO.md` registra uma
+atualização posterior ao mapa de 2026-09-15. Ele deve ser lido como delta
+histórico: não reescreve as medições anteriores e não constitui instrução para
+reativar a residente.
+
+### 16.1 Correções implementadas antes da interrupção
+
+O adendo registra como implementados, mas não necessariamente comprovados em
+uma janela longa posterior:
+
+- `body_capacity = clip(energy_reserve, 0, 1)`, sem seleção externa de ação;
+- persistência após restart de energia, corpo, mundo, plasticidade, `q` e
+  `qdot`;
+- floor de sobrevivência `body_capacity >= 0.01` para impedir deadlock de
+  fome, sem pathfinding, atração ou reward;
+- distinção entre movimento geométrico do corpo e locomoção no espaço do
+  mundo, exigindo delta de posição maior que `0.001u`;
+- mecânica e apresentação de recurso na Caverna, embora contato e consumo
+  reais não tenham sido observados;
+- Caverna mobile/PWA, com validação registrada em `390x844` e `320x568`.
+
+O ciclo alimentar completo permanece não provado:
+
+    REAL_CONTACT_OBSERVED=NO
+    REAL_CONSUMPTION_OBSERVED=NO
+    FULL_FEEDING_CYCLE_PROVEN=NO
+
+### 16.2 Limites de memória e continuidade
+
+O adendo identifica `Session.history` como causa do crescimento linear de
+memória e registra limite de `2000` frames em RAM. A correção foi implementada,
+mas a validação de longa duração foi interrompida pela perda do host:
+
+    MEMORY_ROOT_CAUSE_IDENTIFIED=YES
+    IN_MEMORY_HISTORY_BOUNDED=YES
+    MEMORY_LINEAR_GROWTH_FIXED=UNVERIFIED
+
+Dois restarts controlados ocorreram durante a correção final; eles não foram
+resets experimentais arbitrários. A interrupção externa, contudo, rompeu a
+continuidade temporal residente:
+
+    RESIDENT_CONTINUITY_INTERRUPTED_EXTERNALLY=YES
+    CONTINUITY_GAP_CAUSE=INFRASTRUCTURE_ACCOUNT_SUSPENSION
+
+### 16.3 Incidente Oracle e decisão do autor
+
+O adendo separa o incidente de suspensão Oracle de qualquer hipótese sobre a
+Flynn. O que fica registrado é:
+
+    OCI_ACCOUNT_SUSPENDED=YES
+    OCI_TENANCY_ACCESS_LOST=YES
+    OCI_COMPUTE_ACCESS_LOST=YES
+    OCI_SECONDARY_REVIEW=REQUESTED
+    FLYNN_TRIGGERED_ACCOUNT_SUSPENSION=UNPROVEN
+    RESOURCE_DELETION=UNPROVEN
+    DATA_PRESERVATION=UNKNOWN
+
+O autor decidiu aposentar e congelar o projeto. Não há plano atual de
+rehost local, rehost na Google Mini ou reconstrução. Se a MAX retornar, a
+prioridade histórica é preservar/exportar dados, ledger, checkpoints e runtime,
+avaliar integridade e só então decidir se haverá qualquer continuação.
+
+### 16.4 Estado canônico posterior
+
+O estado posterior ao adendo passa a ser:
+
+    PROJECT_STATUS=RETIRED_FROZEN
+    RESEARCH_STATUS=CLOSED_BY_AUTHOR
+    RESIDENT_RUNTIME_STATUS=INTERRUPTED_EXTERNALLY
+    CURRENT_RUNTIME_STATUS=OFFLINE_UNAVAILABLE
+    REHOST_LOCAL=NO
+    REHOST_GOOGLE_MINI=NO
+    CURRENT_RESUMPTION_PLAN=NONE
+    NEXT_ACTION=NONE_FOR_DEVELOPMENT
+
+O produto e a continuidade eram reais antes da interrupção, mas isso não
+autoriza afirmar que o runtime está disponível hoje. Também permanecem sem
+prova aprendizagem associativa, locomoção real até o alimento e fechamento do
+ciclo alimentar.
