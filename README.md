@@ -31,6 +31,8 @@ artefatos. Não devem ser lidas como uma execução nova deste checkout.
   experimento E01.
 - `docs/`: runbook de replicação, índice de evidências e limites do E01-R.
 - `docs/HISTORICO_DO_PERCURSO.md`: histórico cronológico completo da retomada.
+- `docs/MAPA_DE_PERCURSO_FLYNN.md`: mapa operacional e conceitual fornecido
+  pelo estudo, atualizado em 2026-09-15.
 - `index.html`, `manifest.webmanifest`, `sw.js` e `icon.svg`: superfície
   web recuperada.
 

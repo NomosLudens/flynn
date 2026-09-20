@@ -420,3 +420,104 @@ Até que essa cadeia seja provada, o repositório GitHub deve ser lido como:
 
 > código recuperado + kit de reprodução isolado + evidências históricas,
 > não como uma residente Flynn atualmente operacional.
+
+## 15. Atualização trazida pelo mapa de percurso
+
+O arquivo docs/MAPA_DE_PERCURSO_FLYNN.md, fornecido após a primeira
+consolidação deste histórico, é um registro operacional mais recente,
+atualizado em 2026-09-15. Ele acrescenta uma fase posterior do percurso que
+não estava disponível no checkout local recuperado.
+
+### 15.1 Estado científico refinado
+
+O mapa confirma e detalha:
+
+- núcleo neural ancorado no FlyWire FAFB v783;
+- 139.255 neurônios e 1.305 descending neurons;
+- Fundação encerrada até o Gate 014;
+- plasticidade funcional e mudança sináptica persistente;
+- aprendizagem associativa ainda não comprovada;
+- incidente de protocolo do Gate 014 registrado;
+- restauração da residente ao checkpoint pré-treino;
+- plasticidade OFF, zero deltas aprendidos e connectome-base intacto.
+
+O resultado de aprendizagem permanece:
+
+    PLASTICITY_MECHANISM_FUNCTIONAL=YES
+    PERSISTENT_SYNAPTIC_CHANGE=YES
+    ASSOCIATIVE_LEARNING_PROVEN=NO
+    LEARNING_PROVEN=NO
+
+### 15.2 Embodiment posterior ao E01
+
+O mapa diferencia os experimentos que antes apareciam apenas como E01:
+
+- E01: viabilidade de corpo articulado, PARTIAL;
+- E01-R: coordenação dentro do ZeroClaw, BLOCKED/UNPROVEN;
+- E01-R2: auditoria de superfície de build, sem runtime causal concluído;
+- E01-D: transdução motora direta, PASS;
+- E01-N: atividade temporal real de DNs, PARTIAL;
+- E03: integração residente Flynn → Pinocchio → Lethe, PASS.
+
+O E01-D mostrou que uma fronteira motora sintética mínima era suficiente para
+o teste corporal, sem tornar necessária uma camada cerebellar-like no
+ZeroClaw. A coordenação continuou sem policy, reward, LLM ou agent loop.
+
+O E01-N encontrou atividade temporal real dos 1.305 DNs, mas nenhuma dimensão
+motora reproduzível suficiente para declarar um MotorVector neural. A
+fronteira VNC ficou explicitamente limitada:
+
+    BIOLOGICAL_VNC_PRESENT=NO
+    BIOLOGICAL_VNC_RECONSTRUCTED=NO
+    SYNTHETIC_MOTOR_BOUNDARY=YES
+
+### 15.3 Integração residente documentada
+
+Segundo o mapa, a integração E03 foi concluída no MAX:
+
+    FLYNN_CONNECTED_TO_PINOCCHIO=YES
+    PINOCCHIO_CONTROLS_EXISTING_LETHE_SIGIL=YES
+    LETHE_LIVE_BODY=YES
+    BODY_STATE_PERSISTENT=YES
+    LIVE_BODY_DRIVEN_BY_REPLAY=NO
+    LIVE_BODY_DRIVEN_BY_HTTP_REQUEST=NO
+    REAL_CAUSAL_TRACE_CAPTURED=YES
+    PRODUCT_REAL=YES
+
+O corpo documentado não era um demo separado: era o sigilo canônico de Lethe,
+com 23 módulos e 30 conexões.
+
+Essas afirmações são válidas como histórico registrado em 2026-09-15. Como a
+VM MAX está atualmente inacessível, elas não são uma prova de disponibilidade
+do runtime em 2026-09-20.
+
+### 15.4 H00/H01 e trajetória viva
+
+O mapa registra continuidade real em uma janela de 866,9976 segundos, com:
+
+- cérebro, mundo, corpo e homeostase contínuos;
+- energia evoluindo em NEURAL_TIME;
+- ausência de regressão para avanço dirigido por request;
+- UI de homeostase fail-closed;
+- ausência de fallback que transforme dado ausente em 100% ou 0.00.
+
+Também registra trajetória server-side persistente, no mesmo eixo temporal, com
+posição, geometria Pinocchio, q, distância, direção, atividade DN agregada,
+energy_reserve, feeding_drive e estado Umwelt.
+
+O limite preservado é importante: a atividade DN agregada era registrada,
+mas identidades individuais suficientes para TOP_DNS não estavam disponíveis.
+Nenhum nome neuronal deve ser inventado.
+
+### 15.5 Próxima ação registrada pelo mapa
+
+O mapa aponta como próximo trabalho de produto:
+
+    energy_reserve → body_capacity → degradação/recuperação física
+
+A energia deve limitar a capacidade física de atuação, não selecionar ações ou
+objetivos. A validação futura precisa verificar também a persistência exata
+de energy_reserve, feeding_drive, q, posição e body_capacity após restart.
+
+Esse item foi incorporado aqui como contexto e não foi executado nesta
+atualização. O acesso à VM continua sendo o bloqueio.

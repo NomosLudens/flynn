@@ -17,6 +17,7 @@ __pycache__, bancos e estado de execução não fazem parte do kit.
 | Mundo | app/world/continuous_world.py | fonte recuperada, depende do runtime ausente |
 | Cérebro | app/brain/clock.py | fonte recuperada, dependências auxiliares ausentes |
 | E01 | research/e01/ | kit reproduzível isolado |
+| Mapa de percurso | docs/MAPA_DE_PERCURSO_FLYNN.md | fonte operacional histórica, atualizada em 2026-09-15 |
 
 ## Resultados preservados
 
@@ -29,6 +30,12 @@ __pycache__, bancos e estado de execução não fazem parte do kit.
 - Loop residente: havia evidência de cérebro, mundo e corpo contínuos, mas a
   janela de estabilidade de memória não foi concluída antes da perda do host.
 - MAX: indisponibilidade foi host-wide; a causa exata não foi comprovada.
+
+O mapa de percurso fornecido posteriormente registra uma fase mais avançada
+do produto em 2026-09-15, incluindo E01-D PASS, E01-N PARTIAL, E03 PASS,
+H01 PASS_WITH_RESEARCH_BLOCKER e trajetória residente persistente. Esses
+resultados são históricos do MAX e não substituem a verificação atual,
+bloqueada pela perda de acesso à VM.
 
 ## Proveniência a recuperar
 
