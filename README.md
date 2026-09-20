@@ -30,6 +30,7 @@ artefatos. Não devem ser lidas como uma execução nova deste checkout.
 - `research/e01/`: runner isolado, URDF, dependências e artefatos gerados do
   experimento E01.
 - `docs/`: runbook de replicação, índice de evidências e limites do E01-R.
+- `docs/HISTORICO_DO_PERCURSO.md`: histórico cronológico completo da retomada.
 - `index.html`, `manifest.webmanifest`, `sw.js` e `icon.svg`: superfície
   web recuperada.
 
