@@ -1,0 +1,31 @@
+# Python bytecode and local tooling
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Runtime state and local databases
+*.db
+*.sqlite
+*.sqlite3
+data/
+evidence/
+tmp/
+runtime/
+
+# Local secrets and machine-specific configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# OS/editor files
+.DS_Store
+.idea/
+.vscode/

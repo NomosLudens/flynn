@@ -1,0 +1,78 @@
+{
+  "host": "max",
+  "gate": "CAVERNA_FOOD_UI",
+  "resident_instance_id": "759f27b3-84a9-4071-b29e-20adc1d4fc50",
+  "observation": {
+    "offer_source": "existing human SWEET offer in resident world",
+    "started_after_checkpoint_restore": true,
+    "samples": [
+      {
+        "observed_at_utc": "2026-09-16T15:05:57Z",
+        "neural_time_ms": 5191213.4,
+        "energy": 0.15819,
+        "feeding_drive": 0.84181,
+        "body_position": [-0.0348653381143927, 0.0840271886841415],
+        "sweet": {
+          "position": [3.0, 0.0],
+          "resource_id": "sweet",
+          "available": true,
+          "offered": true,
+          "contact_radius": 0.5,
+          "distance_to_body": 3.036028357727633,
+          "contact": false,
+          "consumed": false,
+          "consumed_at": null
+        }
+      },
+      {
+        "observed_at_utc": "2026-09-16T15:06:02Z",
+        "neural_time_ms": 5191613.4,
+        "energy": 0.15799,
+        "feeding_drive": 0.84201,
+        "body_position": [-0.034974100970284513, 0.08417173683963747],
+        "sweet": {
+          "position": [3.0, 0.0],
+          "resource_id": "sweet",
+          "available": true,
+          "offered": true,
+          "contact_radius": 0.5,
+          "distance_to_body": 3.036141082829154,
+          "contact": false,
+          "consumed": false,
+          "consumed_at": null
+        }
+      },
+      {
+        "observed_at_utc": "2026-09-16T15:06:07Z",
+        "neural_time_ms": 5192013.4,
+        "energy": 0.15779,
+        "feeding_drive": 0.84221,
+        "body_position": [-0.03508114174340768, 0.0843115857168138],
+        "sweet": {
+          "position": [3.0, 0.0],
+          "resource_id": "sweet",
+          "available": true,
+          "offered": true,
+          "contact_radius": 0.5,
+          "distance_to_body": 3.036251962609913,
+          "contact": false,
+          "consumed": false,
+          "consumed_at": null
+        }
+      }
+    ],
+    "result": "CONTACT_NOT_REACHED"
+  },
+  "causal_contract": {
+    "offer_creates_available_resource": true,
+    "same_coordinate_system": true,
+    "distance_source": "resident ContinuousWorldEngine Euclidean geometry",
+    "contact_rule": "distance <= contact_radius",
+    "consumption_requires_contact": true,
+    "consumption_idempotent": true,
+    "consumption_owner": "ContinuousWorldEngine",
+    "homeostasis_owner": "RESIDENT_HOMEOSTASIS",
+    "neural_stimulus_injected_by_offer": false,
+    "movement_or_targeting_added": false
+  }
+}

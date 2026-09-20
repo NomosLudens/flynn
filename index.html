@@ -1,0 +1,3293 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#080503">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="/static/manifest.webmanifest">
+    <link rel="apple-touch-icon" href="/static/icon.svg">
+    <link rel="icon" href="data:,">
+    <title>Flynn — Lethe & Caverna de Hipnos</title>
+    <style>
+        :root {
+            --bg-base: #080503;
+            --bg-panel: rgba(18, 11, 7, 0.94);
+            --border-subtle: rgba(255, 122, 24, 0.22);
+            --border-glow: rgba(255, 140, 30, 0.55);
+            --text-primary: #fff2ea;
+            --text-muted: #a38775;
+            --accent-cyan: #ff7700;
+            --accent-orange: #ff7700;
+            --accent-incandescent: #ff9100;
+            --accent-ember: #ffaa33;
+            --accent-flame: #ff5500;
+            --accent-violet: #ffaa33;
+            --accent-amber: #ffbb44;
+            --accent-rose: #ff4411;
+            --accent-emerald: #ff9100;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "JetBrains Mono", monospace;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            height: 54px;
+            background: rgba(14, 9, 6, 0.97);
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            z-index: 100;
+        }
+
+        .brand-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .brand-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            color: #f8fafc;
+            text-transform: uppercase;
+        }
+
+        .brand-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            letter-spacing: 0.08em;
+            border-left: 1px solid rgba(255, 255, 255, 0.15);
+            padding-left: 0.75rem;
+        }
+
+        .mode-toggle-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            position: absolute;
+            right: 0;
+            top: calc(100% + 6px);
+            min-width: 150px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            padding: 5px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(-4px);
+            transition: opacity 0.16s ease, transform 0.16s ease;
+        }
+
+        .mode-menu {
+            position: relative;
+        }
+
+        .mode-menu.open .mode-toggle-group {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .menu-toggle {
+            min-height: 38px;
+            padding: 7px 12px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            color: var(--text-primary);
+            cursor: pointer;
+            font: 600 0.76rem monospace;
+            letter-spacing: 0.08em;
+        }
+
+        .menu-toggle:hover,
+        .menu-toggle:focus-visible {
+            border-color: rgba(255, 119, 0, 0.55);
+            color: var(--accent-orange);
+            outline: none;
+        }
+
+        .mode-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 9px 12px;
+            width: 100%;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+        }
+
+        .mode-btn.active {
+            background: rgba(255, 119, 0, 0.18);
+            color: var(--accent-orange);
+            border: 1px solid rgba(255, 119, 0, 0.45);
+            box-shadow: 0 0 14px rgba(255, 119, 0, 0.35);
+        }
+
+        .menu-action {
+            width: 100%;
+            min-height: 38px;
+            padding: 8px 12px;
+            background: rgba(255, 119, 0, 0.08);
+            border: 1px solid rgba(255, 119, 0, 0.25);
+            border-radius: 4px;
+            color: #ffd6b3;
+            cursor: pointer;
+            font: 600 0.7rem monospace;
+            letter-spacing: 0.08em;
+            text-align: left;
+        }
+
+        .menu-action:hover,
+        .menu-action:focus-visible {
+            background: rgba(255, 119, 0, 0.18);
+            outline: none;
+        }
+
+        .status-indicators {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #64748b;
+        }
+
+        .status-dot.quiescent {
+            background: #10b981;
+            box-shadow: 0 0 6px #10b981;
+        }
+
+        .status-dot.active {
+            background: #f59e0b;
+            box-shadow: 0 0 8px #f59e0b;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stage-container {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at center, #241105 0%, #080503 85%);
+        }
+
+        #lethe-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .contact-banner {
+            position: absolute;
+            top: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(18, 11, 7, 0.90);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            padding: 6px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.78rem;
+            color: #94a3b8;
+            pointer-events: none;
+            backdrop-filter: blur(8px);
+            z-index: 40;
+        }
+
+        .contact-banner strong {
+            color: #f8fafc;
+        }
+
+        .replay-hud {
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(20, 12, 7, 0.95);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 10px 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.9), 0 0 20px rgba(255, 119, 0, 0.12);
+            backdrop-filter: blur(12px);
+            z-index: 50;
+        }
+
+        .hud-label {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            white-space: nowrap;
+        }
+
+        .trace-selector {
+            background: rgba(28, 17, 11, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            color: #f8fafc;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .hud-btn {
+            background: rgba(255, 119, 0, 0.22);
+            border: 1px solid rgba(255, 119, 0, 0.55);
+            color: #fff8f2;
+            padding: 6px 18px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .hud-btn:hover {
+            background: rgba(255, 119, 0, 0.38);
+            box-shadow: 0 0 16px rgba(255, 119, 0, 0.55);
+        }
+
+        .hud-badge {
+            font-size: 0.68rem;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            background: rgba(168, 85, 247, 0.2);
+            color: #c084fc;
+            border: 1px solid rgba(168, 85, 247, 0.4);
+        }
+
+        .lab-panel {
+            width: 440px;
+            height: 100%;
+            background: rgba(16, 10, 6, 0.97);
+            border-left: 1px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            z-index: 80;
+            padding: 1.2rem;
+            gap: 1.1rem;
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.6);
+        }
+
+        .lab-panel.hidden {
+            display: none;
+        }
+
+        .panel-section {
+            background: rgba(28, 17, 11, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 6px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .section-title {
+            font-size: 0.74rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            font-size: 0.76rem;
+        }
+
+        .metric-box {
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 6px 10px;
+            border-radius: 4px;
+        }
+
+        .metric-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .metric-value {
+            font-size: 0.92rem;
+            font-weight: 600;
+            font-family: monospace;
+            color: #f8fafc;
+            margin-top: 2px;
+        }
+
+        .output-bar-row {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            margin-top: 4px;
+        }
+
+        .output-bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: #cbd5e1;
+        }
+
+        .output-bar-track {
+            height: 6px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 3px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .output-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ff4400, #ff7700, #ffaa22);
+            box-shadow: 0 0 8px rgba(255, 119, 0, 0.45);
+            transition: width 0.2s ease;
+        }
+
+        .timeline-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 0.72rem;
+            padding: 4px 0;
+            border-left: 2px solid rgba(255, 255, 255, 0.1);
+            padding-left: 10px;
+            margin-left: 6px;
+        }
+
+        .step-time {
+            color: var(--accent-cyan);
+            font-family: monospace;
+            font-weight: 600;
+            min-width: 45px;
+        }
+
+        .step-desc {
+            color: #94a3b8;
+        }
+
+        .candidate-tag {
+            font-size: 0.68rem;
+            padding: 2px 6px;
+            border-radius: 3px;
+            background: rgba(245, 158, 11, 0.15);
+            color: #fcd34d;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            display: inline-block;
+            margin-top: 2px;
+        }
+
+        /* === CAVERNA DE HIPNOS UMWELT STYLES === */
+        .caverna-panel {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: min(460px, 92vw);
+            height: 100%;
+            background: rgba(16, 10, 6, 0.98);
+            border-left: 1px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            z-index: 80;
+            padding: 1.2rem;
+            gap: 1.1rem;
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.75);
+        }
+
+        .flynn-hero-copy {
+            display: none;
+            position: absolute;
+            top: 22px;
+            left: 24px;
+            z-index: 45;
+            pointer-events: none;
+            flex-direction: column;
+            gap: 3px;
+            text-shadow: 0 2px 18px rgba(0, 0, 0, 0.9);
+        }
+
+        .flynn-hero-copy strong {
+            color: #f8fafc;
+            font: 700 clamp(1.2rem, 2.4vw, 2rem)/1 monospace;
+            letter-spacing: 0.24em;
+        }
+
+        .flynn-hero-copy span {
+            color: #a5f3fc;
+            font: 600 0.68rem/1.2 monospace;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+            .stage-container.caverna-focus .flynn-hero-copy {
+            display: flex;
+        }
+
+        .stage-container.caverna-focus:not(.caverna-details-open) .replay-hud {
+            display: none;
+        }
+
+        .flynn-situation-card {
+            position: absolute;
+            left: 24px;
+            bottom: 190px;
+            width: min(380px, calc(100% - 48px));
+            padding: 12px 14px;
+            border: 1px solid rgba(103, 232, 249, 0.32);
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(8, 18, 22, 0.94), rgba(18, 10, 6, 0.9));
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.6), 0 0 22px rgba(34, 211, 238, 0.08);
+            backdrop-filter: blur(10px);
+            z-index: 46;
+            pointer-events: none;
+        }
+
+        .operator-dock {
+            position: absolute;
+            left: 20px;
+            right: 20px;
+            bottom: 18px;
+            z-index: 65;
+            padding: 10px 12px;
+            border: 1px solid rgba(255, 145, 0, 0.34);
+            border-radius: 10px;
+            background: rgba(18, 10, 6, 0.97);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.72), 0 0 20px rgba(255, 145, 0, 0.08);
+            backdrop-filter: blur(12px);
+        }
+
+        .operator-dock.hidden {
+            display: none;
+        }
+
+        .operator-dock:not(.operator-dock-open) .window-ctrl-box {
+            display: none;
+        }
+
+        .operator-dock-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 8px;
+            color: #ffb45c;
+            font: 700 0.66rem/1.2 monospace;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .operator-dock-toggle {
+            min-height: 36px;
+            padding: 6px 10px;
+            border: 1px solid rgba(255, 145, 0, 0.38);
+            border-radius: 5px;
+            background: rgba(255, 145, 0, 0.1);
+            color: #ffd6b3;
+            cursor: pointer;
+            font: 700 0.62rem/1 monospace;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .operator-dock-toggle:focus-visible {
+            outline: 2px solid #67e8f9;
+            outline-offset: 2px;
+        }
+
+        .operator-dock .window-ctrl-box {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 8px 10px;
+            background: rgba(36, 20, 12, 0.48);
+        }
+
+        .operator-dock .operator-step-label {
+            color: var(--text-muted);
+            font: 600 0.62rem/1.2 monospace;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .operator-dock .var-tabs {
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+        }
+
+        .operator-dock .action-grammar-group,
+        .operator-dock .operator-actions-row {
+            margin-top: 0;
+        }
+
+        .operator-grammar-details {
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 6px;
+        }
+
+        .operator-grammar-details summary {
+            min-height: 32px;
+            padding: 7px 2px;
+            color: var(--text-muted);
+            cursor: pointer;
+            font: 600 0.6rem/1.2 monospace;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .operator-grammar-details[open] summary {
+            color: #ffb45c;
+        }
+
+        .situation-card-head,
+        .situation-fact,
+        .situation-resource {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .situation-card-head {
+            color: #67e8f9;
+            font: 700 0.66rem/1.2 monospace;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .situation-live {
+            color: #86efac;
+            font-size: 0.58rem;
+        }
+
+        .situation-state {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-top: 7px;
+            color: #e2e8f0;
+            font: 700 0.78rem/1.2 monospace;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .situation-state::before {
+            content: '';
+            flex: 0 0 7px;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #94a3b8;
+            box-shadow: 0 0 7px rgba(148, 163, 184, 0.45);
+        }
+
+        .situation-state[data-state="moving"]::before {
+            background: #67e8f9;
+            box-shadow: 0 0 9px rgba(103, 232, 249, 0.85);
+            animation: situation-pulse 1.5s ease-in-out infinite;
+        }
+
+        .situation-state[data-state="body-active"]::before {
+            background: #fbbf24;
+            box-shadow: 0 0 9px rgba(251, 191, 36, 0.7);
+        }
+
+        .situation-state[data-state="unknown"]::before {
+            background: #f87171;
+            box-shadow: 0 0 9px rgba(248, 113, 113, 0.6);
+        }
+
+        .situation-state[data-state="contact"]::before {
+            background: #ffaa33;
+            box-shadow: 0 0 9px rgba(255, 170, 51, 0.75);
+        }
+
+        .situation-state[data-state="consumed"]::before {
+            background: #86efac;
+            box-shadow: 0 0 9px rgba(134, 239, 172, 0.75);
+        }
+
+        @keyframes situation-pulse {
+            0%, 100% { opacity: 0.55; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.15); }
+        }
+
+        .situation-facts {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 7px;
+            margin-top: 10px;
+            padding-top: 9px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .situation-fact {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 3px;
+            min-width: 0;
+        }
+
+        .situation-fact + .situation-fact {
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            padding-left: 7px;
+        }
+
+        .situation-fact span,
+        .situation-resource-label {
+            color: var(--text-muted);
+            font: 600 0.58rem/1.2 monospace;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .situation-fact strong,
+        .situation-resource-value {
+            color: #f8fafc;
+            font: 700 0.72rem/1.2 monospace;
+        }
+
+        .situation-resource {
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .situation-resource-value {
+            color: #ffe066;
+            text-align: right;
+        }
+
+        .situation-observation {
+            margin-top: 7px;
+            color: #cbd5e1;
+            font: 500 0.62rem/1.35 monospace;
+        }
+
+        .technical-details {
+            border: 1px solid rgba(103, 232, 249, 0.22);
+            border-radius: 6px;
+            background: rgba(8, 20, 24, 0.35);
+        }
+
+        .technical-details summary {
+            display: flex;
+            align-items: center;
+            min-height: 44px;
+            padding: 9px 10px;
+            color: #67e8f9;
+            cursor: pointer;
+            font: 700 0.68rem/1.2 monospace;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .technical-details[open] summary {
+            border-bottom: 1px solid rgba(103, 232, 249, 0.18);
+        }
+
+        .technical-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 7px;
+            padding: 10px;
+        }
+
+        .technical-grid > div {
+            min-width: 0;
+            color: var(--text-muted);
+            font: 600 0.6rem/1.25 monospace;
+            text-transform: uppercase;
+        }
+
+        .technical-grid strong {
+            display: block;
+            margin-top: 3px;
+            overflow-wrap: anywhere;
+            color: #cbd5e1;
+            font-size: 0.62rem;
+            font-weight: 500;
+            text-transform: none;
+        }
+
+        .technical-json {
+            margin: 0 10px 10px;
+            max-height: 150px;
+            overflow: auto;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            color: #94a3b8;
+            font: 500 0.58rem/1.3 monospace;
+        }
+
+        .caverna-panel.hidden {
+            display: none;
+        }
+
+        .world-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .world-card {
+            background: rgba(28, 17, 11, 0.65);
+            border: 1px solid rgba(255, 122, 24, 0.18);
+            border-radius: 5px;
+            padding: 8px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            opacity: 0.45;
+            transition: opacity 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .world-card.world-card-active {
+            opacity: 1;
+            border-color: rgba(255, 145, 0, 0.48);
+            box-shadow: 0 0 12px rgba(255, 145, 0, 0.08);
+        }
+
+        .world-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .world-card-val {
+            font-size: 0.86rem;
+            font-weight: 700;
+            font-family: monospace;
+            color: #fff4ed;
+        }
+
+        .world-card-badge {
+            font-size: 0.65rem;
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
+        .badge-active {
+            background: rgba(255, 119, 0, 0.25);
+            color: #ffaa33;
+            border: 1px solid rgba(255, 119, 0, 0.5);
+        }
+
+        .badge-off {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+        }
+
+        .window-ctrl-box {
+            background: rgba(36, 20, 12, 0.6);
+            border: 1px solid rgba(255, 140, 30, 0.3);
+            border-radius: 6px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .var-tabs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+        }
+
+        .var-tab-btn {
+            background: rgba(20, 12, 7, 0.8);
+            border: 1px solid rgba(255, 122, 24, 0.2);
+            color: var(--text-muted);
+            padding: 5px 6px;
+            font-size: 0.68rem;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-transform: uppercase;
+        }
+
+        .var-tab-btn.active {
+            background: rgba(255, 119, 0, 0.25);
+            color: #ff9100;
+            border-color: rgba(255, 145, 0, 0.6);
+            box-shadow: 0 0 10px rgba(255, 119, 0, 0.3);
+        }
+
+        .action-grammar-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-top: 4px;
+        }
+
+        .action-grammar-btn {
+            background: rgba(18, 11, 7, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #e2e8f0;
+            padding: 6px 10px;
+            font-size: 0.72rem;
+            border-radius: 4px;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.15s ease;
+        }
+
+        .action-grammar-btn.active {
+            border-color: rgba(255, 145, 0, 0.6);
+            background: rgba(255, 119, 0, 0.15);
+            color: #ffaa33;
+        }
+
+        .operator-actions-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .op-btn {
+            padding: 7px 10px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.15s ease;
+            text-align: center;
+        }
+
+        .op-btn-offer {
+            background: rgba(255, 145, 0, 0.2);
+            border-color: rgba(255, 145, 0, 0.5);
+            color: #ffaa33;
+        }
+        .op-btn-offer:hover {
+            background: rgba(255, 145, 0, 0.35);
+            box-shadow: 0 0 12px rgba(255, 145, 0, 0.4);
+        }
+
+        .op-btn-fulfill {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: rgba(34, 197, 94, 0.5);
+            color: #86efac;
+        }
+        .op-btn-fulfill:hover {
+            background: rgba(34, 197, 94, 0.35);
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
+        }
+
+        .op-btn-deny {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.5);
+            color: #fca5a5;
+        }
+        .op-btn-deny:hover {
+            background: rgba(239, 68, 68, 0.35);
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+        }
+
+        .op-btn-remove {
+            background: rgba(148, 163, 184, 0.15);
+            border-color: rgba(148, 163, 184, 0.3);
+            color: #cbd5e1;
+        }
+        .op-btn-remove:hover {
+            background: rgba(148, 163, 184, 0.3);
+        }
+
+        .bridge-btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .bridge-btn {
+            background: rgba(25, 15, 10, 0.85);
+            border: 1px solid rgba(255, 122, 24, 0.25);
+            color: #fed7aa;
+            padding: 6px 8px;
+            font-size: 0.70rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-align: left;
+        }
+
+        .bridge-btn:hover {
+            background: rgba(255, 119, 0, 0.2);
+            border-color: rgba(255, 119, 0, 0.5);
+        }
+
+        .event-journal {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            max-height: 220px;
+            overflow-y: auto;
+            font-size: 0.70rem;
+        }
+
+        .journal-item {
+            background: rgba(12, 7, 4, 0.7);
+            border-left: 2px solid var(--accent-orange);
+            padding: 5px 8px;
+            border-radius: 0 4px 4px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .journal-meta {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-muted);
+            font-size: 0.65rem;
+        }
+
+        .journal-item summary {
+            list-style: none;
+            cursor: pointer;
+        }
+
+        .journal-item summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .journal-item summary .journal-meta > span:last-child {
+            color: #cbd5e1;
+            text-align: right;
+        }
+
+        .journal-technical {
+            margin-top: 7px;
+            padding-top: 7px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            color: #94a3b8;
+            font-size: 0.61rem;
+            line-height: 1.35;
+        }
+
+        .journal-technical pre {
+            max-height: 120px;
+            margin-top: 5px;
+            overflow: auto;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            font: inherit;
+        }
+        /* Operator Lock UI */
+        .status-pill.operator-locked {
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .status-pill.operator-unlocked {
+            border: 1px solid rgba(34, 197, 94, 0.4);
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .operator-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        .operator-modal-box {
+            background: #18110b;
+            border: 1px solid var(--accent-orange);
+            border-radius: 6px;
+            padding: 22px;
+            width: 400px;
+            max-width: 90vw;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.85);
+        }
+
+        .body-presence-badge {
+            display: none;
+            position: absolute;
+            left: 50%;
+            bottom: 88px;
+            transform: translateX(-50%);
+            z-index: 45;
+            padding: 5px 10px;
+            border: 1px solid rgba(103, 232, 249, 0.45);
+            border-radius: 999px;
+            background: rgba(8, 20, 24, 0.82);
+            color: #a5f3fc;
+            font: 700 0.65rem/1 monospace;
+            letter-spacing: 0.1em;
+            white-space: nowrap;
+            pointer-events: none;
+            box-shadow: 0 0 18px rgba(34, 211, 238, 0.16);
+        }
+
+        /* Mobile: the Caverna is a vertical, touch-first surface. */
+        @media (max-width: 760px) {
+            html {
+                background: var(--bg-base);
+            }
+
+            body {
+                width: 100%;
+                min-width: 0;
+                height: 100dvh;
+                overflow: hidden;
+            }
+
+            header {
+                height: auto;
+                min-height: 0;
+                padding: max(10px, env(safe-area-inset-top)) 12px 8px;
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto;
+                gap: 8px;
+            }
+
+            .brand-group {
+                min-width: 0;
+                gap: 8px;
+            }
+
+            .brand-title {
+                font-size: 1rem;
+            }
+
+            .brand-subtitle {
+                min-width: 0;
+                max-width: 145px;
+                max-height: 2.6em;
+                overflow: hidden;
+                font-size: 0.58rem;
+                line-height: 1.25;
+                letter-spacing: 0.05em;
+                padding-left: 8px;
+            }
+
+            .mode-btn {
+                min-height: 42px;
+                padding: 9px 6px;
+                font-size: 0.68rem;
+                letter-spacing: 0.08em;
+                white-space: nowrap;
+            }
+
+            .status-indicators {
+                grid-column: 1 / -1;
+                width: 100%;
+                gap: 6px;
+                overflow-x: auto;
+                padding-bottom: 2px;
+                scrollbar-width: none;
+            }
+
+            .status-indicators::-webkit-scrollbar {
+                display: none;
+            }
+
+            .status-pill {
+                flex: 0 0 auto;
+                min-height: 34px;
+                padding: 7px 8px;
+                font-size: 0.65rem;
+                white-space: nowrap;
+            }
+
+            main {
+                min-height: 0;
+                flex-direction: column;
+                overflow: hidden;
+            }
+
+            .stage-container {
+                flex: 0 0 clamp(245px, 40dvh, 370px);
+                width: 100%;
+                min-height: 245px;
+            }
+
+            .stage-container.caverna-focus {
+                flex: 1 1 auto;
+                min-height: 0;
+            }
+
+            .contact-banner {
+                top: 8px;
+                left: 8px;
+                right: 8px;
+                transform: none;
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 4px 8px;
+                padding: 8px 10px;
+                font-size: 0.68rem;
+                text-align: center;
+            }
+
+            .replay-hud {
+                right: 8px;
+                bottom: 8px;
+                left: 8px;
+                transform: none;
+                display: grid;
+                grid-template-columns: auto minmax(0, 1fr);
+                gap: 6px;
+                padding: 8px;
+            }
+
+            .body-presence-badge {
+                bottom: 176px;
+                font-size: 0.6rem;
+            }
+
+            .replay-hud .hud-label,
+            .replay-hud .hud-badge {
+                min-width: 0;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .replay-hud .trace-selector,
+            .replay-hud .hud-btn {
+                width: 100%;
+                min-height: 42px;
+            }
+
+            .replay-hud .trace-selector {
+                grid-column: 1 / -1;
+                min-width: 0;
+            }
+
+            .replay-hud .hud-btn {
+                grid-column: 1 / -1;
+            }
+
+            .caverna-panel,
+            .lab-panel {
+                width: 100%;
+                min-width: 0;
+                min-height: 0;
+                height: auto;
+                flex: 1 1 0;
+                border-top: 1px solid var(--border-subtle);
+                border-left: 0;
+                padding: 10px 12px max(14px, env(safe-area-inset-bottom));
+                gap: 10px;
+                overflow-x: hidden;
+                overflow-y: auto;
+                overscroll-behavior: contain;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .caverna-panel {
+                top: auto;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                width: 100%;
+                height: min(72dvh, 600px);
+                max-height: calc(100dvh - 72px);
+                border-left: 0;
+                border-top: 1px solid var(--border-subtle);
+            }
+
+            .flynn-hero-copy {
+                top: 44px;
+                left: 16px;
+            }
+
+            .flynn-hero-copy strong {
+                font-size: 1.18rem;
+            }
+
+            .menu-toggle,
+            .menu-action {
+                min-height: 44px;
+            }
+
+            .flynn-situation-card {
+                left: 12px;
+                right: 12px;
+                bottom: 88px;
+                width: auto;
+                padding: 8px 10px;
+                background: linear-gradient(135deg, rgba(8, 18, 22, 0.78), rgba(18, 10, 6, 0.72));
+                backdrop-filter: blur(4px);
+            }
+
+            .situation-card-head {
+                font-size: 0.58rem;
+            }
+
+            .situation-live {
+                font-size: 0.5rem;
+            }
+
+            .situation-state {
+                margin-top: 4px;
+                font-size: 0.68rem;
+            }
+
+            .situation-facts {
+                gap: 4px;
+                margin-top: 6px;
+                padding-top: 6px;
+            }
+
+            .situation-fact {
+                gap: 2px;
+            }
+
+            .situation-fact span,
+            .situation-resource-label {
+                font-size: 0.5rem;
+                letter-spacing: 0.05em;
+            }
+
+            .situation-fact strong,
+            .situation-resource-value {
+                font-size: 0.6rem;
+            }
+
+            .situation-fact + .situation-fact {
+                padding-left: 5px;
+            }
+
+            .situation-resource {
+                margin-top: 6px;
+                padding-top: 6px;
+            }
+
+            .situation-observation {
+                display: none;
+            }
+
+            .operator-dock {
+                left: 10px;
+                right: 10px;
+                bottom: 10px;
+                padding: 8px;
+            }
+
+            .operator-dock-head {
+                margin-bottom: 6px;
+                font-size: 0.6rem;
+            }
+
+            .operator-dock-toggle {
+                min-height: 44px;
+                padding: 8px 9px;
+            }
+
+            .operator-dock .window-ctrl-box {
+                display: none;
+                flex-direction: column;
+                gap: 6px;
+                padding: 8px;
+            }
+
+            .operator-dock.operator-dock-open .window-ctrl-box {
+                display: flex;
+            }
+
+            .operator-dock.operator-dock-open {
+                overflow-y: auto;
+                overscroll-behavior: contain;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .operator-dock .var-tabs {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            @media (max-width: 360px) {
+                .operator-dock.operator-dock-open {
+                    max-height: calc(100dvh - 350px);
+                }
+            }
+
+            .situation-state {
+                font-size: 0.68rem;
+            }
+
+            .situation-facts {
+                gap: 5px;
+            }
+
+            .situation-fact strong,
+            .situation-resource-value {
+                font-size: 0.64rem;
+            }
+
+            #connectome-status-pill {
+                display: none;
+            }
+
+            .panel-section {
+                min-width: 0;
+                padding: 10px;
+                gap: 7px;
+            }
+
+            .section-title {
+                font-size: 0.68rem;
+                line-height: 1.25;
+            }
+
+            .world-grid,
+            .metric-grid {
+                gap: 6px;
+            }
+
+            .world-card {
+                min-width: 0;
+                padding: 9px;
+            }
+
+            .world-card-header {
+                align-items: flex-start;
+                gap: 4px;
+            }
+
+            .world-card-badge {
+                white-space: nowrap;
+            }
+
+            .window-ctrl-box {
+                padding: 10px;
+                gap: 8px;
+            }
+
+            .var-tab-btn,
+            .action-grammar-btn,
+            .op-btn,
+            .bridge-btn {
+                min-height: 44px;
+            }
+
+            .var-tab-btn {
+                padding: 8px 4px;
+                font-size: 0.64rem;
+            }
+
+            .action-grammar-btn,
+            .op-btn,
+            .bridge-btn {
+                padding: 10px 8px;
+            }
+
+            .event-journal {
+                max-height: none;
+                min-height: 100px;
+            }
+
+            .journal-meta {
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+
+            .journal-meta > span:last-child {
+                margin-left: auto;
+                text-align: right;
+            }
+
+            .operator-modal-box {
+                width: calc(100vw - 24px);
+                max-width: none;
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand-group">
+            <div class="brand-title">LETHE</div>
+            <div class="brand-subtitle">Sigilo Causal & Observabilidade de Flynn</div>
+        </div>
+
+        <div class="mode-menu" id="mode-menu">
+            <button class="menu-toggle" id="mode-menu-toggle" aria-expanded="false" aria-controls="mode-menu-options" onclick="toggleModeMenu()">☰ MENU</button>
+            <div class="mode-toggle-group" id="mode-menu-options" aria-label="Navegação">
+                <button class="menu-action" id="btn-caverna-details" onclick="toggleCavernaDetails()">DETALHES TÉCNICOS</button>
+                <button class="mode-btn" id="btn-mode-contact" onclick="setMode('CONTACT')">CONTACT</button>
+                <button class="mode-btn" id="btn-mode-lab" onclick="setMode('LAB')">LAB</button>
+                <button class="mode-btn active" id="btn-mode-caverna" onclick="setMode('CAVERNA')">CAVERNA</button>
+            </div>
+        </div>
+
+        <div class="status-indicators">
+            <div class="status-pill operator-locked" id="interaction-pill" onclick="toggleInteractionModal()" title="Sessão de interação">
+                <div class="status-dot" id="interaction-dot" style="background: #ef4444; box-shadow: 0 0 6px #ef4444;"></div>
+                <span id="interaction-text" style="color: #ef4444; font-weight: 600;">HUMANO: OFF</span>
+            </div>
+            <div class="status-pill">
+                <div class="status-dot quiescent" id="status-dot"></div>
+                <span id="status-text">QUIESCENT</span>
+            </div>
+            <div class="status-pill" id="connectome-status-pill">
+                <span style="color: var(--text-muted)">CONNECTOMA:</span>
+                <span id="inst-neurons" style="color: #f8fafc">139,255</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Human interaction session modal -->
+    <div class="operator-modal-overlay" id="interaction-modal" onclick="if(event.target===this) toggleInteractionModal(false)">
+        <div class="operator-modal-box">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px;">
+                <span style="font-weight: bold; color: var(--accent-orange); font-size: 0.85rem; letter-spacing: 0.5px;">INTERAGIR</span>
+                <button onclick="toggleInteractionModal(false)" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.1rem; line-height: 1;">✕</button>
+            </div>
+            <div id="interaction-modal-desc" style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.4;">
+                Digite a palavra ou frase de acesso para iniciar uma sessão de interação humana na Caverna.
+            </div>
+            <div id="interaction-input-container" style="display: flex; flex-direction: column; gap: 8px;">
+                <input type="password" id="interaction-passphrase-input" placeholder="Palavra ou frase de acesso" style="background: rgba(0,0,0,0.6); border: 1px solid var(--border-subtle); color: #fff; padding: 8px 10px; border-radius: 4px; font-family: monospace; font-size: 0.75rem;" autocomplete="current-password" onkeydown="if(event.key==='Enter') submitInteractionPassphrase()" />
+                <label style="font-size: 0.7rem; color: var(--text-muted);"><input type="checkbox" id="interaction-remember-device" /> lembrar neste dispositivo</label>
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="submitInteractionPassphrase()" style="flex: 1; background: var(--accent-orange); color: #000; border: none; padding: 7px; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 0.75rem;">ENTRAR</button>
+                    <button id="btn-interaction-logout" onclick="logoutInteraction()" style="display: none; background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; padding: 7px 14px; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 0.75rem;">SAIR</button>
+                </div>
+            </div>
+            <div id="interaction-modal-msg" style="font-size: 0.70rem; color: #ef4444; display: none;"></div>
+        </div>
+    </div>
+
+    <main>
+        <div class="stage-container">
+            <div class="contact-banner" id="contact-banner">
+                <span>FLYNN · <strong id="contact-state-txt">QUIESCENTE · SEM ESTÍMULO</strong></span>
+                <span id="contact-action-txt" style="color: var(--accent-cyan); display: none;"></span>
+            </div>
+
+            <div class="body-presence-badge" id="body-presence-badge">FLYNN · CORPO VIVO</div>
+            <div class="flynn-hero-copy" id="flynn-hero-copy">
+                <strong>FLYNN</strong>
+                <span>corpo vivo · Caverna</span>
+            </div>
+
+            <section class="flynn-situation-card" id="flynn-situation-card" aria-live="polite">
+                <div class="situation-card-head">
+                    <span>FLYNN AGORA</span>
+                    <span class="situation-live">LIVE · RESIDENTE</span>
+                </div>
+                <div class="situation-state" id="situation-state">LENDO ESTADO RESIDENTE...</div>
+                <div class="situation-facts">
+                    <div class="situation-fact">
+                        <span>Energia</span>
+                        <strong id="situation-energy">—</strong>
+                    </div>
+                    <div class="situation-fact">
+                        <span>Necessidade alimentar</span>
+                        <strong id="situation-drive">—</strong>
+                    </div>
+                    <div class="situation-fact">
+                        <span>Capacidade corporal</span>
+                        <strong id="situation-capacity">—</strong>
+                    </div>
+                </div>
+                <div class="situation-resource">
+                    <span class="situation-resource-label">MUNDO · DOCE</span>
+                    <span class="situation-resource-value" id="situation-sweet-state">—</span>
+                </div>
+                <div class="situation-observation" id="situation-observation">Aguardando observação do Umwelt.</div>
+            </section>
+
+            <canvas id="lethe-canvas"></canvas>
+
+            <div class="replay-hud">
+                <div class="hud-label">Sessão:</div>
+                <div class="hud-badge" id="hud-source-badge">REPLAY CIENTÍFICO</div>
+                <select class="trace-selector" id="trace-select" onchange="onTraceSelectChange()">
+                    <option value="looming">Looming (DNp01 Escape Takeoff)</option>
+                    <option value="taste_sugar">Açúcar (Proboscis Extension Reflex)</option>
+                    <option value="taste_bitter">Amargo (Supressão Motora + Rejeição Aversiva)</option>
+                    <option value="sound">Som (Canto de Cortejo / Orientação DNg24)</option>
+                    <option value="touch_head">Toque Cefálico (MDN Reversa + Grooming DNge104)</option>
+                </select>
+                <button class="hud-btn" id="btn-play-trace" onclick="triggerReplay()">REPRODUZIR TRACE</button>
+            </div>
+        </div>
+
+        <section class="operator-dock" id="operator-dock" aria-label="Controles de interação humana">
+            <div class="operator-dock-head">
+                <span>Interação humana</span>
+                <span id="window-status-pill" style="color: #ff9100; font-size: 0.65rem">LIMIAR EM PAZ</span>
+                <button class="operator-dock-toggle" id="operator-dock-toggle" type="button" aria-expanded="false" onclick="toggleOperatorDock()">Controles</button>
+            </div>
+            <div class="window-ctrl-box">
+                <div class="operator-step-label">1. Escolha o estímulo:</div>
+                <div class="var-tabs">
+                    <button class="var-tab-btn active" id="tab-sweet" onclick="selectVariable('sweet')">Doce</button>
+                    <button class="var-tab-btn" id="tab-bitter" onclick="selectVariable('bitter')">Amargo</button>
+                    <button class="var-tab-btn" id="tab-wind" onclick="selectVariable('wind')">Vento</button>
+                    <button class="var-tab-btn" id="tab-sound" onclick="selectVariable('sound')">Som</button>
+                    <button class="var-tab-btn" id="tab-looming" onclick="selectVariable('looming')">Looming</button>
+                    <button class="var-tab-btn" id="tab-contact" onclick="selectVariable('contact')">Contato</button>
+                </div>
+
+                <details class="operator-grammar-details">
+                    <summary>Gramática técnica (opcional)</summary>
+                    <div class="action-grammar-group" id="grammar-buttons-container">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </details>
+
+                <div class="operator-step-label">2. O que você quer fazer?</div>
+                <div class="operator-actions-row">
+                    <button class="op-btn op-btn-offer" onclick="sendHumanOp('offer')">+ Disponibilizar</button>
+                    <button class="op-btn op-btn-fulfill" onclick="sendHumanOp('fulfill')">✓ Confirmar oferta</button>
+                    <button class="op-btn op-btn-deny" onclick="sendHumanOp('deny')">✗ Recusar oferta</button>
+                    <button class="op-btn op-btn-remove" onclick="sendHumanOp('remove')">⊘ Retirar do mundo</button>
+                </div>
+            </div>
+        </section>
+
+        <aside class="caverna-panel hidden" id="caverna-panel">
+            <div class="panel-section">
+                <div class="section-title">
+                    <span>Estado do Umwelt (Caverna)</span>
+                    <span id="caverna-mode-badge" style="color: #ffaa33; font-size: 0.65rem">LIVE</span>
+                    <span style="color: rgba(255,145,0,0.7); font-size: 0.62rem; margin-left: 6px;">BODY ● LIVE / PINOCCHIO</span>
+                    <span style="color: #ef4444; font-size: 0.62rem; margin-left: 6px; font-weight: bold;">REC ● <span id="caverna-ledger-sess-id" style="color: #cbd5e1; font-weight: normal;">sess_default</span></span>
+                </div>
+                <div style="background: rgba(20, 10, 5, 0.6); border: 1px solid rgba(255, 145, 0, 0.25); border-radius: 4px; padding: 5px 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 0.68rem;">
+                    <div>
+                        <span style="color: var(--text-muted);">RESERVA ENERGÉTICA:</span>
+                        <strong id="energy-reserve-val" style="color: #94a3b8; margin-left: 4px;">—</strong>
+                        <span id="energy-status-label" style="color: #94a3b8; font-size: 0.62rem; margin-left: 4px;">(INDISPONÍVEL)</span>
+                    </div>
+                    <div>
+                        <span style="color: var(--text-muted);">DRIVE ALIMENTAR:</span>
+                        <strong id="feeding-drive-val" style="color: #94a3b8; margin-left: 4px;">—</strong>
+                    </div>
+                    <div>
+                        <span style="color: var(--text-muted);">BODY CAPACITY:</span>
+                        <strong id="body-capacity-val" style="color: #94a3b8; margin-left: 4px;">—</strong>
+                    </div>
+                </div>
+                <div style="background: rgba(8, 20, 24, 0.55); border: 1px solid rgba(34, 211, 238, 0.24); border-radius: 4px; padding: 7px 8px; margin-bottom: 8px; font-size: 0.68rem;">
+                    <div style="display: flex; justify-content: space-between; color: #67e8f9; font-weight: 600; margin-bottom: 5px;">
+                        <span>TRAJETÓRIA / HISTÓRICO VIVO</span><span id="trajectory-window-label">5 MIN</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; color: var(--text-muted);">
+                        <div>POSIÇÃO<br><strong id="trajectory-position" style="color: #cbd5e1;">—</strong></div>
+                        <div>DISTÂNCIA<br><strong id="trajectory-distance" style="color: #cbd5e1;">—</strong></div>
+                        <div>DNs ATIVOS<br><strong id="trajectory-dns" style="color: #cbd5e1;">—</strong></div>
+                    </div>
+                    <div id="world-position-summary" style="margin-top: 6px; color: #a5f3fc;">UMWELT: posição — · doce — · contato —</div>
+                    <div id="trajectory-recent-events" style="margin-top: 6px; color: #94a3b8;">Lendo histórico residente...</div>
+                </div>
+                <div class="world-grid" id="world-grid-container">
+                    <div class="world-card" id="card-sweet">
+                        <div class="world-card-header">
+                            <span>Doce (Sugar)</span>
+                            <span class="world-card-badge badge-off" id="badge-sweet">AUSENTE</span>
+                        </div>
+                        <div class="world-card-val" id="val-sweet">0%</div>
+                    </div>
+                    <div class="world-card" id="card-bitter">
+                        <div class="world-card-header">
+                            <span>Amargo (Bitter)</span>
+                            <span class="world-card-badge badge-off" id="badge-bitter">AUSENTE</span>
+                        </div>
+                        <div class="world-card-val" id="val-bitter">0%</div>
+                    </div>
+                    <div class="world-card" id="card-wind">
+                        <div class="world-card-header">
+                            <span>Vento (Wind)</span>
+                            <span class="world-card-badge badge-off" id="badge-wind">OFF</span>
+                        </div>
+                        <div class="world-card-val" id="val-wind">0 m/s</div>
+                    </div>
+                    <div class="world-card" id="card-sound">
+                        <div class="world-card-header">
+                            <span>Som (Sound)</span>
+                            <span class="world-card-badge badge-off" id="badge-sound">SILÊNCIO</span>
+                        </div>
+                        <div class="world-card-val" id="val-sound">0 dB</div>
+                    </div>
+                    <div class="world-card" id="card-looming">
+                        <div class="world-card-header">
+                            <span>Looming (Óptico)</span>
+                            <span class="world-card-badge badge-off" id="badge-looming">REPOUSO</span>
+                        </div>
+                        <div class="world-card-val" id="val-looming">Inativo</div>
+                    </div>
+                    <div class="world-card" id="card-contact">
+                        <div class="world-card-header">
+                            <span>Contato (Toque)</span>
+                            <span class="world-card-badge badge-off" id="badge-contact">AUSENTE</span>
+                        </div>
+                        <div class="world-card-val" id="val-contact">Inativo</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="section-title">
+                    <span>Diário Causal de Eventos</span>
+                    <button style="background: transparent; border: none; color: var(--accent-orange); cursor: pointer; font-size: 0.68rem;" onclick="refreshCavernaState()">Atualizar</button>
+                </div>
+                <div class="event-journal" id="event-journal-container">
+                    <div style="color: var(--text-muted)">Carregando eventos do Umwelt...</div>
+                </div>
+            </div>
+
+            <details class="technical-details">
+                <summary>Detalhes técnicos</summary>
+                <div class="technical-grid">
+                    <div>Posição mundo<strong id="technical-body-position">—</strong></div>
+                    <div>q / qdot<strong id="technical-q-summary">—</strong></div>
+                    <div>DNs ativos<strong id="technical-dn-activity">—</strong></div>
+                    <div>Deslocamento<strong id="technical-displacement">—</strong></div>
+                    <div>Resource ID<strong id="technical-resource-id">—</strong></div>
+                    <div>Posição do doce<strong id="technical-resource-position">—</strong></div>
+                    <div>Distância / raio<strong id="technical-distance-contact">—</strong></div>
+                    <div>Contato / consumo<strong id="technical-contact-consumed">—</strong></div>
+                    <div>Event IDs<strong id="technical-event-ids">—</strong></div>
+                    <div>Proveniência<strong id="technical-provenance">—</strong></div>
+                </div>
+                <pre class="technical-json" id="technical-json">Aguardando dados técnicos do residente.</pre>
+            </details>
+        </aside>
+
+        <aside class="lab-panel hidden" id="lab-panel">
+            <div class="panel-section">
+                <div class="section-title">
+                    <span>Telemetria do Ensaio</span>
+                    <span id="lab-modality-badge" style="color: #f8fafc; font-size: 0.65rem">LOOMING</span>
+                </div>
+                <div style="background: rgba(20, 10, 5, 0.6); border: 1px solid rgba(255, 145, 0, 0.25); border-radius: 4px; padding: 5px 8px; margin-bottom: 8px; font-size: 0.68rem; display: flex; justify-content: space-between;">
+                    <div><span>BODY:</span> <strong style="color: #ffaa33;">VIRTUAL / ZEROCLAW (DETERMINISTIC)</strong></div>
+                    <div><span>EXPERIENCE STORE:</span> <strong style="color: #44bb88;">ONLINE</strong></div>
+                </div>
+                <div class="metric-grid">
+                    <div class="metric-box">
+                        <div class="metric-label">Spikes Totais</div>
+                        <div class="metric-value" id="lab-total-spikes">0</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Neurônios Ativos</div>
+                        <div class="metric-value" id="lab-active-neurons">0</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Duração Ensaio</div>
+                        <div class="metric-value" id="lab-duration">400 ms</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Seed Estocástica</div>
+                        <div class="metric-value" id="lab-seed">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="section-title">
+                    <span>EXPERIMENT LEDGER</span>
+                    <span style="color: #ef4444; font-size: 0.65rem; font-weight: bold;">● RECORDING</span>
+                </div>
+                <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 4px; padding: 6px 8px; font-size: 0.68rem; margin-bottom: 8px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span style="color: var(--text-muted);">SESSION:</span>
+                        <strong id="lab-ledger-session" style="color: #38bdf8;">--</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span style="color: var(--text-muted);">EVENT COUNT:</span>
+                        <strong id="lab-ledger-events" style="color: #4ade80;">--</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span style="color: var(--text-muted);">LAST EVENT:</span>
+                        <span id="lab-ledger-last-event" style="color: #f8fafc; font-family: monospace;">--</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span style="color: var(--text-muted);">CAUSAL CHAIN:</span>
+                        <span id="lab-ledger-chain" style="color: #fb923c; font-family: monospace;">--</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-muted);">STATUS:</span>
+                        <strong style="color: #22c55e;">ACTIVE (WAL APPEND-ONLY)</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="section-title">Saídas Descendentes Canônicas (6/6)</div>
+                <div class="output-bar-row">
+                    <div class="output-bar-label">
+                        <span>Escape Takeoff (DNp01 Giant Fibre)</span>
+                        <span id="val-takeoff">0.00</span>
+                    </div>
+                    <div class="output-bar-track"><div class="output-bar-fill" id="bar-takeoff"></div></div>
+                </div>
+                <div class="output-bar-row">
+                    <div class="output-bar-label">
+                        <span>Escape Long Mode (DNp02, DNp04, DNp11)</span>
+                        <span id="val-longmode">0.00</span>
+                    </div>
+                    <div class="output-bar-track"><div class="output-bar-fill" id="bar-longmode"></div></div>
+                </div>
+                <div class="output-bar-row">
+                    <div class="output-bar-label">
+                        <span>Proboscis Motor Drive (MN9 Extension)</span>
+                        <span id="val-proboscis">0.00</span>
+                    </div>
+                    <div class="output-bar-track"><div class="output-bar-fill" id="bar-proboscis"></div></div>
+                </div>
+                <div class="output-bar-row">
+                    <div class="output-bar-label">
+                        <span>Steering / Turn (DNa01/02 Asymmetry)</span>
+                        <span id="val-turn">0.00</span>
+                    </div>
+                    <div class="output-bar-track"><div class="output-bar-fill" id="bar-turn"></div></div>
+                </div>
+                <div class="output-bar-row">
+                    <div class="output-bar-label">
+                        <span>Backward Walk (MDN Retraction)</span>
+                        <span id="val-backward">0.00</span>
+                    </div>
+                    <div class="output-bar-track"><div class="output-bar-fill" id="bar-backward"></div></div>
+                </div>
+                <div class="output-bar-row">
+                    <div class="output-bar-label">
+                        <span>Stop / Freeze (EB Ring Gating)</span>
+                        <span id="val-stop">0.00</span>
+                    </div>
+                    <div class="output-bar-track"><div class="output-bar-fill" id="bar-stop"></div></div>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="section-title">Saídas Candidatas & Sinais Desconhecidos</div>
+                <div id="lab-candidates-container" style="font-size: 0.74rem; color: #cbd5e1; display: flex; flex-direction: column; gap: 6px;">
+                    <div style="color: var(--text-muted)">Nenhum sinal candidato ativo no repouso.</div>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="section-title">Estado Central & Persistência (pC1d/aIPg)</div>
+                <div class="metric-grid">
+                    <div class="metric-box">
+                        <div class="metric-label">pC1d Firing Rate</div>
+                        <div class="metric-value" id="lab-pc1d-hz">0.0 Hz</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">aIPg Reciprocal Hub</div>
+                        <div class="metric-value" id="lab-aipg-hz">0.0 Hz</div>
+                    </div>
+                </div>
+                <div style="font-size: 0.68rem; color: var(--text-muted); margin-top: 4px;">
+                    Alça excitatória recíproca monossináptica (473 sinapses). Sustenta reverberação residual no modelo.
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="section-title">Timeline Causal Factual</div>
+                <div id="lab-timeline-container" style="display: flex; flex-direction: column; gap: 4px;">
+                    <div class="timeline-step">
+                        <div class="step-time">0 ms</div>
+                        <div class="step-desc">T0: Quiescência basal (0 spikes em repouso)</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <script>
+        // Synchronous Base Structural Projection of Lethe (FAFB v783 23 modules)
+        const BASE_MODULES = {
+            "OPTIC_L": { "label": "Optic Lobe L", "x": -0.80, "y": -0.12, "r": 0.12, "side": "L" },
+            "OPTIC_R": { "label": "Optic Lobe R", "x": 0.80, "y": -0.12, "r": 0.12, "side": "R" },
+            "ANTENNAL_L": { "label": "Antennal Lobe L", "x": -0.42, "y": 0.28, "r": 0.08, "side": "L" },
+            "ANTENNAL_R": { "label": "Antennal Lobe R", "x": 0.42, "y": 0.28, "r": 0.08, "side": "R" },
+            "AUDITORY_L": { "label": "AMMC Auditory L", "x": -0.58, "y": 0.06, "r": 0.09, "side": "L" },
+            "AUDITORY_R": { "label": "AMMC Auditory R", "x": 0.58, "y": 0.06, "r": 0.09, "side": "R" },
+            "GNATHAL_SEZ": { "label": "Gnathal SEZ", "x": 0.0, "y": 0.52, "r": 0.11, "side": "M" },
+            "MUSHROOM_L": { "label": "Mushroom Body L", "x": -0.30, "y": -0.34, "r": 0.09, "side": "L" },
+            "MUSHROOM_R": { "label": "Mushroom Body R", "x": 0.30, "y": -0.34, "r": 0.09, "side": "R" },
+            "CENTRAL_EB": { "label": "Ellipsoid Body", "x": 0.0, "y": -0.05, "r": 0.09, "side": "M" },
+            "CENTRAL_FB": { "label": "Fan-shaped Body", "x": 0.0, "y": -0.22, "r": 0.10, "side": "M" },
+            "SUPERIOR_L": { "label": "Superior Protocerebrum L", "x": -0.34, "y": -0.12, "r": 0.09, "side": "L" },
+            "SUPERIOR_R": { "label": "Superior Protocerebrum R", "x": 0.34, "y": -0.12, "r": 0.09, "side": "R" },
+            "VENTROLAT_L": { "label": "Ventrolateral L", "x": -0.52, "y": -0.25, "r": 0.10, "side": "L" },
+            "VENTROLAT_R": { "label": "Ventrolateral R", "x": 0.52, "y": -0.25, "r": 0.10, "side": "R" },
+            "FEMALE_HUB": { "label": "Female Hub (pC1/aIPg)", "x": 0.0, "y": 0.14, "r": 0.08, "side": "M" },
+            "CIRCADIAN_PACEMAKER": { "label": "Circadian Pacemaker", "x": 0.0, "y": -0.42, "r": 0.07, "side": "M" },
+            "DN_TAKEOFF": { "label": "DN Takeoff (Giant Fibre)", "x": 0.0, "y": -0.68, "r": 0.08, "side": "M" },
+            "DN_LONG_MODE": { "label": "DN Long Mode", "x": 0.22, "y": -0.62, "r": 0.07, "side": "M" },
+            "DN_STEERING": { "label": "DN Steering (DNa)", "x": -0.22, "y": -0.62, "r": 0.07, "side": "M" },
+            "DN_FEEDING": { "label": "Proboscis Motor", "x": 0.0, "y": 0.76, "r": 0.09, "side": "M" },
+            "DN_CANDIDATE": { "label": "Candidate Outputs", "x": 0.34, "y": 0.62, "r": 0.08, "side": "M" },
+            "DN_UNKNOWN": { "label": "Unknown Signals", "x": -0.34, "y": 0.62, "r": 0.08, "side": "M" }
+        };
+
+        const BASE_EDGES = [
+            ["OPTIC_L", "VENTROLAT_L"], ["OPTIC_R", "VENTROLAT_R"],
+            ["OPTIC_L", "DN_TAKEOFF"], ["OPTIC_R", "DN_TAKEOFF"],
+            ["OPTIC_L", "DN_LONG_MODE"], ["OPTIC_R", "DN_LONG_MODE"],
+            ["ANTENNAL_L", "MUSHROOM_L"], ["ANTENNAL_R", "MUSHROOM_R"],
+            ["AUDITORY_L", "VENTROLAT_L"], ["AUDITORY_R", "VENTROLAT_R"],
+            ["AUDITORY_L", "DN_STEERING"], ["AUDITORY_R", "DN_STEERING"],
+            ["GNATHAL_SEZ", "DN_FEEDING"], ["GNATHAL_SEZ", "DN_CANDIDATE"], ["GNATHAL_SEZ", "DN_UNKNOWN"],
+            ["MUSHROOM_L", "SUPERIOR_L"], ["MUSHROOM_R", "SUPERIOR_R"],
+            ["SUPERIOR_L", "CENTRAL_FB"], ["SUPERIOR_R", "CENTRAL_FB"],
+            ["CENTRAL_FB", "CENTRAL_EB"], ["CENTRAL_EB", "DN_STEERING"],
+            ["SUPERIOR_L", "FEMALE_HUB"], ["SUPERIOR_R", "FEMALE_HUB"],
+            ["FEMALE_HUB", "GNATHAL_SEZ"],
+            ["CIRCADIAN_PACEMAKER", "SUPERIOR_L"], ["CIRCADIAN_PACEMAKER", "SUPERIOR_R"],
+            ["VENTROLAT_L", "SUPERIOR_L"], ["VENTROLAT_R", "SUPERIOR_R"],
+            ["VENTROLAT_L", "DN_TAKEOFF"], ["VENTROLAT_R", "DN_TAKEOFF"]
+        ];
+
+        let currentMode = 'CAVERNA';
+        let cavernaDetailsOpen = false;
+        let currentLiveBody = null;
+        let isReplaying = false;
+        let replayStartTime = 0;
+        let replayDurationMs = 2200;
+        let replayProgress = 0.0;
+        let activeReplayData = null;
+        let currentTraceKey = 'looming';
+
+        const canvas = document.getElementById('lethe-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            syncOperatorDockLayout();
+            drawLethe();
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        async function init() {
+            resizeCanvas();
+            initInteractionAuth();
+            pollState();
+            setInterval(pollState, 5000);
+            requestAnimationFrame(renderLoop);
+        }
+
+        async function pollState() {
+            try {
+                const res = await fetch('/api/lethe/state');
+                const data = await res.json();
+                const dot = document.getElementById('status-dot');
+                const txt = document.getElementById('status-text');
+                if (data.sigil_body && data.sigil_body.engine === 'pinocchio') {
+                    currentLiveBody = data.sigil_body;
+                }
+                if (data.quiescent && !isReplaying) {
+                    dot.className = 'status-dot quiescent';
+                    txt.textContent = 'FLYNN · LIVE';
+                    document.getElementById('contact-state-txt').textContent = 'QUIESCENTE · SEM ESTÍMULO';
+                    document.getElementById('contact-action-txt').style.display = 'none';
+                }
+            } catch (e) {
+                console.warn("Poll state:", e);
+            }
+        }
+
+        let currentCavernaState = null;
+        let currentTrajectory = null;
+        let selectedVariable = 'sweet';
+        let selectedActionId = 1;
+        let actionGrammar = {};
+        let riverParticles = [];
+
+        // Initialize river drifting embers
+        for (let i = 0; i < 45; i++) {
+            riverParticles.push({
+                x: (Math.random() - 0.5) * 160,
+                y: (Math.random() - 0.5) * 600,
+                speed: 0.6 + Math.random() * 1.2,
+                size: 1.0 + Math.random() * 2.2,
+                alpha: 0.2 + Math.random() * 0.6
+            });
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            document.getElementById('btn-mode-contact').classList.toggle('active', mode === 'CONTACT');
+            document.getElementById('btn-mode-lab').classList.toggle('active', mode === 'LAB');
+            document.getElementById('btn-mode-caverna').classList.toggle('active', mode === 'CAVERNA');
+            closeModeMenu();
+            document.getElementById('lab-panel').classList.toggle('hidden', mode !== 'LAB');
+            document.getElementById('caverna-panel').classList.toggle('hidden', mode !== 'CAVERNA' || !cavernaDetailsOpen);
+            const stageContainer = document.querySelector('.stage-container');
+            stageContainer?.classList.toggle('caverna-focus', mode === 'CAVERNA');
+            stageContainer?.classList.toggle('caverna-details-open', mode === 'CAVERNA' && cavernaDetailsOpen);
+            document.getElementById('operator-dock')?.classList.toggle('hidden', mode !== 'CAVERNA');
+            setOperatorDockOpen(false);
+            const bodyPresenceBadge = document.getElementById('body-presence-badge');
+            if (bodyPresenceBadge) bodyPresenceBadge.style.display = 'none';
+            
+            const badge = document.getElementById('hud-source-badge');
+            if (badge) {
+                badge.textContent = mode === 'CAVERNA' ? 'UMWELT CAVERNA' : 'REPLAY CIENTÍFICO';
+            }
+            if (mode === 'CAVERNA') {
+                refreshCavernaState();
+            }
+            setTimeout(resizeCanvas, 50);
+        }
+
+        function setOperatorDockOpen(open) {
+            const dock = document.getElementById('operator-dock');
+            const toggle = document.getElementById('operator-dock-toggle');
+            if (!dock || !toggle) return;
+            dock.classList.toggle('operator-dock-open', Boolean(open));
+            toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            toggle.textContent = open ? 'Fechar controles' : 'Controles';
+            syncOperatorDockLayout();
+        }
+
+        function toggleOperatorDock() {
+            const dock = document.getElementById('operator-dock');
+            if (!dock) return;
+            setOperatorDockOpen(!dock.classList.contains('operator-dock-open'));
+        }
+
+        function syncOperatorDockLayout() {
+            const dock = document.getElementById('operator-dock');
+            const stage = document.querySelector('.stage-container');
+            const situation = document.getElementById('flynn-situation-card');
+            if (!dock || !stage || !situation || dock.classList.contains('hidden')) return;
+            const stageRect = stage.getBoundingClientRect();
+            const dockRect = dock.getBoundingClientRect();
+            const gap = 12;
+            const minimumBottom = window.innerWidth <= 760 ? 78 : 190;
+            const safeBottom = Math.max(minimumBottom, stageRect.bottom - dockRect.top + gap);
+            situation.style.bottom = `${Math.ceil(safeBottom)}px`;
+        }
+
+        function toggleCavernaDetails() {
+            cavernaDetailsOpen = !cavernaDetailsOpen;
+            document.getElementById('caverna-panel').classList.toggle('hidden', currentMode !== 'CAVERNA' || !cavernaDetailsOpen);
+            document.querySelector('.stage-container')?.classList.toggle('caverna-details-open', currentMode === 'CAVERNA' && cavernaDetailsOpen);
+            const detailsButton = document.getElementById('btn-caverna-details');
+            if (detailsButton) detailsButton.textContent = cavernaDetailsOpen ? 'FECHAR DETALHES' : 'DETALHES DA CAVERNA';
+            closeModeMenu();
+            if (cavernaDetailsOpen) refreshCavernaState();
+            setTimeout(resizeCanvas, 50);
+        }
+
+        function toggleModeMenu() {
+            const menu = document.getElementById('mode-menu');
+            const toggle = document.getElementById('mode-menu-toggle');
+            if (!menu || !toggle) return;
+            const open = menu.classList.toggle('open');
+            toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        }
+
+        function closeModeMenu() {
+            const menu = document.getElementById('mode-menu');
+            const toggle = document.getElementById('mode-menu-toggle');
+            if (!menu || !toggle) return;
+            menu.classList.remove('open');
+            toggle.setAttribute('aria-expanded', 'false');
+        }
+
+        async function refreshCavernaState() {
+            try {
+                const res = await fetch('/api/caverna/state');
+                const data = await res.json();
+                if (data.status === 'ok') {
+                    currentCavernaState = data.world;
+                    if (data.neural_state?.sigil_body?.engine === 'pinocchio') {
+                        currentLiveBody = data.neural_state.sigil_body;
+                    }
+                    actionGrammar = data.action_grammar || {};
+                    try {
+                        const trajectoryRes = await fetch('/api/trajectory/state?window_sec=300&limit=600');
+                        currentTrajectory = trajectoryRes.ok ? await trajectoryRes.json() : null;
+                    } catch (trajectoryError) {
+                        currentTrajectory = null;
+                    }
+                    data.trajectory = currentTrajectory;
+                    updateCavernaUI(data);
+                }
+            } catch (e) {
+                console.warn('Caverna state fetch error:', e);
+            }
+        }
+
+        // Human interaction session helpers. No technical credentials are kept in the browser.
+        let interactionCsrf = null;
+
+        function isInteractionAuthenticated() {
+            return !!interactionCsrf;
+        }
+
+        function toggleInteractionModal(forceOpen) {
+            const modal = document.getElementById('interaction-modal');
+            if (!modal) return;
+            const isHidden = modal.style.display === 'none' || modal.style.display === '';
+            const shouldOpen = (forceOpen !== undefined) ? forceOpen : isHidden;
+            modal.style.display = shouldOpen ? 'flex' : 'none';
+            const msg = document.getElementById('interaction-modal-msg');
+            if (msg) msg.style.display = 'none';
+            if (shouldOpen) {
+                const input = document.getElementById('interaction-passphrase-input');
+                if (input && !isInteractionAuthenticated()) {
+                    input.value = '';
+                    input.focus();
+                }
+            }
+        }
+
+        function setInteractionUIState(authenticated) {
+            const dot = document.getElementById('interaction-dot');
+            const txt = document.getElementById('interaction-text');
+            const pill = document.getElementById('interaction-pill');
+            const logoutBtn = document.getElementById('btn-interaction-logout');
+            const desc = document.getElementById('interaction-modal-desc');
+
+            if (authenticated) {
+                if (pill) {
+                    pill.className = 'status-pill operator-unlocked';
+                }
+                if (dot) {
+                    dot.style.background = '#22c55e';
+                    dot.style.boxShadow = '0 0 6px #22c55e';
+                }
+                if (txt) {
+                    txt.style.color = '#22c55e';
+                    txt.innerText = 'HUMANO: ON';
+                }
+                if (logoutBtn) logoutBtn.style.display = 'block';
+                if (desc) desc.innerText = 'Sessão de interação autorizada. Ações humanas na Caverna estão disponíveis.';
+            } else {
+                if (pill) {
+                    pill.className = 'status-pill operator-locked';
+                }
+                if (dot) {
+                    dot.style.background = '#ef4444';
+                    dot.style.boxShadow = '0 0 6px #ef4444';
+                }
+                if (txt) {
+                    txt.style.color = '#ef4444';
+                    txt.innerText = 'HUMANO: OFF';
+                }
+                if (logoutBtn) logoutBtn.style.display = 'none';
+                if (desc) desc.innerText = 'Digite a palavra ou frase de acesso para iniciar uma sessão de interação humana na Caverna.';
+            }
+
+            document.querySelectorAll('.op-btn').forEach(btn => {
+                btn.disabled = !authenticated;
+                btn.style.opacity = authenticated ? '1.0' : '0.45';
+                btn.style.cursor = authenticated ? 'pointer' : 'not-allowed';
+                btn.title = authenticated ? '' : 'Interação bloqueada';
+            });
+        }
+
+        async function submitInteractionPassphrase() {
+            const input = document.getElementById('interaction-passphrase-input');
+            const msg = document.getElementById('interaction-modal-msg');
+            if (!input) return;
+            const passphrase = input.value;
+            if (!passphrase) {
+                if (msg) {
+                    msg.innerText = 'Digite a palavra ou frase de acesso.';
+                    msg.style.display = 'block';
+                }
+                return;
+            }
+            try {
+                const res = await fetch('/api/auth/interaction/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        passphrase,
+                        remember_device: document.getElementById('interaction-remember-device')?.checked === true
+                    })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok && data.authenticated && data.csrf_token) {
+                    interactionCsrf = data.csrf_token;
+                    input.value = '';
+                    setInteractionUIState(true);
+                    toggleInteractionModal(false);
+                } else {
+                    if (msg) {
+                        msg.innerText = res.status === 429 ? 'Muitas tentativas. Aguarde e tente novamente.' : 'Acesso não autorizado.';
+                        msg.style.display = 'block';
+                    }
+                }
+            } catch (e) {
+                if (msg) {
+                    msg.innerText = 'Não foi possível iniciar a sessão.';
+                    msg.style.display = 'block';
+                }
+            }
+        }
+
+        async function logoutInteraction() {
+            if (!interactionCsrf) return;
+            await fetch('/api/auth/interaction/logout', {
+                method: 'POST',
+                headers: { 'X-Flynn-CSRF': interactionCsrf },
+                credentials: 'same-origin'
+            }).catch(() => {});
+            interactionCsrf = null;
+            setInteractionUIState(false);
+            toggleInteractionModal(false);
+        }
+
+        async function initInteractionAuth() {
+            try {
+                const res = await fetch('/api/auth/interaction/session', { credentials: 'same-origin' });
+                const data = await res.json();
+                if (res.ok && data.authenticated && data.csrf_token) {
+                    interactionCsrf = data.csrf_token;
+                    setInteractionUIState(true);
+                } else {
+                    setInteractionUIState(false);
+                }
+            } catch (e) {
+                setInteractionUIState(false);
+            }
+        }
+
+        async function interactionFetch(url, options = {}) {
+            if (!interactionCsrf) {
+                setInteractionUIState(false);
+                toggleInteractionModal(true);
+                throw new Error('Unauthorized: interaction session required');
+            }
+            const headers = new Headers(options.headers || {});
+            headers.set('X-Flynn-CSRF', interactionCsrf);
+            const fetchOptions = {
+                ...options,
+                headers,
+                credentials: 'same-origin'
+            };
+            const response = await fetch(url, fetchOptions);
+            if (response.status === 401 || response.status === 403) {
+                interactionCsrf = null;
+                setInteractionUIState(false);
+                toggleInteractionModal(true);
+                throw new Error('Unauthorized: interaction session invalid');
+            }
+            return response;
+        }
+
+        function selectVariable(v) {
+            selectedVariable = v;
+            document.querySelectorAll('.var-tab-btn').forEach(b => {
+                b.classList.toggle('active', b.id === `tab-${v}`);
+            });
+            renderGrammarButtons();
+            if (isInteractionAuthenticated()) {
+                sendHumanOp('select_window');
+            }
+        }
+
+        function selectActionGrammar(id) {
+            selectedActionId = id;
+            document.querySelectorAll('.action-grammar-btn').forEach(b => {
+                b.classList.toggle('active', b.getAttribute('data-action-id') == id);
+            });
+            if (isInteractionAuthenticated()) {
+                sendHumanOp('select_window');
+            }
+        }
+
+        function renderGrammarButtons() {
+            const container = document.getElementById('grammar-buttons-container');
+            if (!container) return;
+            container.innerHTML = '';
+            const list = actionGrammar[selectedVariable] || [];
+            list.forEach(item => {
+                const btn = document.createElement('button');
+                btn.className = `action-grammar-btn ${item.id === selectedActionId ? 'active' : ''}`;
+                btn.setAttribute('data-action-id', item.id);
+                btn.onclick = () => selectActionGrammar(item.id);
+                btn.innerHTML = `<span><strong>${item.id}.</strong> ${item.label}</span> <span style="font-size: 0.65rem; color: var(--text-muted)">[Ação ${item.id}]</span>`;
+                container.appendChild(btn);
+            });
+        }
+
+        async function sendHumanOp(opType) {
+            try {
+                const res = await interactionFetch('/api/caverna/human/action', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        action_type: opType,
+                        variable: selectedVariable,
+                        action_id: selectedActionId,
+                        level: 'high'
+                    })
+                });
+                const data = await res.json();
+                if (data.status === 'ok') {
+                    currentCavernaState = data.world;
+                    refreshCavernaState();
+                }
+            } catch (e) {
+                console.error('Human op error:', e);
+            }
+        }
+
+        function normalizeHomeostasisFraction(value) {
+            return Number.isFinite(value) && value >= 0 && value <= 1 ? value : null;
+        }
+
+        function resourceState(resource) {
+            if (!resource) return 'AUSENTE';
+            if (resource.consumed || resource.consumed_at) return 'CONSUMIDO';
+            if (resource.contact) return 'CONTATO';
+            if (resource.available) return 'DISPONÍVEL';
+            if (resource.offered) return 'OFERTADO';
+            return 'AUSENTE';
+        }
+
+        function formatWorldPoint(point) {
+            return Array.isArray(point) ? `[${point.map(value => Number(value).toFixed(3)).join(', ')}]` : '—';
+        }
+
+        function formatResourceValue(resource, state) {
+            const distance = Number(resource?.distance_to_body);
+            if (Number.isFinite(distance)) return `d=${distance.toFixed(3)} u · ${state}`;
+            return state;
+        }
+
+        function updateFlynnSituation(data, homeostasis, trajectory) {
+            const world = data?.world || {};
+            const body = data?.body || {};
+            const sweet = world.sweet || {};
+            const energy = normalizeHomeostasisFraction(homeostasis?.energy_reserve);
+            const drive = normalizeHomeostasisFraction(homeostasis?.feeding_drive);
+            const capacity = normalizeHomeostasisFraction(trajectory?.current?.body?.body_capacity ?? homeostasis?.body_capacity ?? energy);
+            const movementClass = ['LOCOMOTION', 'BODY_MOTION_WITHOUT_LOCOMOTION', 'REST'].includes(body.movement_class)
+                ? body.movement_class
+                : 'UNKNOWN';
+            const displacement = Array.isArray(body.world_position_delta)
+                ? body.world_position_delta
+                : (Array.isArray(body.world_displacement) ? body.world_displacement : []);
+            const displacementDistance = Number.isFinite(Number(body.world_position_delta_magnitude))
+                ? Number(body.world_position_delta_magnitude)
+                : null;
+            const sweetState = resourceState(sweet);
+            const situationState = sweetState === 'CONSUMIDO'
+                ? 'SWEET · CONSUMIDO'
+                : sweetState === 'CONTATO'
+                    ? 'CONTATO · SWEET'
+                    : movementClass === 'LOCOMOTION'
+                        ? 'FLYNN ESTÁ SE DESLOCANDO'
+                        : movementClass === 'BODY_MOTION_WITHOUT_LOCOMOTION'
+                            ? 'MOVIMENTO CORPORAL · SEM LOCOMOÇÃO'
+                            : movementClass === 'REST'
+                                ? 'QUIESCENTE'
+                                : 'MOVIMENTO INDISPONÍVEL';
+            const situationStateType = sweetState === 'CONSUMIDO'
+                ? 'consumed'
+                : sweetState === 'CONTATO'
+                    ? 'contact'
+                    : movementClass === 'LOCOMOTION'
+                        ? 'moving'
+                        : movementClass === 'BODY_MOTION_WITHOUT_LOCOMOTION'
+                            ? 'body-active'
+                            : movementClass === 'REST' ? 'quiet' : 'unknown';
+            const driveLabel = drive == null ? '—' : `${Math.round(drive * 100)}%${drive >= 0.7 ? ' · ALTA' : drive >= 0.3 ? ' · MÉDIA' : ' · BAIXA'}`;
+            const setText = (id, value) => {
+                const element = document.getElementById(id);
+                if (element) element.textContent = value;
+            };
+
+            const situationStateElement = document.getElementById('situation-state');
+            if (situationStateElement) {
+                situationStateElement.textContent = situationState;
+                situationStateElement.dataset.state = situationStateType;
+            }
+            setText('situation-energy', energy == null ? '—' : `${Math.round(energy * 100)}%`);
+            setText('situation-drive', driveLabel);
+            setText('situation-capacity', capacity == null ? '—' : `${Math.round(capacity * 100)}%`);
+            setText('situation-sweet-state', formatResourceValue(sweet, sweetState));
+            const distance = Number(sweet.distance_to_body);
+            const contact = sweet.contact ? 'CONTACT=YES' : 'CONTACT=NO';
+            const observation = sweetState === 'CONSUMIDO'
+                ? 'SWEET deixou de estar disponível após contato físico. Os valores internos vêm do residente.'
+                : movementClass === 'UNKNOWN'
+                    ? 'Classificação de movimento indisponível no residente.'
+                    : movementClass === 'BODY_MOTION_WITHOUT_LOCOMOTION'
+                        ? `Corpo ativo; posição no mundo estável · ${Number.isFinite(distance) ? `SWEET está ${sweetState.toLowerCase()} a ${distance.toFixed(3)} u.` : 'distância indisponível'}`
+                        : movementClass === 'LOCOMOTION'
+                            ? `Deslocamento no mundo observado${Number.isFinite(displacementDistance) ? ` · Δ=${displacementDistance.toFixed(6)} u` : ''}. SWEET ${sweetState.toLowerCase()} · ${contact}.`
+                            : Number.isFinite(distance)
+                                ? `Sem deslocamento no mundo · SWEET está ${sweetState.toLowerCase()} a ${distance.toFixed(3)} u · ${contact}.`
+                                : 'Distância e contato ainda não publicados pelo residente.';
+            setText('situation-observation', observation);
+        }
+
+        function updateTechnicalDetails(data, trajectory) {
+            const world = data?.world || {};
+            const body = data?.body || {};
+            const current = trajectory?.current || {};
+            const currentBody = current.body || {};
+            const currentNeural = current.neural || {};
+            const sweet = world.sweet || {};
+            const setText = (id, value) => {
+                const element = document.getElementById(id);
+                if (element) element.textContent = value;
+            };
+            const q = Array.isArray(currentBody.q) ? currentBody.q : [];
+            const qdot = Array.isArray(currentBody.qdot) ? currentBody.qdot : [];
+            const recentEvent = trajectory?.recent_events?.[trajectory.recent_events.length - 1];
+            const latestEvent = data?.recent_events?.[0];
+            setText('technical-body-position', formatWorldPoint(world.body_position || body.position));
+            setText('technical-q-summary', `q[${q.length}] · qdot[${qdot.length}]`);
+            setText('technical-dn-activity', currentNeural.active_dn_count == null ? '—' : String(currentNeural.active_dn_count));
+            setText('technical-displacement', formatWorldPoint(body.world_displacement));
+            setText('technical-resource-id', sweet.resource_id || 'sweet');
+            setText('technical-resource-position', formatWorldPoint(sweet.position));
+            setText('technical-distance-contact', `${Number.isFinite(Number(sweet.distance_to_body)) ? Number(sweet.distance_to_body).toFixed(6) : '—'} u / ${Number(sweet.contact_radius ?? 0).toFixed(3)} u`);
+            setText('technical-contact-consumed', `${sweet.contact ? 'YES' : 'NO'} / ${sweet.consumed ? 'YES' : 'NO'}`);
+            setText('technical-event-ids', `traj=${recentEvent?.event_id || '—'} · caverna=${latestEvent?.event_id || '—'}`);
+            setText('technical-provenance', currentBody.geometry_summary?.body_id || currentBody.provenance?.body || body.body_state_mutation_owner || 'resident');
+            const jsonElement = document.getElementById('technical-json');
+            if (jsonElement) {
+                jsonElement.textContent = JSON.stringify({
+                    q,
+                    qdot,
+                    requested_actuation: currentBody.requested_actuation || [],
+                    executed_actuation: currentBody.executed_actuation || [],
+                    resource: sweet,
+                    world_position_delta: body.world_position_delta || body.world_displacement || [],
+                    world_position_delta_magnitude: body.world_position_delta_magnitude ?? null,
+                    body_geometry_delta: body.body_geometry_delta ?? null,
+                    movement_class: body.movement_class || null,
+                    provenance: {
+                        body: body.body_state_mutation_owner,
+                        world: body.movement_class ? 'WORLD_POSITION_DELTA' : world.locomotion_reference,
+                        trajectory: currentBody.geometry_summary?.centroid_definition
+                    }
+                }, null, 2);
+            }
+        }
+
+        function humanEventSummary(event) {
+            const action = String(event?.action || '');
+            const distance = Number(event?.body?.distance);
+            if (event?.event_type === 'BODY' || event?.trajectory_event_id) {
+                return Number.isFinite(distance) && distance > 0.00001
+                    ? `Flynn deslocou-se ${distance.toFixed(5)} u no mundo.`
+                    : 'Atividade corporal registrada; locomoção não comprovada.';
+            }
+            if (action === 'sweet=consumed' || event?.event_type === 'INGESTION_EVENT') return 'SWEET foi consumido.';
+            if (event?.event_type === 'INTERNAL_STATE_CHANGE' && action.startsWith('energy ')) return `Energia: ${action.replace(/^energy\s+/, '')}.`;
+            if (event?.event_type === 'OFFER' && event?.variable === 'sweet') return 'Oferta humana: SWEET disponível no Umwelt.';
+            if (event?.event_type === 'FULFILL' && event?.variable === 'sweet') return 'SWEET disponibilizado no Umwelt.';
+            if (event?.event_type === 'WORLD_STATE_CHANGE' && event?.variable === 'sweet') return 'Estado de SWEET atualizado no Umwelt.';
+            return action || `${event?.event_type || 'Evento'} · ${event?.variable || '—'}`;
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
+        }
+
+        function updateCavernaUI(data) {
+            const w = data?.world || {};
+
+            // Homeostasis update
+            const homeostasis = data?.homeostasis || {};
+            const en = normalizeHomeostasisFraction(homeostasis.energy_reserve);
+            const dr = normalizeHomeostasisFraction(homeostasis.feeding_drive);
+            const enValElem = document.getElementById('energy-reserve-val');
+            const drValElem = document.getElementById('feeding-drive-val');
+            const capacityValElem = document.getElementById('body-capacity-val');
+            const enLblElem = document.getElementById('energy-status-label');
+            if (enValElem) {
+                enValElem.textContent = en == null ? '—' : `${Math.round(en * 100)}%`;
+                enValElem.style.color = en == null ? '#94a3b8' : '#ffaa33';
+            }
+            if (drValElem) {
+                drValElem.textContent = dr == null ? '—' : dr.toFixed(2);
+                drValElem.style.color = dr == null ? '#94a3b8' : '#f97316';
+            }
+            const trajectory = data?.trajectory || currentTrajectory;
+            const trajectoryCapacity = normalizeHomeostasisFraction(trajectory?.current?.body?.body_capacity ?? homeostasis.body_capacity ?? en);
+            if (capacityValElem) {
+                capacityValElem.textContent = trajectoryCapacity == null ? '—' : `${Math.round(trajectoryCapacity * 100)}%`;
+                capacityValElem.style.color = trajectoryCapacity == null ? '#94a3b8' : '#22d3ee';
+            }
+            if (enLblElem) {
+                if (en == null) {
+                    enLblElem.textContent = '(INDISPONÍVEL)';
+                    enLblElem.style.color = '#94a3b8';
+                } else if (en >= 0.70) {
+                    enLblElem.textContent = '(SACIADA)';
+                    enLblElem.style.color = '#10b981';
+                } else if (en >= 0.30) {
+                    enLblElem.textContent = '(VIGÍLIA)';
+                    enLblElem.style.color = '#ffaa33';
+                } else {
+                    enLblElem.textContent = '(FOME / DRIVE)';
+                    enLblElem.style.color = '#ef4444';
+                }
+            }
+
+            const situationTrajectory = data?.trajectory || currentTrajectory;
+            updateFlynnSituation(data, homeostasis, situationTrajectory);
+            updateTechnicalDetails(data, situationTrajectory);
+
+            // Sweet
+            const sweetState = resourceState(w.sweet);
+            document.getElementById('card-sweet')?.classList.toggle('world-card-active', sweetState !== 'AUSENTE');
+            document.getElementById('badge-sweet').className = `world-card-badge ${sweetState === 'AUSENTE' ? 'badge-off' : 'badge-active'}`;
+            document.getElementById('badge-sweet').textContent = sweetState;
+            document.getElementById('val-sweet').textContent = formatResourceValue(w.sweet, sweetState);
+
+            // Bitter
+            const bitterState = resourceState(w.bitter);
+            document.getElementById('card-bitter')?.classList.toggle('world-card-active', bitterState !== 'AUSENTE');
+            document.getElementById('badge-bitter').className = `world-card-badge ${bitterState === 'AUSENTE' ? 'badge-off' : 'badge-active'}`;
+            document.getElementById('badge-bitter').textContent = bitterState;
+            document.getElementById('val-bitter').textContent = formatResourceValue(w.bitter, bitterState);
+
+            // Wind
+            const wLvl = w.wind ? w.wind.level : 'off';
+            const wOff = w.wind ? w.wind.offered_level : 'none';
+            document.getElementById('card-wind')?.classList.toggle('world-card-active', wLvl !== 'off' || wOff !== 'none');
+            document.getElementById('badge-wind').className = `world-card-badge ${wLvl !== 'off' ? 'badge-active' : 'badge-off'}`;
+            document.getElementById('badge-wind').textContent = wLvl.toUpperCase();
+            document.getElementById('val-wind').textContent = wLvl === 'high' ? '2.5 m/s (FORTE)' : (wLvl === 'low' ? '0.8 m/s (FRACO)' : (wOff !== 'none' ? `OFERTA ${wOff.toUpperCase()}` : '0 m/s'));
+
+            // Sound
+            const sLvl = w.sound ? w.sound.level : 'off';
+            const sOff = w.sound ? w.sound.offered_level : 'none';
+            document.getElementById('card-sound')?.classList.toggle('world-card-active', sLvl !== 'off' || sOff !== 'none');
+            document.getElementById('badge-sound').className = `world-card-badge ${sLvl !== 'off' ? 'badge-active' : 'badge-off'}`;
+            document.getElementById('badge-sound').textContent = sLvl === 'off' ? 'SILÊNCIO' : sLvl.toUpperCase();
+            document.getElementById('val-sound').textContent = sLvl === 'high' ? '75 dB (CANÇÃO)' : (sLvl === 'low' ? '45 dB (TOM)' : (sOff !== 'none' ? `OFERTA ${sOff.toUpperCase()}` : '0 dB'));
+
+            // Looming
+            const lSt = w.looming ? w.looming.state : 'none';
+            const lOff = w.looming && w.looming.offered;
+            document.getElementById('card-looming')?.classList.toggle('world-card-active', lSt !== 'none' || lOff);
+            document.getElementById('badge-looming').className = `world-card-badge ${lSt !== 'none' ? 'badge-active' : 'badge-off'}`;
+            document.getElementById('badge-looming').textContent = lSt === 'none' ? (lOff ? 'OFERTADO' : 'REPOUSO') : 'AMEAÇA ATIVA';
+            document.getElementById('val-looming').textContent = lSt !== 'none' ? 'EXPANSÃO ÓPTICA' : (lOff ? 'OFERTA PENDENTE' : 'Inativo');
+
+            // Contact
+            const ctAvail = w.contact && w.contact.available;
+            const ctOff = w.contact && w.contact.offered;
+            document.getElementById('card-contact')?.classList.toggle('world-card-active', ctAvail || ctOff);
+            document.getElementById('badge-contact').className = `world-card-badge ${ctAvail ? 'badge-active' : 'badge-off'}`;
+            document.getElementById('badge-contact').textContent = ctAvail ? 'PRESENTE' : (ctOff ? 'OFERTADO' : 'AUSENTE');
+            document.getElementById('val-contact').textContent = ctAvail ? 'TÁTIL ATIVO' : (ctOff ? 'OFERTA PENDENTE' : 'Inativo');
+
+            // Window Status
+            const win = w.window || {};
+            const pill = document.getElementById('window-status-pill');
+            if (win.pending_flynn_request) {
+                pill.textContent = `PEDIDO FLYNN: ${win.pending_flynn_request.variable.toUpperCase()}`;
+                pill.style.color = '#ff4411';
+            } else if (win.pending_human_offer) {
+                pill.textContent = `OFERTA HUMANA: ${win.pending_human_offer.variable.toUpperCase()}`;
+                pill.style.color = '#ffaa33';
+            } else {
+                pill.textContent = 'LIMIAR EM PAZ';
+                pill.style.color = '#10b981';
+            }
+
+            renderGrammarButtons();
+
+            const trajectorySummary = trajectory?.summary || {};
+            const trajectoryCurrent = trajectory?.current || {};
+            const trajectoryPos = trajectorySummary.current_position;
+            const positionEl = document.getElementById('trajectory-position');
+            const distanceEl = document.getElementById('trajectory-distance');
+            const dnsEl = document.getElementById('trajectory-dns');
+            if (positionEl) positionEl.textContent = trajectoryPos ? `[${trajectoryPos.map(v => Number(v).toFixed(3)).join(', ')}]` : '—';
+            if (distanceEl) distanceEl.textContent = trajectorySummary.total_distance == null ? '—' : `${Number(trajectorySummary.total_distance).toFixed(3)} u`;
+            if (dnsEl) dnsEl.textContent = trajectoryCurrent.neural?.active_dn_count == null ? '—' : Number(trajectoryCurrent.neural.active_dn_count).toLocaleString('pt-BR');
+            const trajectoryEventsEl = document.getElementById('trajectory-recent-events');
+            const bodyPosition = Array.isArray(w.body_position) ? w.body_position : (Array.isArray(data?.body?.position) ? data.body.position : null);
+            const sweetPosition = Array.isArray(w.sweet?.position) ? w.sweet.position : null;
+            const sweetDistance = Number.isFinite(Number(w.sweet?.distance_to_body)) ? Number(w.sweet.distance_to_body).toFixed(3) : '—';
+            const sweetContact = w.sweet?.contact ? 'CONTACT=YES' : 'CONTACT=NO';
+            const worldSummaryEl = document.getElementById('world-position-summary');
+            if (worldSummaryEl) {
+                const fmt = p => p ? `[${p.map(v => Number(v).toFixed(3)).join(', ')}]` : '—';
+                worldSummaryEl.textContent = `UMWELT: Flynn ${fmt(bodyPosition)} · doce ${fmt(sweetPosition)} · d=${sweetDistance}u · ${sweetContact}`;
+            }
+            if (trajectoryEventsEl) {
+                const events = (trajectory?.recent_events || []).slice(-3).reverse();
+                trajectoryEventsEl.textContent = events.length
+                    ? events.map(ev => `MOV ${Number(ev.body?.distance || 0).toFixed(5)}u · ${ev.wall_time ? new Date(ev.wall_time).toLocaleString('pt-BR', {timeZone: 'America/Sao_Paulo', dateStyle: 'short', timeStyle: 'medium'}) : ''}`).join('  |  ')
+                    : 'Nenhum deslocamento acima da resolução nesta janela.';
+            }
+
+            // Causal journal: concise factual summary first, raw provenance on demand.
+            const jContainer = document.getElementById('event-journal-container');
+            if (jContainer && data.recent_events) {
+                jContainer.innerHTML = '';
+                const trajectoryJournalEvents = (trajectory?.recent_events || []).slice(-6).map(ev => ({
+                    event_type: 'BODY',
+                    variable: 'PINOCCHIO',
+                    action: `deslocamento Δ=${Number(ev.body?.distance || 0).toFixed(5)}u · direção=${Number(ev.body?.direction_degrees || 0).toFixed(1)}° · capacidade=${Math.round(Number(ev.body?.body_capacity ?? 0) * 100)}% · DNs ativos=${Number(ev.neural?.active_dn_count || 0)}`,
+                    source: 'flynn',
+                    origin_type: 'resident_brain',
+                    timestamp: ev.wall_time,
+                    trajectory_event_id: ev.event_id
+                })).reverse();
+                const journalEvents = [...trajectoryJournalEvents, ...data.recent_events].slice(0, 30);
+                journalEvents.forEach(ev => {
+                    const d = document.createElement('details');
+                    d.className = 'journal-item';
+
+                    let originBadge = '<span style="color: #64748b; font-weight: bold;">[UNKNOWN]</span>';
+                    if (ev.origin_type === 'resident_brain' || ev.source === 'flynn') {
+                        originBadge = '<span style="color: #ffaa33; font-weight: bold;">[RESIDENT BRAIN]</span>';
+                    } else if (ev.origin_type === 'human_operator' || ev.source === 'human') {
+                        originBadge = '<span style="color: #38bdf8; font-weight: bold;">[HUMAN OPERATOR]</span>';
+                    } else if (ev.origin_type === 'diagnostic_injection' || ev.source === 'diagnostic') {
+                        originBadge = '<span style="color: #c084fc; font-weight: bold;">[DIAGNOSTIC INJECTION]</span>';
+                    }
+
+                    const eventTimestamp = ev.timestamp || ev.created_at;
+                    const timeStr = eventTimestamp ? (() => {
+                        const eventDate = new Date(eventTimestamp);
+                        if (Number.isNaN(eventDate.getTime())) return '';
+                        const datePart = eventDate.toLocaleDateString('pt-BR', {
+                            timeZone: 'America/Sao_Paulo',
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric'
+                        });
+                        const timePart = eventDate.toLocaleTimeString('pt-BR', {
+                            timeZone: 'America/Sao_Paulo',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                            hour12: false
+                        });
+                        return `${datePart} ${timePart}`;
+                    })() : '';
+
+                    const technicalPayload = {
+                        event_id: ev.event_id ?? ev.trajectory_event_id ?? null,
+                        trajectory_event_id: ev.trajectory_event_id ?? null,
+                        event_type: ev.event_type ?? null,
+                        variable: ev.variable ?? null,
+                        source: ev.source ?? null,
+                        origin_type: ev.origin_type ?? null,
+                        action: ev.action ?? null,
+                        provenance: ev.provenance ?? ev.context?.provenance ?? null,
+                        world_before: ev.world_before ?? null,
+                        world_after: ev.world_after ?? null,
+                        measured_output: ev.measured_output ?? null
+                    };
+                    d.innerHTML = `
+                        <summary>
+                            <span class="journal-meta">
+                                <span>${originBadge} ${escapeHtml(timeStr)}</span>
+                                <span>${escapeHtml(humanEventSummary(ev))}</span>
+                            </span>
+                        </summary>
+                        <div class="journal-technical">
+                            <div>${escapeHtml(ev.event_type || 'EVENT')} · ${escapeHtml(ev.variable || '—')} · ${escapeHtml(ev.action || '—')}</div>
+                            <pre>${escapeHtml(JSON.stringify(technicalPayload, null, 2))}</pre>
+                        </div>
+                    `;
+                    jContainer.appendChild(d);
+                });
+            }
+            syncOperatorDockLayout();
+        }
+
+        function onTraceSelectChange() {
+            currentTraceKey = document.getElementById('trace-select').value;
+        }
+
+        async function triggerReplay() {
+            currentTraceKey = document.getElementById('trace-select').value;
+            try {
+                const res = await fetch(`/api/lethe/replay/${currentTraceKey}`);
+                activeReplayData = await res.json();
+                isReplaying = true;
+                replayStartTime = performance.now();
+                replayProgress = 0.0;
+                updateLabMetrics(activeReplayData);
+                document.getElementById('contact-state-txt').textContent = `REPLAY: ${activeReplayData.modality.toUpperCase()}`;
+                document.getElementById('contact-action-txt').style.display = 'inline';
+                document.getElementById('status-dot').className = 'status-dot active';
+                document.getElementById('status-text').textContent = 'REPLAY ATIVO';
+            } catch (e) {
+                console.error("Replay fetch error:", e);
+            }
+        }
+
+        function updateLabMetrics(data) {
+            document.getElementById('lab-modality-badge').textContent = data.modality.toUpperCase();
+            document.getElementById('lab-total-spikes').textContent = data.total_brain_spikes.toLocaleString();
+            document.getElementById('lab-active-neurons').textContent = data.active_brain_neurons.toLocaleString();
+            document.getElementById('lab-duration').textContent = `${data.duration_ms} ms`;
+            document.getElementById('lab-seed').textContent = data.seed;
+
+            const cp = data.channels_peak || {};
+            setBar('takeoff', cp.escape_takeoff || 0.0);
+            setBar('longmode', cp.escape_long_mode || 0.0);
+            setBar('proboscis', data.proboscis_drive_peak || 0.0);
+            setBar('turn', cp.turn || 0.0);
+            setBar('backward', cp.backward_walk || 0.0);
+            setBar('stop', cp.stop_freeze || 0.0);
+
+            const candDiv = document.getElementById('lab-candidates-container');
+            candDiv.innerHTML = '';
+            const cands = data.candidates || {};
+            const unks = data.unknowns || {};
+
+            let hasExtra = false;
+            for (const [k, v] of Object.entries(cands)) {
+                hasExtra = true;
+                const d = document.createElement('div');
+                d.innerHTML = `<strong>${k}</strong> (${v.hz} Hz) — <em>${v.role}</em> <span class="candidate-tag">${v.evidence} (${v.citation})</span>`;
+                candDiv.appendChild(d);
+            }
+            for (const [k, v] of Object.entries(unks)) {
+                hasExtra = true;
+                const d = document.createElement('div');
+                d.innerHTML = `<strong>${v.label}</strong> [${k}] (${v.hz} Hz) — <em>Sinal Descendente Desconhecido (${v.neuropil})</em>`;
+                candDiv.appendChild(d);
+            }
+            if (!hasExtra) {
+                candDiv.innerHTML = '<div style="color: var(--text-muted)">Nenhum sinal candidato ou desconhecido ativo para este estímulo.</div>';
+            }
+
+            const fs = data.female_circuit_state || {};
+            document.getElementById('lab-pc1d-hz').textContent = `${fs.pC1d_hz ? fs.pC1d_hz.toFixed(1) : '0.0'} Hz`;
+            document.getElementById('lab-aipg-hz').textContent = `${fs.aIPg_hz ? fs.aIPg_hz.toFixed(1) : '0.0'} Hz`;
+
+            const timeDiv = document.getElementById('lab-timeline-container');
+            timeDiv.innerHTML = '';
+            for (const ph of (data.phases || [])) {
+                const s = document.createElement('div');
+                s.className = 'timeline-step';
+                s.innerHTML = `<div class="step-time">${ph.t_ms} ms</div><div class="step-desc"><strong>${ph.stage}:</strong> ${ph.label}</div>`;
+                timeDiv.appendChild(s);
+            }
+        }
+
+        function setBar(id, val) {
+            const pct = Math.min(100, Math.max(0, val * 100));
+            document.getElementById(`bar-${id}`).style.width = `${pct}%`;
+            document.getElementById(`val-${id}`).textContent = val.toFixed(2);
+        }
+
+        function renderLoop(now) {
+            if (isReplaying) {
+                const elapsed = now - replayStartTime;
+                replayProgress = Math.min(1.0, elapsed / replayDurationMs);
+
+                if (replayProgress < 0.20) {
+                    document.getElementById('contact-action-txt').textContent = '• [T0-T1] ENTRADA SENSORIAL';
+                } else if (replayProgress < 0.55) {
+                    document.getElementById('contact-action-txt').textContent = '• [T2-T3] PROPAGAÇÃO CENTRAL';
+                } else if (replayProgress < 0.85) {
+                    document.getElementById('contact-action-txt').textContent = '• [T4] GESTO MOTOR DESCENDENTE';
+                } else {
+                    document.getElementById('contact-action-txt').textContent = '• [T5] RELAXAMENTO A REPOUSO';
+                }
+
+                if (replayProgress >= 1.0) {
+                    isReplaying = false;
+                    document.getElementById('contact-action-txt').style.display = 'none';
+                    document.getElementById('contact-state-txt').textContent = 'QUIESCENTE · SEM ESTÍMULO';
+                    document.getElementById('status-dot').className = 'status-dot quiescent';
+                    document.getElementById('status-text').textContent = 'QUIESCENT';
+                }
+            }
+
+            drawLethe();
+            requestAnimationFrame(renderLoop);
+        }
+
+
+        function drawCavernaEnvironment(ctx, w, h, cx, cy, scale) {
+            ctx.save();
+            ctx.translate(cx, cy - 20);
+
+            // 1. Cavern Rock Vault Strata
+            const grad = ctx.createRadialGradient(0, 0, scale * 0.2, 0, 0, scale * 2.2);
+            grad.addColorStop(0, '#1c0e06');
+            grad.addColorStop(0.55, '#0e0703');
+            grad.addColorStop(1, '#050302');
+            ctx.fillStyle = grad;
+            ctx.fillRect(-cx, -cy + 20, w, h);
+
+            // Subterranean Fissures & Arch Lines
+            ctx.strokeStyle = 'rgba(255, 120, 20, 0.10)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(0, -scale * 0.35, scale * 1.3, Math.PI * 0.85, Math.PI * 0.15, true);
+            ctx.stroke();
+
+            // 2. Rio Lethe (Curving Riverbed Flowing through Center)
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(-scale * 0.38, -scale * 1.4);
+            ctx.bezierCurveTo(-scale * 0.48, -scale * 0.6, scale * 0.35, scale * 0.2, scale * 0.28, scale * 1.4);
+            ctx.lineTo(-scale * 0.18, scale * 1.4);
+            ctx.bezierCurveTo(-scale * 0.12, scale * 0.2, -scale * 0.72, -scale * 0.6, -scale * 0.62, -scale * 1.4);
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(255, 110, 15, 0.09)';
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255, 140, 25, 0.26)';
+            ctx.lineWidth = 1.8;
+            ctx.stroke();
+
+            // River Particles (Embers drifting down the current)
+            ctx.fillStyle = 'rgba(255, 160, 40, 0.75)';
+            riverParticles.forEach(p => {
+                p.y += p.speed * 0.7;
+                if (p.y > scale * 1.4) p.y = -scale * 1.4;
+                ctx.beginPath();
+                ctx.arc(p.x * (scale / 400), p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.restore();
+
+            const cw = currentCavernaState || {};
+            const worldDisplayScale = Math.min(w, h) * 0.08;
+            const worldPosition = Array.isArray(cw.body_position) ? cw.body_position : [0, 0];
+            const worldPoint = (point) => [Number(point?.[0] || 0) * worldDisplayScale, -Number(point?.[1] || 0) * worldDisplayScale];
+
+            // 3. FONTE DOCE (Top Left Chamber)
+            const [sweetWorldX, sweetWorldY] = worldPoint(cw.sweet?.position || [3, 0]);
+            const sx = sweetWorldX, sy = sweetWorldY;
+            const sweetActive = cw.sweet && (cw.sweet.available || cw.sweet.offered);
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(sx, sy, scale * 0.15, 0, Math.PI * 2);
+            ctx.fillStyle = sweetActive ? 'rgba(255, 180, 40, 0.25)' : 'rgba(255, 180, 40, 0.08)';
+            ctx.fill();
+            ctx.strokeStyle = sweetActive ? 'rgba(255, 200, 60, 0.85)' : 'rgba(255, 180, 40, 0.35)';
+            ctx.lineWidth = 2.0;
+            ctx.stroke();
+
+            // Crystal glyph
+            ctx.font = 'bold 11px monospace';
+            ctx.fillStyle = sweetActive ? '#ffe066' : '#d97706';
+            ctx.textAlign = 'center';
+            ctx.fillText('FONTE DOCE', sx, sy - scale * 0.25);
+            ctx.font = '9px monospace';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.fillText(resourceState(cw.sweet), sx, sy + 4);
+            ctx.restore();
+
+            // 4. FONTE AMARGA (Top Right Chamber)
+            const [bitterWorldX, bitterWorldY] = worldPoint(cw.bitter?.position || [-3, 0]);
+            const bx = bitterWorldX, by = bitterWorldY;
+            const bitterActive = cw.bitter && (cw.bitter.available || cw.bitter.offered);
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(bx, by, scale * 0.15, 0, Math.PI * 2);
+            ctx.fillStyle = bitterActive ? 'rgba(255, 40, 30, 0.28)' : 'rgba(255, 40, 30, 0.08)';
+            ctx.fill();
+            ctx.strokeStyle = bitterActive ? 'rgba(255, 60, 50, 0.85)' : 'rgba(255, 40, 30, 0.35)';
+            ctx.lineWidth = 2.0;
+            ctx.stroke();
+
+            ctx.font = 'bold 11px monospace';
+            ctx.fillStyle = bitterActive ? '#ff6666' : '#dc2626';
+            ctx.textAlign = 'center';
+            ctx.fillText('FONTE AMARGA', bx, by - scale * 0.25);
+            ctx.font = '9px monospace';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.fillText(resourceState(cw.bitter), bx, by + 4);
+            ctx.restore();
+
+            // 5. REGIÃO DE VENTO (Mid Left Vault)
+            const wx = -scale * 0.86, wy = scale * 0.24;
+            const windActive = cw.wind && (cw.wind.level !== 'off' || cw.wind.offered_level !== 'none');
+            ctx.save();
+            ctx.font = 'bold 11px monospace';
+            ctx.fillStyle = windActive ? '#ffbb55' : '#94a3b8';
+            ctx.textAlign = 'center';
+            ctx.fillText('VENTO', wx, wy - 18);
+            ctx.font = '9px monospace';
+            ctx.fillText(cw.wind ? `[${cw.wind.level.toUpperCase()}]` : '[OFF]', wx, wy);
+            // Wind Stream vectors
+            ctx.strokeStyle = windActive ? 'rgba(255, 190, 80, 0.7)' : 'rgba(255, 255, 255, 0.15)';
+            ctx.lineWidth = windActive ? 2.2 : 1.2;
+            for (let k = -1; k <= 1; k++) {
+                ctx.beginPath();
+                ctx.moveTo(wx - 35, wy + 16 + k * 8);
+                ctx.lineTo(wx + 35, wy + 16 + k * 8);
+                ctx.stroke();
+            }
+            ctx.restore();
+
+            // 6. REGIÃO DE SOM (Mid Right Chasm)
+            const anx = scale * 0.86, any = scale * 0.24;
+            const soundActive = cw.sound && (cw.sound.level !== 'off' || cw.sound.offered_level !== 'none');
+            ctx.save();
+            ctx.font = 'bold 11px monospace';
+            ctx.fillStyle = soundActive ? '#ffaa33' : '#94a3b8';
+            ctx.textAlign = 'center';
+            ctx.fillText('SOM', anx, any - 18);
+            ctx.font = '9px monospace';
+            ctx.fillText(cw.sound ? `[${cw.sound.level.toUpperCase()}]` : '[SILÊNCIO]', anx, any);
+            // Acoustic arcs
+            ctx.strokeStyle = soundActive ? 'rgba(255, 170, 50, 0.8)' : 'rgba(255, 255, 255, 0.15)';
+            ctx.lineWidth = soundActive ? 2.0 : 1.2;
+            [12, 22, 32].forEach(rad => {
+                ctx.beginPath();
+                ctx.arc(anx, any + 20, rad, -Math.PI * 0.4, Math.PI * 0.4);
+                ctx.stroke();
+            });
+            ctx.restore();
+
+            // 7. REGIÃO DE LOOMING (Top Center Vault)
+            const lx = 0, ly = -scale * 0.70;
+            const loomingActive = cw.looming && (cw.looming.state !== 'none' || cw.looming.offered);
+            ctx.save();
+            ctx.font = 'bold 11px monospace';
+            ctx.fillStyle = loomingActive ? '#ff4411' : '#a38775';
+            ctx.textAlign = 'center';
+            ctx.fillText('LOOMING / AMEAÇA', lx, ly - 14);
+            ctx.font = '9px monospace';
+            ctx.fillText(cw.looming && cw.looming.state !== 'none' ? '[AMEAÇA ATIVA]' : (cw.looming && cw.looming.offered ? '[OFERTADO]' : '[REPOUSO]'), lx, ly + 2);
+            // Threat arch
+            ctx.strokeStyle = loomingActive ? 'rgba(255, 68, 17, 0.85)' : 'rgba(255, 120, 20, 0.2)';
+            ctx.lineWidth = loomingActive ? 3.0 : 1.5;
+            ctx.beginPath();
+            ctx.arc(lx, ly + 14, 28, Math.PI * 0.9, Math.PI * 0.1, true);
+            ctx.stroke();
+            ctx.restore();
+
+            // 8. Telemetria de distância: relação observada, sem alvo ou semântica de navegação.
+            const bodyPoint = worldPoint(worldPosition);
+            const drawDistanceTelemetry = (resource, color) => {
+                if (!resource || (!resource.available && !resource.contact)) return;
+                const resourcePoint = worldPoint(resource.position || [0, 0]);
+                const distance = Number(resource.distance_to_body);
+                ctx.save();
+                ctx.strokeStyle = color;
+                ctx.globalAlpha = 0.42;
+                ctx.lineWidth = 1;
+                ctx.setLineDash([3, 6]);
+                ctx.beginPath();
+                ctx.moveTo(bodyPoint[0], bodyPoint[1]);
+                ctx.lineTo(resourcePoint[0], resourcePoint[1]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                if (Number.isFinite(distance)) {
+                    const mx = (bodyPoint[0] + resourcePoint[0]) / 2;
+                    const my = (bodyPoint[1] + resourcePoint[1]) / 2;
+                    ctx.fillStyle = 'rgba(8, 5, 3, 0.82)';
+                    ctx.fillRect(mx - 29, my - 8, 58, 15);
+                    ctx.fillStyle = '#cbd5e1';
+                    ctx.font = '9px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`d=${distance.toFixed(3)}u`, mx, my + 3);
+                }
+                ctx.restore();
+            };
+            drawDistanceTelemetry(cw.sweet, 'rgba(255, 224, 102, 0.8)');
+            ctx.restore(); // outer translate(cx, cy - 20)
+        }
+
+        function drawLethe() {
+            const w = canvas.width;
+            const h = canvas.height;
+            ctx.clearRect(0, 0, w, h);
+
+            const cx = w / 2;
+            const cy = h / 2;
+            const scale = Math.min(w, h) * 0.44;
+
+            let burstScale = 1.0;
+            let wingFlare = 1.0;
+            let axialOffset = 0.0;
+            let lateralTorsion = 0.0;
+
+            if (currentMode === 'LAB' && isReplaying && activeReplayData) {
+                const cp = activeReplayData.channels_peak || {};
+                const prog = replayProgress;
+                const pulse = Math.sin(Math.PI * Math.min(1.0, Math.max(0.0, (prog - 0.1) / 0.85)));
+
+                if (cp.escape_takeoff > 0.4) {
+                    burstScale = 1.0 + (cp.escape_takeoff * 0.25 * pulse);
+                    axialOffset = -(cp.escape_takeoff * 25.0 * pulse);
+                }
+                if (cp.escape_long_mode > 0.3) {
+                    wingFlare = 1.0 + (cp.escape_long_mode * 0.20 * pulse);
+                }
+                if (activeReplayData.proboscis_drive_peak > 0.15) {
+                    axialOffset = (activeReplayData.proboscis_drive_peak * 28.0 * pulse);
+                }
+                if (cp.backward_walk > 0.3) {
+                    burstScale = 1.0 - (cp.backward_walk * 0.12 * pulse);
+                    axialOffset = -(cp.backward_walk * 16.0 * pulse);
+                }
+                if (cp.turn > 0.2) {
+                    lateralTorsion = (cp.turn_bias || 0.3) * 0.18 * pulse;
+                }
+            }
+
+            if (currentMode === 'CAVERNA') {
+                drawCavernaEnvironment(ctx, w, h, cx, cy, scale);
+            }
+
+            ctx.save();
+            if (currentMode === 'CAVERNA') {
+                const worldDisplayScale = Math.min(w, h) * 0.08;
+                const worldPosition = Array.isArray(currentCavernaState?.body_position) ? currentCavernaState.body_position : [0, 0];
+                ctx.translate(cx + Number(worldPosition[0] || 0) * worldDisplayScale,
+                    cy - 20 - Number(worldPosition[1] || 0) * worldDisplayScale + axialOffset);
+                const cavernaBodyScale = w <= 760 ? 0.80 : 0.58;
+                ctx.scale(burstScale * cavernaBodyScale, burstScale * cavernaBodyScale);
+            } else {
+                ctx.translate(cx, cy + axialOffset);
+                ctx.scale(burstScale, burstScale);
+            }
+            ctx.rotate(lateralTorsion);
+
+            if (currentMode === 'CAVERNA') {
+                drawLiveBodyMarker(ctx, scale);
+            }
+
+            // 1. Subtle Concentric Base Sigil Rings
+            ctx.lineWidth = 1;
+            [0.22, 0.45, 0.70, 0.95].forEach((rNorm, idx) => {
+                ctx.strokeStyle = idx === 1 ? 'rgba(255, 130, 25, 0.28)' : 'rgba(255, 110, 20, 0.12)';
+                ctx.beginPath();
+                ctx.arc(0, 0, rNorm * scale, 0, Math.PI * 2);
+                ctx.stroke();
+            });
+
+            // 2. Axes Lines
+            ctx.strokeStyle = 'rgba(255, 200, 160, 0.09)';
+            ctx.beginPath();
+            ctx.moveTo(0, -scale * 1.02);
+            ctx.lineTo(0, scale * 1.02);
+            ctx.moveTo(-scale * 1.02, 0);
+            ctx.lineTo(scale * 1.02, 0);
+            ctx.stroke();
+
+            // Persisted resident path; no animation or synthetic interpolation.
+            drawRecentTrajectory(ctx, scale);
+
+            // 3. Connective Tract Edges
+            for (const [src, tgt] of BASE_EDGES) {
+                const sMod = BASE_MODULES[src];
+                const tMod = BASE_MODULES[tgt];
+                if (!sMod || !tMod) continue;
+
+                const liveSource = currentMode !== 'LAB' && currentLiveBody && currentLiveBody.nodes
+                    ? currentLiveBody.nodes[src] : null;
+                const liveTarget = currentMode !== 'LAB' && currentLiveBody && currentLiveBody.nodes
+                    ? currentLiveBody.nodes[tgt] : null;
+                const sx = (liveSource ? liveSource[0] : sMod.x) * scale * (liveSource ? 1.0 : (sMod.side === 'L' ? wingFlare : sMod.side === 'R' ? wingFlare : 1.0));
+                const sy = (liveSource ? liveSource[1] : sMod.y) * scale;
+                const tx = (liveTarget ? liveTarget[0] : tMod.x) * scale * (liveTarget ? 1.0 : (tMod.side === 'L' ? wingFlare : tMod.side === 'R' ? wingFlare : 1.0));
+                const ty = (liveTarget ? liveTarget[1] : tMod.y) * scale;
+
+                let edgeAlpha = 0.20;
+                let edgeColor = '255, 120, 20';
+
+                if (currentMode === 'CAVERNA' && liveSource && liveTarget) {
+                    edgeAlpha = 0.62;
+                    edgeColor = '103, 232, 249';
+                }
+
+                if (currentMode === 'LAB' && isReplaying && replayProgress > 0.15 && replayProgress < 0.75) {
+                    if (src.includes('OPTIC') && activeReplayData.modality === 'looming') {
+                        edgeAlpha = 0.9;
+                        edgeColor = '255, 155, 30';
+                    } else if (src.includes('GNATHAL') && activeReplayData.modality.includes('taste')) {
+                        edgeAlpha = 0.9;
+                        edgeColor = activeReplayData.modality === 'taste_sugar' ? '245, 158, 11' : '244, 63, 94';
+                    } else if (src.includes('AUDITORY') && activeReplayData.modality === 'sound') {
+                        edgeAlpha = 0.9;
+                        edgeColor = '255, 110, 15';
+                    }
+                }
+
+                ctx.strokeStyle = `rgba(${edgeColor}, ${edgeAlpha})`;
+                ctx.lineWidth = edgeAlpha > 0.2 ? 2.0 : 1.2;
+                ctx.beginPath();
+                ctx.moveTo(sx, sy);
+                ctx.lineTo(tx, ty);
+                ctx.stroke();
+            }
+
+            // 4. Draw Modular Nodes
+            for (const [modId, m] of Object.entries(BASE_MODULES)) {
+                const liveNode = currentMode !== 'LAB' && currentLiveBody && currentLiveBody.nodes
+                    ? currentLiveBody.nodes[modId] : null;
+                const mx = (liveNode ? liveNode[0] : m.x) * scale * (liveNode ? 1.0 : (m.side === 'L' ? wingFlare : m.side === 'R' ? wingFlare : 1.0));
+                const my = (liveNode ? liveNode[1] : m.y) * scale;
+                const isLiveCavernaNode = currentMode === 'CAVERNA' && Boolean(liveNode);
+                const mr = Math.max(m.r * scale * 0.45, isLiveCavernaNode ? 4.5 : 0);
+
+                let nodeAlpha = isLiveCavernaNode ? 0.92 : 0.50;
+                let nodeColor = isLiveCavernaNode ? '103, 232, 249' : '255, 125, 20';
+                let pulseRing = 0;
+
+                if (currentMode === 'LAB' && isReplaying && activeReplayData) {
+                    const isStimOrigin = (
+                        (modId.includes('OPTIC') && activeReplayData.modality === 'looming') ||
+                        (modId.includes('GNATHAL') && activeReplayData.modality.includes('taste')) ||
+                        (modId.includes('AUDITORY') && activeReplayData.modality === 'sound') ||
+                        (modId.includes('GNATHAL') && activeReplayData.modality === 'touch_head')
+                    );
+
+                    if (isStimOrigin && replayProgress < 0.4) {
+                        nodeAlpha = 1.0;
+                        pulseRing = (1.0 - replayProgress * 2.5) * 14;
+                        nodeColor = activeReplayData.modality === 'taste_sugar' ? '255, 190, 45' : (activeReplayData.modality === 'taste_bitter' ? '255, 45, 20' : '255, 155, 30');
+                    }
+                    if (modId.startsWith('DN_') && replayProgress >= 0.35 && replayProgress <= 0.85) {
+                        nodeAlpha = 0.95;
+                        nodeColor = '255, 100, 10';
+                    }
+                    if (modId === 'FEMALE_HUB' && (activeReplayData.populations.pC1d || {}).peak_window_hz > 5.0) {
+                        nodeAlpha = 0.95;
+                        nodeColor = '255, 70, 30';
+                    }
+                }
+
+                if (pulseRing > 0) {
+                    ctx.beginPath();
+                    ctx.arc(mx, my, mr + pulseRing, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(${nodeColor}, 0.6)`;
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                }
+
+                ctx.beginPath();
+                ctx.arc(mx, my, mr, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${nodeColor}, ${nodeAlpha * 0.35})`;
+                ctx.fill();
+                ctx.strokeStyle = `rgba(${nodeColor}, ${nodeAlpha})`;
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                // Incandescent filament / hot core
+                ctx.beginPath();
+                ctx.arc(mx, my, 2.5, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 240, 200, ${nodeAlpha * 1.4})`;
+                ctx.fill();
+
+                if (currentMode === 'LAB') {
+                    ctx.font = '10px monospace';
+                    ctx.fillStyle = 'rgba(255, 220, 180, 0.7)';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(modId, mx, my + mr + 12);
+                }
+            }
+
+            ctx.restore();
+        }
+
+        function drawRecentTrajectory(ctx, scale) {
+            if (currentMode !== 'CAVERNA' || !currentTrajectory || !currentTrajectory.path_points) return;
+            const points = currentTrajectory.path_points.filter(p => Array.isArray(p) && p.length >= 2);
+            if (!points.length) return;
+            ctx.save();
+            ctx.strokeStyle = 'rgba(34, 211, 238, 0.72)';
+            ctx.fillStyle = 'rgba(103, 232, 249, 0.88)';
+            ctx.lineWidth = 1.8;
+            const worldDisplayScale = Math.min(canvas.width, canvas.height) * 0.08;
+            const worldPosition = Array.isArray(currentCavernaState?.body_position) ? currentCavernaState.body_position : [0, 0];
+            ctx.beginPath();
+            points.forEach((p, i) => {
+                const x = (Number(p[0]) - Number(worldPosition[0] || 0)) * worldDisplayScale;
+                const y = -(Number(p[1]) - Number(worldPosition[1] || 0)) * worldDisplayScale;
+                i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+            });
+            ctx.stroke();
+            points.forEach((p, i) => {
+                const x = (Number(p[0]) - Number(worldPosition[0] || 0)) * worldDisplayScale;
+                const y = -(Number(p[1]) - Number(worldPosition[1] || 0)) * worldDisplayScale;
+                ctx.beginPath();
+                ctx.arc(x, y, i === points.length - 1 ? 4.0 : 2.0, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.restore();
+        }
+
+        function drawLiveBodyMarker(ctx, scale) {
+            const nodes = currentLiveBody?.nodes;
+            if (!nodes) return;
+            const points = Object.values(nodes).filter((point) => Array.isArray(point) && point.length >= 2);
+            if (!points.length) return;
+
+            const xs = points.map((point) => Number(point[0])).filter(Number.isFinite);
+            const ys = points.map((point) => Number(point[1])).filter(Number.isFinite);
+            if (!xs.length || !ys.length) return;
+
+            const bodyCenterX = ((Math.min(...xs) + Math.max(...xs)) / 2) * scale;
+            const bodyCenterY = ((Math.min(...ys) + Math.max(...ys)) / 2) * scale;
+            const bodyRadius = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)) * scale * 0.62;
+
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            const glow = ctx.createRadialGradient(bodyCenterX, bodyCenterY, bodyRadius * 0.18, bodyCenterX, bodyCenterY, bodyRadius);
+            glow.addColorStop(0, 'rgba(103, 232, 249, 0.22)');
+            glow.addColorStop(0.68, 'rgba(34, 211, 238, 0.08)');
+            glow.addColorStop(1, 'rgba(34, 211, 238, 0)');
+            ctx.fillStyle = glow;
+            ctx.beginPath();
+            ctx.arc(bodyCenterX, bodyCenterY, bodyRadius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(103, 232, 249, 0.46)';
+            ctx.lineWidth = 1.4;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.arc(bodyCenterX, bodyCenterY, bodyRadius * 0.82, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.restore();
+        }
+
+        
+        // Support URL parameters for automated observability & deep-linking
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get("mode") === "LAB") {
+            setMode("LAB");
+        } else if (urlParams.get("mode") === "CAVERNA" || urlParams.get("mode") === "CAVE" || window.location.pathname.includes("caverna")) {
+            setMode("CAVERNA");
+        } else {
+            setMode("CAVERNA");
+        }
+        const traceParam = urlParams.get("trace");
+        if (traceParam) {
+            document.getElementById("trace-select").value = traceParam;
+            setTimeout(triggerReplay, 150);
+        }
+
+        async function updateLedgerTelemetry() {
+            try {
+                const res = await fetch('/api/experiment/stats');
+                const data = await res.json();
+                if (data.status === 'ok' && data.stats) {
+                    const s = data.stats;
+                    const sessBadge = document.getElementById('caverna-ledger-sess-id');
+                    if (sessBadge) sessBadge.textContent = s.current_session_id || 'sess_default';
+                    const labSess = document.getElementById('lab-ledger-session');
+                    if (labSess) labSess.textContent = s.current_session_id || 'sess_default';
+                    const labEv = document.getElementById('lab-ledger-events');
+                    if (labEv) labEv.textContent = `${s.event_count} (${s.snapshot_count} snp)`;
+                }
+                const evRes = await fetch('/api/experiment/events/latest?limit=1');
+                const evData = await evRes.json();
+                if (evData.status === 'ok' && evData.events && evData.events.length > 0) {
+                    const last = evData.events[0];
+                    const labLast = document.getElementById('lab-ledger-last-event');
+                    if (labLast) labLast.textContent = `${last.source.toUpperCase()} ${last.event_type} (${last.variable || '-'})`;
+                    const labChain = document.getElementById('lab-ledger-chain');
+                    if (labChain) labChain.textContent = last.causal_chain_id || 'none';
+                }
+            } catch (e) {
+                // background telemetry silently handles failure
+            }
+        }
+
+        init();
+        updateLedgerTelemetry();
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
+        }
+        setInterval(() => {
+            if (currentMode === 'CAVERNA') {
+                refreshCavernaState();
+            }
+        }, 1500);
+        setInterval(updateLedgerTelemetry, 2500);
+
+    </script>
+</body>
+</html>

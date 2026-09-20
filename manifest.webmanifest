@@ -1,0 +1,20 @@
+{
+  "name": "Lethe — Caverna de Hipnos",
+  "short_name": "Lethe",
+  "description": "Superfície viva de observabilidade e interação da Caverna de Hipnos.",
+  "lang": "pt-BR",
+  "start_url": "/caverna?mode=CAVERNA",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#080503",
+  "background_color": "#080503",
+  "icons": [
+    {
+      "src": "/static/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

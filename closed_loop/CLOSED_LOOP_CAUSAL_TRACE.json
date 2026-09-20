@@ -1,0 +1,90 @@
+{
+  "mission": "CLOSE_THE_REAL_EMBODIED_LOOP",
+  "host": "max",
+  "runtime": "/home/ubuntu/Portifolio/flynn-max/runtime",
+  "implementation": {
+    "locomotion_reference": "PINOCCHIO_FRAME_CENTROID_DELTA",
+    "world_scale": 1.0,
+    "world_position_owner": "CavernaVirtualBody.apply_physical_displacement",
+    "contact_owner": "ContinuousWorldEngine.observe_body",
+    "consumption_owner": "ContinuousWorldEngine.observe_body",
+    "energy_to_capacity": "clip(energy_reserve,0,1)",
+    "session_advance_owner": "ContinuousBrainClock._run_loop"
+  },
+  "restart_persistence": {
+    "before_instance_id": "759f27b3-84a9-4071-b29e-20adc1d4fc50",
+    "after_instance_id": "759f27b3-84a9-4071-b29e-20adc1d4fc50",
+    "same_instance_id": true,
+    "topology_nodes": 23,
+    "topology_edges": 30,
+    "body_engine": "pinocchio_sigil"
+  },
+  "passive_window": {
+    "wall_start_utc": "2026-09-16T14:13:02.200534+00:00",
+    "wall_end_utc": "2026-09-16T14:16:21.091062+00:00",
+    "wall_elapsed_sec": 198.890528,
+    "neural_start_ms": 4939913.4,
+    "neural_end_ms": 4955693.4,
+    "neural_elapsed_sec": 15.78,
+    "brain_ticks_delta": 157800,
+    "world_ticks_delta": 789,
+    "body_ticks_delta": 789,
+    "position_before": [0.0024635121794026604, 0.0030295304910805676],
+    "position_after": [0.003675399575826556, 0.006008230604983011],
+    "world_distance_travelled_before": 0.14823675,
+    "world_distance_travelled_after": 0.38717546,
+    "sweet_distance_before": 2.997538018753197,
+    "sweet_distance_after": 2.9963306242706405,
+    "energy_before": 0.28384,
+    "energy_after": 0.27595,
+    "feeding_drive_before": 0.71616,
+    "feeding_drive_after": 0.72405,
+    "expected_energy_delta_from_neural_time": -0.00789,
+    "actual_energy_delta": -0.00789,
+    "contact": false,
+    "consumption": null
+  },
+  "precise_followup_window": {
+    "wall_start_utc": "2026-09-16T14:17:46.852645+00:00",
+    "wall_end_utc": "2026-09-16T14:18:16.849232+00:00",
+    "wall_elapsed_sec": 29.996587,
+    "neural_elapsed_ms": 2400.0,
+    "brain_ticks_delta": 24000,
+    "world_ticks_delta": 120,
+    "distance_to_sweet_before": 2.99612498793399,
+    "distance_to_sweet_after": 2.996260054760563,
+    "energy_before": 0.27256,
+    "energy_after": 0.27136,
+    "consumption": null
+  },
+  "resource_validation": {
+    "human_offer_executed": false,
+    "reason": "The authenticated browser action is a real Umwelt mutation and awaits direct user confirmation.",
+    "legacy_state_observed": {
+      "offered": true,
+      "available": false,
+      "position": [3.0, 0.0],
+      "offered_at": null
+    }
+  },
+  "sensory_validation": {
+    "synthetic_proprioception_signal": "EMITTED_RUNTIME_ONLY",
+    "neural_injection_for_proprioception": "NONE_REGISTERED_MODALITY",
+    "physical_contact_signal": "NOT_OBSERVED_IN_PASSIVE_WINDOW",
+    "taste_signal": "NOT_OBSERVED_OUTSIDE_CONTACT_RADIUS"
+  },
+  "ui_validation": {
+    "mobile_390x844": {"body_visible": true, "horizontal_overflow": false, "console_errors": 0},
+    "mobile_320x568": {"body_visible": true, "horizontal_overflow": false, "console_errors": 0},
+    "pwa_manifest_http": 200,
+    "service_worker_http": 200,
+    "icon_http": 200
+  },
+  "request_boundary": {
+    "get_drives_advance": false,
+    "session_advance_callsite": "ContinuousBrainClock._run_loop",
+    "food_fulfill_direct_stimulus": false,
+    "food_fulfill_direct_homeostasis_mutation": false
+  },
+  "provenance": ["RESIDENT", "PINOCCHIO", "CAVERNA_UMWELT", "SYNTHETIC_SENSOR_INTERFACE"]
+}
