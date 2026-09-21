@@ -1,5 +1,8 @@
 # Flynn — runbook de replicação
 
+> **STATUS: ARQUIVADO / NÃO É PRÓXIMA AÇÃO DO PROJETO**  
+> O projeto Flynn está `RETIRED_FROZEN`, sem plano atual de reconstrução ou rehost. Este documento é preservado apenas como procedimento técnico histórico para o experimento isolado E01. Não deve ser interpretado como autorização para recriar a residente.
+
 ## Estado atual
 
 REPLICATION_KIT=READY
