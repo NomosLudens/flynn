@@ -1,10 +1,10 @@
 # Flynn — replicabilidade e limites
 
-Flynn é publicada como **arquivo técnico e pesquisa experimental encerrada**. O objetivo desta publicação é tornar reproduzíveis os artefatos que foram efetivamente preservados sem fingir que o estado residente perdido ainda existe.
+Flynn é preservada como **arquivo técnico e pesquisa experimental encerrada**. O objetivo desta publicação é tornar reproduzíveis os artefatos que foram efetivamente preservados sem fingir que o estado residente perdido ainda existe.
 
 ## Matriz de replicabilidade
 
-| Componente | Estado público | O que pode ser reproduzido |
+| Componente | Estado de distribuição | O que pode ser reproduzido |
 | --- | --- | --- |
 | Código recuperado em `app/` e superfícies web | **AVAILABLE / ARCHIVAL** | inspeção, estudo e reconstrução parcial das camadas preservadas |
 | Closed loop e Caverna Food UI | **EVIDENCE + IMPLEMENTATION PRESERVED** | implementação e traços históricos preservados no repositório |
@@ -54,7 +54,7 @@ HISTORICAL_EVIDENCE != CURRENT_RUNTIME
 
 ## Compromisso de replicabilidade
 
-Os artefatos públicos de Flynn devem ser **reconstruíveis dentro dos limites declarados**, não apenas inspecionáveis.
+Os artefatos distribuídos neste repositório devem ser **reconstruíveis dentro dos limites declarados**, não apenas inspecionáveis.
 
 Se uma receita documentada falhar porque um componente sob controle da Nomos Ludens está faltando, abra uma issue neste repositório descrevendo:
 
