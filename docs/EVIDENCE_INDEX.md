@@ -18,7 +18,7 @@ __pycache__, bancos e estado de execução não fazem parte do kit.
 | Cérebro | app/brain/clock.py | fonte recuperada, dependências auxiliares ausentes |
 | E01 | research/e01/ | kit reproduzível isolado |
 | Mapa de percurso | docs/MAPA_DE_PERCURSO_FLYNN.md | fonte operacional histórica, atualizada em 2026-09-15 |
-| Adendo de encerramento | docs/FLYNN_DELTA_ATUALIZACAO_MAPA_DE_PERCURSO.md | atualização histórica posterior; projeto congelado |
+| Adendo de encerramento | docs/FLYNN_DELTA_ATUALIZACAO_MAPA_DE_PERCURSO.md | atualização histórica posterior; projeto congelado |\n| Status final canônico | docs/STATUS_FINAL.md | estado pós-interrupção; autoridade atual do repositório |
 | Prints de interface | docs/PRINTS_EVIDENCIA_VISUAL.md | capturas históricas fornecidas pelo autor, com hashes |
 
 ## Resultados preservados
