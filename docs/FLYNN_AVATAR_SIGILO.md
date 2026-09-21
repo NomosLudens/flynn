@@ -1,5 +1,8 @@
 # FLYNN — AVATAR / SIGILO
 
+> **NOTA DE ARQUIVO — 2026-09-21**  
+> Este documento preserva a **especificação histórica** do sigilo. O cabeçalho original abaixo dizia “conceito em especificação; não implementado”, mas essa condição foi posteriormente superada: Lethe tornou-se o corpo-sigilo canônico residente, integrado ao Pinocchio, antes da interrupção da VM MAX. O documento é mantido sem reescrever retrospectivamente suas decisões de projeto. Para o estado posterior, consultar [MAPA_DE_PERCURSO_FLYNN.md](MAPA_DE_PERCURSO_FLYNN.md) e [STATUS_FINAL.md](STATUS_FINAL.md).
+
 > **Documento de concepção visual, funcional e epistemológica**  
 > **Projeto:** FLYNN  
 > **Estado:** conceito em especificação; não implementado  
