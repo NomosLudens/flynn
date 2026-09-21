@@ -111,17 +111,38 @@ DESCENDING_TYPES=473
 
 The project uses this biological ancestry as a neural anchor while keeping synthetic interfaces explicit. Lethe is a synthetic morphology; Pinocchio is the body-dynamics layer; the motor boundary is not presented as a biological reconstruction of the missing VNC.
 
+## English documentation
+
+The English documentation is intended to make the project directly reviewable by hosting sponsors, researchers, students and independent developers:
+
+- [Research rehosting and infrastructure](docs/RESEARCH_REHOSTING.md)
+- [Canonical status: closure history + research reopening](docs/STATUS_FINAL_EN.md)
+- [Complete Flynn roadmap](docs/FLYNN_ROADMAP_EN.md)
+- [Complete journey history](docs/JOURNEY_HISTORY_EN.md)
+- [Roadmap update delta](docs/FLYNN_ROADMAP_UPDATE_DELTA_EN.md)
+- [Avatar / living sigil specification](docs/FLYNN_AVATAR_SIGIL_EN.md)
+- [Replicability and limits](REPLICABILITY_EN.md)
+- [Replication runbook](docs/REPLICATION_RUNBOOK_EN.md)
+- [Recovered evidence index](docs/EVIDENCE_INDEX_EN.md)
+- [Recovery provenance](docs/RECOVERY_PROVENANCE_EN.md)
+- [Visual evidence and screenshot provenance](docs/PRINTS_VISUAL_EVIDENCE_EN.md)
+
+The original Portuguese documents remain preserved alongside these mirrors as historical/source-language records.
+
 ## What was preserved
 
 - `app/`: recovered portions of the brain, body, world and web surface;
 - `closed_loop/`: implementation and historical evidence of the embodied loop;
 - `caverna_food_ui/`: implementation and historical validation of the feeding interface;
 - `research/e01/`: isolated E01 replication kit;
-- `docs/MAPA_DE_PERCURSO_FLYNN.md`: detailed historical operational map;
-- `docs/FLYNN_DELTA_ATUALIZACAO_MAPA_DE_PERCURSO.md`: interruption and recovery record;
-- `docs/FLYNN_AVATAR_SIGILO.md`: visual, functional and epistemological specification of Lethe;
-- `docs/STATUS_FINAL.md`: historical freeze state plus reopening addendum;
-- `docs/PRINTS_EVIDENCIA_VISUAL.md`: provenance of recovered runtime screenshots and conceptual images;
+- `docs/MAPA_DE_PERCURSO_FLYNN.md`: original detailed historical operational roadmap;
+- `docs/FLYNN_ROADMAP_EN.md`: English roadmap mirror;
+- `docs/FLYNN_DELTA_ATUALIZACAO_MAPA_DE_PERCURSO.md`: original interruption and recovery record;
+- `docs/FLYNN_ROADMAP_UPDATE_DELTA_EN.md`: English delta mirror;
+- `docs/FLYNN_AVATAR_SIGILO.md`: original visual, functional and epistemological specification of Lethe;
+- `docs/FLYNN_AVATAR_SIGIL_EN.md`: English sigil specification;
+- `docs/STATUS_FINAL.md` and `docs/STATUS_FINAL_EN.md`: historical freeze state plus reopening record;
+- `docs/PRINTS_EVIDENCIA_VISUAL.md` and `docs/PRINTS_VISUAL_EVIDENCE_EN.md`: provenance of recovered runtime screenshots and conceptual images;
 - `docs/assets/screenshots/flynn/`: archived product/runtime screenshots;
 - `docs/assets/concepts/`: conceptual images kept separate from runtime evidence;
 - `index.html`, `manifest.webmanifest`, `sw.js`, `icon.svg`: recovered web surface.
@@ -132,7 +153,8 @@ The repository is both an archive and a basis for renewed research.
 
 The isolated E01 experiment has its own preserved kit and runbook. The original resident databases, canonical ledger and checkpoints that existed only on MAX are **not** represented as recovered.
 
-See [REPLICABILITY.md](REPLICABILITY.md) and [docs/REPLICATION_RUNBOOK.md](docs/REPLICATION_RUNBOOK.md).
+English: [Replicability and limits](REPLICABILITY_EN.md) · [Replication runbook](docs/REPLICATION_RUNBOOK_EN.md)  
+Portuguese originals: [REPLICABILITY.md](REPLICABILITY.md) · [docs/REPLICATION_RUNBOOK.md](docs/REPLICATION_RUNBOOK.md)
 
 The code is published under the [Common Public Attribution License 1.0](LICENSE).
 
@@ -144,7 +166,7 @@ IMPLEMENT -> OBSERVE_REAL_RESULT -> VALIDATE -> CLOSE_OR_FIX_REAL_BLOCKER
 
 Do not fabricate learning, autonomy, intention, causality or continuity that has not been observed.
 
-Historical results currently preserve these explicit limits:
+Historical results preserve these explicit limits:
 
 ```text
 ASSOCIATIVE_LEARNING_PROVEN=NO
