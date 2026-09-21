@@ -41,6 +41,16 @@ Este repositório deve ser lido como **arquivo histórico + código/artefatos re
 - `docs/assets/concepts/`: 4 imagens conceituais separadas da evidência de runtime;
 - `index.html`, `manifest.webmanifest`, `sw.js` e `icon.svg`: superfície web recuperada.
 
+## Publicação e replicabilidade
+
+Flynn é um **arquivo público de pesquisa experimental**, não uma residente atualmente operacional.
+
+Os artefatos preservados são publicados para inspeção e reprodução dentro de limites explícitos. O experimento isolado E01 possui kit e runbook próprios; o estado residente original, bancos, ledger e checkpoints que existiam apenas na MAX não são apresentados como recuperados.
+
+Consulte [REPLICABILITY.md](REPLICABILITY.md) para a matriz de replicabilidade e [docs/REPLICATION_RUNBOOK.md](docs/REPLICATION_RUNBOOK.md) para o procedimento E01.
+
+O código é disponibilizado sob a [Common Public Attribution License 1.0](LICENSE).
+
 ## Limites
 
 O runtime residente completo não foi recuperado deste repositório. Bancos SQLite, ledger canônico, checkpoints, estado temporal residente e alterações que existiam apenas na MAX podem estar ausentes.
