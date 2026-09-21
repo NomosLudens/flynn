@@ -1,5 +1,7 @@
 # Flynn — runbook de replicação
 
+> Escopo e limites públicos: [REPLICABILITY.md](../REPLICABILITY.md).
+
 > **STATUS: ARQUIVADO / NÃO É PRÓXIMA AÇÃO DO PROJETO**  
 > O projeto Flynn está `RETIRED_FROZEN`, sem plano atual de reconstrução ou rehost. Este documento é preservado apenas como procedimento técnico histórico para o experimento isolado E01. Não deve ser interpretado como autorização para recriar a residente.
 
@@ -27,11 +29,12 @@ PASS.
 - Não usar a residente Flynn, o connectome, plasticidade, KALLISTIS ou banco
   SQLite para esta reprodução.
 
-Instalação isolada:
+Instalação isolada, a partir da raiz do repositório:
 
-    cd research/e01
-    python3 -m venv .venv
-    .venv/bin/python -m pip install --only-binary=:all: -r requirements.txt
+```bash
+python3 -m venv research/e01/.venv
+research/e01/.venv/bin/python -m pip install --only-binary=:all: -r research/e01/requirements.txt
+```
 
 O pacote se chama pin, mas o import é pinocchio. No MAX, o wheel observado foi
 manylinux_2_28_aarch64 cp312; isso precisa ser revalidado em qualquer outro
@@ -41,7 +44,12 @@ host.
 
 Forneça explicitamente o binário e o socket do ZeroClaw:
 
-    research/e01/.venv/bin/python research/e01/run_e01.py +      --zeroclaw /caminho/real/para/zeroclaw +      --socket /caminho/real/para/daemon.sock +      --output /tmp/flynn-e01-run
+```bash
+research/e01/.venv/bin/python research/e01/run_e01.py \
+  --zeroclaw /caminho/real/para/zeroclaw \
+  --socket /caminho/real/para/daemon.sock \
+  --output /tmp/flynn-e01-run
+```
 
 O runner mantém initialize e health na mesma conexão IPC, registra
 proveniência, executa 40 ticks do caso A e verifica:
