@@ -1,6 +1,36 @@
-# FLYNN — STATUS FINAL CANÔNICO
+# FLYNN — STATUS HISTÓRICO DE ENCERRAMENTO + REABERTURA DE PESQUISA
 
-> Estado pós-interrupção da VM MAX e pós-decisão de congelamento do projeto.
+> Este documento preserva o estado pós-interrupção da VM MAX e a decisão posterior de congelamento.  
+> Em **2026-09-21**, esse estado foi sucedido por uma decisão explícita de **reabrir Flynn como projeto de pesquisa não comercial e conhecimento aberto**, condicionado à obtenção de infraestrutura adequada.
+
+## Estado atual — reabertura para pesquisa
+
+```text
+PROJECT=FLYNN
+PROJECT_STATUS=RESEARCH_REOPENING
+RESEARCH_STATUS=ACTIVE_REHOSTING_PREPARATION
+CURRENT_RUNTIME_STATUS=OFFLINE_PENDING_REHOST
+
+NON_COMMERCIAL=YES
+PUBLIC_REPOSITORY=YES
+OPEN_KNOWLEDGE_COMMITMENT=YES
+HOSTING_SPONSORSHIP=SEEKING
+
+ORIGINAL_RESIDENT_CONTINUITY_RECOVERABLE=NO
+FUTURE_REHOST_IS_NEW_TEMPORAL_EPISODE=YES
+```
+
+A reabertura **não restaura retroativamente a continuidade temporal da residente original**. Qualquer nova instância deverá ser identificada como novo episódio experimental, reconstruído a partir dos artefatos públicos preservados.
+
+O objetivo atual é acadêmico e técnico: estudar dinâmica neural contínua, persistência, homeostase, acoplamento sensório-motor, mecanismos de memória/plasticidade e os limites epistemológicos das inferências possíveis, publicando código, protocolos, falhas, resultados negativos e evidências reproduzíveis.
+
+Ver [RESEARCH_REHOSTING.md](RESEARCH_REHOSTING.md).
+
+---
+
+## Estado histórico preservado — pós-interrupção / congelamento
+
+O bloco abaixo permanece intacto como registro do encerramento anterior:
 
 ```text
 PROJECT=FLYNN
@@ -69,8 +99,8 @@ IF_ORIGINAL_MAX_RETURNS=
 PRESERVE_DATA_AND_DECIDE_LATER
 ```
 
-## Interpretação
+## Interpretação histórica
 
 A interrupção externa rompeu a continuidade temporal residente que fazia parte do próprio objeto experimental. Uma eventual recuperação futura da MAX não deve ser descrita como continuidade ininterrupta.
 
-O arquivo histórico permanece válido para registrar o que foi observado antes da interrupção. Ele não autoriza preencher lacunas com inferência, reexecutar automaticamente a residente nem transformar o kit E01 em retomada do projeto.
+O arquivo histórico permanece válido para registrar o que foi observado antes da interrupção. A decisão de 2026-09-21 autoriza uma **nova etapa de pesquisa**, não a fabricação de lacunas nem a falsa continuidade da residente anterior.
