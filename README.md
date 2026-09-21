@@ -1,67 +1,150 @@
-# Flynn — arquivo histórico do organismo contínuo
+# Flynn — open research archive and rehosting initiative
 
-Este repositório preserva o material recuperado do estudo Flynn: a cadeia mundo → transdução sensorial → cérebro LIF → leitura descendente → corpo Pinocchio → mundo, os artefatos da Caverna/Lethe, o kit isolado E01 e a evidência visual recuperada.
+> **Non-commercial research project · public repository · open knowledge**
 
-## Estado canônico atual
+Flynn is an experimental neuro-synthetic research project that studies what can be learned from running a biologically anchored neural core inside a persistent sensorimotor loop.
+
+The preserved architecture links:
+
+```text
+world → sensory transduction → continuous LIF brain → descending readout
+→ Pinocchio body dynamics → Lethe synthetic morphology → world
+```
+
+The neural substrate is derived from the **FlyWire FAFB v783** adult female *Drosophila melanogaster* connectome. The historical runtime used a continuous LIF implementation, a persistent world, homeostatic state, an append-only causal ledger and a synthetic body represented by the Lethe sigil.
+
+## Current status
 
 ```text
 PROJECT=FLYNN
-PROJECT_STATUS=RETIRED_FROZEN
-RESEARCH_STATUS=CLOSED_BY_AUTHOR
-CURRENT_RUNTIME_STATUS=OFFLINE_UNAVAILABLE
+PROJECT_STATUS=RESEARCH_REOPENING
+RESEARCH_STATUS=ACTIVE_REHOSTING_PREPARATION
+CURRENT_RUNTIME_STATUS=OFFLINE_PENDING_REHOST
 
 FORMER_AUTHORITATIVE_HOST=MAX
 FORMER_PROVIDER=ORACLE_CLOUD
 RESIDENT_CONTINUITY_INTERRUPTED_EXTERNALLY=YES
 
-REHOST_LOCAL=NO
-REHOST_GOOGLE_MINI=NO
-CURRENT_RESUMPTION_PLAN=NONE
-
-IF_ORIGINAL_MAX_RETURNS=
-PRESERVE_DATA_AND_DECIDE_LATER
+NON_COMMERCIAL=YES
+PUBLIC_REPOSITORY=YES
+OPEN_KNOWLEDGE_COMMITMENT=YES
+HOSTING_SPONSORSHIP=SEEKING
 ```
 
-A VM MAX que hospedava a residente ficou inacessível após a suspensão da conta Oracle. A continuidade temporal residente foi rompida. O projeto foi posteriormente aposentado/congelado pelo autor e **não existe plano atual de reconstrução ou rehost**.
+The original resident runtime became unavailable after the Oracle Cloud tenancy that hosted MAX was suspended. That interruption broke the resident's temporal continuity.
 
-Este repositório deve ser lido como **arquivo histórico + código/artefatos recuperados**, não como uma Flynn residente atualmente operacional.
+**A future rehost will not be presented as uninterrupted continuation of the former resident.** It will be a new research runtime reconstructed from the public code and preserved evidence.
 
-## O que foi preservado
+The previous `RETIRED_FROZEN` state remains part of the historical record. On **2026-09-21**, the project was reopened specifically as a non-commercial research and open-knowledge initiative seeking suitable persistent infrastructure.
 
-- `app/`: partes recuperadas do corpo, cérebro, mundo e superfície web;
-- `closed_loop/`: implementação e evidência histórica do loop encarnado;
-- `caverna_food_ui/`: implementação e validação histórica da interface de alimentação;
-- `research/e01/`: kit isolado de replicação E01;
-- `docs/MAPA_DE_PERCURSO_FLYNN.md`: mapa operacional histórico atualizado em 2026-09-15;
-- `docs/FLYNN_DELTA_ATUALIZACAO_MAPA_DE_PERCURSO.md`: delta posterior que registra correções finais, suspensão Oracle e congelamento;
-- `docs/FLYNN_AVATAR_SIGILO.md`: especificação visual, funcional e epistemológica do sigilo/Lethe;
-- `docs/STATUS_FINAL.md`: estado canônico pós-interrupção;
-- `docs/PRINTS_EVIDENCIA_VISUAL.md`: galeria e proveniência dos prints reais e imagens conceituais recuperadas;
-- `docs/assets/screenshots/flynn/`: 14 screenshots/prints de produto arquivados;
-- `docs/assets/concepts/`: 4 imagens conceituais separadas da evidência de runtime;
-- `index.html`, `manifest.webmanifest`, `sw.js` e `icon.svg`: superfície web recuperada.
+## Research purpose
 
-## Publicação e replicabilidade
+Flynn exists for academic and technical inquiry, not commercial exploitation.
 
-Flynn é um **arquivo de pesquisa experimental**, não uma residente atualmente operacional.
+The research questions include:
 
-Os artefatos preservados são publicados para inspeção e reprodução dentro de limites explícitos. O experimento isolado E01 possui kit e runbook próprios; o estado residente original, bancos, ledger e checkpoints que existiam apenas na MAX não são apresentados como recuperados.
+- what persistent spiking-neural dynamics look like when coupled to an embodied closed loop;
+- how a biologically anchored neural core interacts with synthetic sensory and motor boundaries;
+- how temporal continuity, homeostasis, memory mechanisms and persistent state affect observed behavior;
+- what can and cannot legitimately be inferred from recurrent LIF activity and connectome-derived structure;
+- how to make experiments of this kind reproducible, inspectable and useful to other researchers, students and independent builders.
 
-Consulte [REPLICABILITY.md](REPLICABILITY.md) para a matriz de replicabilidade e [docs/REPLICATION_RUNBOOK.md](docs/REPLICATION_RUNBOOK.md) para o procedimento E01.
+The project deliberately distinguishes observed results from interpretation. No claim of consciousness, sentience, associative learning or biological equivalence is made without evidence.
 
-O código é disponibilizado sob a [Common Public Attribution License 1.0](LICENSE).
+## Open knowledge commitment
 
-## Limites
+Flynn is being reopened with a simple principle: **if the infrastructure enables the experiment, the resulting technical knowledge should be shared back.**
 
-O runtime residente completo não foi recuperado deste repositório. Bancos SQLite, ledger canônico, checkpoints, estado temporal residente e alterações que existiam apenas na MAX podem estar ausentes.
+The repository is public. We intend to preserve and publish:
+
+- source code and architecture;
+- reproducible experimental runbooks;
+- infrastructure notes where they are safe to publish;
+- technical failures and negative results;
+- validation evidence;
+- research notes and limitations;
+- improvements required to reproduce the system independently.
+
+The goal is not only to run Flynn again, but to make the work useful as a shared technical research object.
+
+See [Research rehosting and infrastructure](docs/RESEARCH_REHOSTING.md).
+
+## Why persistent infrastructure matters
+
+This is not a static website. The experimental object depends on **continuous runtime and persistent state**.
+
+A suitable research host allows us to maintain:
+
+- continuous neural time rather than isolated batch replays;
+- persistent world/body/homeostatic state;
+- append-only causal history;
+- controlled restart and persistence experiments;
+- long-running observations;
+- reproducible public demonstrations and technical validation.
+
+A modest Linux VPS is sufficient for the first rehosting stage. Our baseline request is:
 
 ```text
-SOURCE_CODE_BACKUP != RESIDENT_STATE_BACKUP
+OS=Linux x86_64
+CPU=2 vCPU
+RAM=4 GB
+DISK=40 GB SSD
+NETWORK=stable public connectivity
+UPTIME=continuous research runtime
 ```
 
-Resultados históricos preservados não devem ser promovidos a alegações de disponibilidade atual.
+More resources are useful but not required to begin.
 
-Também permanecem sem prova:
+## Scientific substrate
+
+Historical preserved dataset:
+
+```text
+DATASET=FlyWire FAFB v783
+SEX=adult female
+N_NEURONS=139255
+N_CONNECTION_PAIRS=3732460
+N_SYNAPSES=50666648
+DESCENDING_NEURONS=1305
+DESCENDING_TYPES=473
+```
+
+The project uses this biological ancestry as a neural anchor while keeping synthetic interfaces explicit. Lethe is a synthetic morphology; Pinocchio is the body-dynamics layer; the motor boundary is not presented as a biological reconstruction of the missing VNC.
+
+## What was preserved
+
+- `app/`: recovered portions of the brain, body, world and web surface;
+- `closed_loop/`: implementation and historical evidence of the embodied loop;
+- `caverna_food_ui/`: implementation and historical validation of the feeding interface;
+- `research/e01/`: isolated E01 replication kit;
+- `docs/MAPA_DE_PERCURSO_FLYNN.md`: detailed historical operational map;
+- `docs/FLYNN_DELTA_ATUALIZACAO_MAPA_DE_PERCURSO.md`: interruption and recovery record;
+- `docs/FLYNN_AVATAR_SIGILO.md`: visual, functional and epistemological specification of Lethe;
+- `docs/STATUS_FINAL.md`: historical freeze state plus reopening addendum;
+- `docs/PRINTS_EVIDENCIA_VISUAL.md`: provenance of recovered runtime screenshots and conceptual images;
+- `docs/assets/screenshots/flynn/`: archived product/runtime screenshots;
+- `docs/assets/concepts/`: conceptual images kept separate from runtime evidence;
+- `index.html`, `manifest.webmanifest`, `sw.js`, `icon.svg`: recovered web surface.
+
+## Replicability
+
+The repository is both an archive and a basis for renewed research.
+
+The isolated E01 experiment has its own preserved kit and runbook. The original resident databases, canonical ledger and checkpoints that existed only on MAX are **not** represented as recovered.
+
+See [REPLICABILITY.md](REPLICABILITY.md) and [docs/REPLICATION_RUNBOOK.md](docs/REPLICATION_RUNBOOK.md).
+
+The code is published under the [Common Public Attribution License 1.0](LICENSE).
+
+## Epistemic rule
+
+```text
+IMPLEMENT -> OBSERVE_REAL_RESULT -> VALIDATE -> CLOSE_OR_FIX_REAL_BLOCKER
+```
+
+Do not fabricate learning, autonomy, intention, causality or continuity that has not been observed.
+
+Historical results currently preserve these explicit limits:
 
 ```text
 ASSOCIATIVE_LEARNING_PROVEN=NO
@@ -72,18 +155,13 @@ FLYNN_TRIGGERED_ACCOUNT_SUSPENSION=UNPROVEN
 RESOURCE_DELETION=UNPROVEN
 ```
 
-## Replicação E01
+## Historical continuity note
 
-O kit E01 continua preservado porque é um artefato científico útil e reproduzível de forma isolada. Isso **não significa que o projeto esteja em retomada**. O runbook correspondente está arquivado como procedimento histórico/técnico e não constitui uma próxima ação autorizada.
-
-## Regra epistemológica preservada
+The historical Flynn resident and any future rehost are scientifically distinct temporal episodes.
 
 ```text
-IMPLEMENT -> OBSERVE_REAL_RESULT -> VALIDATE -> CLOSE_OR_FIX_REAL_BLOCKER
+SOURCE_CODE_BACKUP != RESIDENT_STATE_BACKUP
+REHOST != UNINTERRUPTED_CONTINUATION
 ```
 
-Não fabricar aprendizagem, autonomia, intenção, causalidade ou continuidade que não tenham sido observadas.
-
-## Evidência visual
-
-A galeria consolidada está em docs/PRINTS_EVIDENCIA_VISUAL.md. Ela separa prints reais de runtime/interface de imagens conceituais geradas durante o desenvolvimento.
+That distinction is part of the experiment, not something to hide.
