@@ -1,5 +1,44 @@
 # FLYNN — MAPA DE PERCURSO
 
+> **NOTA DE ENCERRAMENTO / AUTORIDADE ATUAL — 2026-09-21**  
+> O corpo principal deste mapa preserva o estado histórico observado até 2026-09-15.  
+> A autoridade atual do projeto é: **RETIRED_FROZEN**. A residente ficou indisponível após a suspensão da tenancy Oracle que hospedava a VM MAX, e sua continuidade temporal foi interrompida externamente. Não há plano atual de rehost ou retomada automática.  
+> Para o bloco canônico completo, ver [STATUS_FINAL.md](STATUS_FINAL.md) e [FLYNN_DELTA_ATUALIZACAO_MAPA_DE_PERCURSO.md](FLYNN_DELTA_ATUALIZACAO_MAPA_DE_PERCURSO.md).
+
+# -1. STATUS PÓS-INTERRUPÇÃO — AUTORIDADE ATUAL
+
+```text
+PROJECT=FLYNN
+PROJECT_STATUS=RETIRED_FROZEN
+RESEARCH_STATUS=CLOSED_BY_AUTHOR
+CURRENT_RUNTIME_STATUS=OFFLINE_UNAVAILABLE
+
+FORMER_AUTHORITATIVE_HOST=MAX
+FORMER_PROVIDER=ORACLE_CLOUD
+OCI_ACCOUNT_SUSPENDED=YES
+RESIDENT_CONTINUITY_INTERRUPTED_EXTERNALLY=YES
+
+FLYNN_RETIRED=YES
+FLYNN_FROZEN=YES
+REHOST_LOCAL=NO
+REHOST_GOOGLE_MINI=NO
+CURRENT_RESUMPTION_PLAN=NONE
+
+ENERGY_TO_BODY_CAPACITY_IMPLEMENTED=YES
+ALIVE_BODY_CAPACITY_FLOOR=0.01
+FULL_FEEDING_CYCLE_PROVEN=NO
+REAL_WORLD_SPACE_LOCOMOTION_TO_FOOD=NOT_PROVEN
+MEMORY_LINEAR_GROWTH_FIXED=UNVERIFIED
+
+IF_ORIGINAL_MAX_RETURNS=
+PRESERVE_DATA_AND_DECIDE_LATER
+```
+
+**Regra de leitura:** menções posteriores neste documento a “pesquisa ativa”, “host autoritativo MAX”, “Lethe live” ou “NEXT_ACTION=ENERGY_TO_BODY_CAPACITY” descrevem o **snapshot histórico pré-interrupção**, não o estado atual.
+
+---
+
+
 
 
 
