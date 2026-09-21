@@ -43,7 +43,7 @@ Este repositório deve ser lido como **arquivo histórico + código/artefatos re
 
 ## Publicação e replicabilidade
 
-Flynn é um **arquivo público de pesquisa experimental**, não uma residente atualmente operacional.
+Flynn é um **arquivo de pesquisa experimental**, não uma residente atualmente operacional.
 
 Os artefatos preservados são publicados para inspeção e reprodução dentro de limites explícitos. O experimento isolado E01 possui kit e runbook próprios; o estado residente original, bancos, ledger e checkpoints que existiam apenas na MAX não são apresentados como recuperados.
 
