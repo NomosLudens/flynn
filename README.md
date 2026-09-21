@@ -34,9 +34,11 @@ Este repositório deve ser lido como **arquivo histórico + código/artefatos re
 - `research/e01/`: kit isolado de replicação E01;
 - `docs/MAPA_DE_PERCURSO_FLYNN.md`: mapa operacional histórico atualizado em 2026-09-15;
 - `docs/FLYNN_DELTA_ATUALIZACAO_MAPA_DE_PERCURSO.md`: delta posterior que registra correções finais, suspensão Oracle e congelamento;
+- `docs/FLYNN_AVATAR_SIGILO.md`: especificação visual, funcional e epistemológica do sigilo/Lethe;
 - `docs/STATUS_FINAL.md`: estado canônico pós-interrupção;
 - `docs/PRINTS_EVIDENCIA_VISUAL.md`: galeria e proveniência dos prints reais e imagens conceituais recuperadas;
-- `docs/assets/screenshots/flynn/`: 18 imagens arquivadas;
+- `docs/assets/screenshots/flynn/`: 14 screenshots/prints de produto arquivados;
+- `docs/assets/concepts/`: 4 imagens conceituais separadas da evidência de runtime;
 - `index.html`, `manifest.webmanifest`, `sw.js` e `icon.svg`: superfície web recuperada.
 
 ## Limites
