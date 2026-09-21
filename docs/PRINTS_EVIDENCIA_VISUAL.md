@@ -74,13 +74,13 @@ Além dos quatro prints inicialmente preservados, foram recuperados outros dez r
 
 Estas quatro imagens são artefatos conceituais/visuais produzidos durante o trabalho de Flynn. Elas documentam a exploração visual do projeto, mas **não são prints de runtime**.
 
-![Interface neural — cinco frequências](assets/screenshots/flynn/15-concept-interface-neural-cinco-frequencias.jpg)
+![Interface neural — cinco frequências](assets/concepts/interface-neural-cinco-frequencias.jpg)
 
-![Caverna de Hipnos — fluxo sensorial](assets/screenshots/flynn/16-concept-caverna-fluxo-sensorial.jpg)
+![Caverna de Hipnos — fluxo sensorial](assets/concepts/caverna-fluxo-sensorial.jpg)
 
-![Rio sensorial na Caverna de Hipnos](assets/screenshots/flynn/17-concept-rio-sensorial.jpg)
+![Rio sensorial na Caverna de Hipnos](assets/concepts/rio-sensorial.jpg)
 
-![Templo subterrâneo do rio Lethe](assets/screenshots/flynn/18-concept-templo-lethe.jpg)
+![Templo subterrâneo do rio Lethe](assets/concepts/templo-lethe.jpg)
 
 ### Proveniência dos arquivos 05–18
 
@@ -98,10 +98,10 @@ As cópias no repositório foram convertidas/otimizadas em JPEG para arquivament
 | `12-recovered-lethe-early-ui.jpg` | `d8643f69-b215-4d9e-aea9-f2051de2938b.png` | `fad2dca0baa2a004c15edd8119cad59bfd4ad2e63cbf48c4ef7510e4adb40db1` |
 | `13-recovered-minimal-presence.jpg` | `2dd8d40a-6609-40ae-802e-646c087666f0.png` | `7945c6fdf3cdc818c0983814165393cd890189bef63d36d19db799cbc8b7a37e` |
 | `14-recovered-architecture-flow.jpg` | `c6d80a5a-e7fe-4b1f-9df8-b4568b88ce97.png` | `29f969429ddf5a3fbd6a7e4638ca31ccc88231f612d8aae68d603391bb82f339` |
-| `15-concept-interface-neural-cinco-frequencias.jpg` | `interface_neural_cinco_frequências.png` | `094eb7fb2f884dcfaa4e1a48e7a8bd8d67c5792160ef43a92b0afb36dd722ced` |
-| `16-concept-caverna-fluxo-sensorial.jpg` | `caverna_de_hipnos_fluxo_sensorial.png` | `918e16327309a7627ba67c438948c26f64d2faf10283c783710764c741533542` |
-| `17-concept-rio-sensorial.jpg` | `rio_sensorial_na_caverna_de_hipnos.png` | `96e9919317cdb49abd3369190602001e303ac76e7fdb690d5f700907e6e8eb8b` |
-| `18-concept-templo-lethe.jpg` | `templo_subterrâneo_do_rio_lethe.png` | `24856f34e57585bff6e62c468717b54ebcae327d05bb4dd266e3227617c66d7a` |
+| `assets/concepts/interface-neural-cinco-frequencias.jpg` | `interface_neural_cinco_frequências.png` | `094eb7fb2f884dcfaa4e1a48e7a8bd8d67c5792160ef43a92b0afb36dd722ced` |
+| `assets/concepts/caverna-fluxo-sensorial.jpg` | `caverna_de_hipnos_fluxo_sensorial.png` | `918e16327309a7627ba67c438948c26f64d2faf10283c783710764c741533542` |
+| `assets/concepts/rio-sensorial.jpg` | `rio_sensorial_na_caverna_de_hipnos.png` | `96e9919317cdb49abd3369190602001e303ac76e7fdb690d5f700907e6e8eb8b` |
+| `assets/concepts/templo-lethe.jpg` | `templo_subterrâneo_do_rio_lethe.png` | `24856f34e57585bff6e62c468717b54ebcae327d05bb4dd266e3227617c66d7a` |
 
 ## Limite de interpretação
 
