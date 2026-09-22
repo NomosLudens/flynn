@@ -1,43 +1,49 @@
 # FLYNN — ROADMAP
 
-> **CURRENT SUPERSEDING NOTE — 2026-09-21**  
-> This English mirror preserves the historical roadmap observed through 2026-09-15 and the later interruption/freeze record. Flynn was subsequently **reopened as a non-commercial research and open-knowledge initiative seeking persistent infrastructure**. Any future runtime is a new temporal experimental episode; it is not uninterrupted continuation of the former resident. See [STATUS_FINAL_EN.md](STATUS_FINAL_EN.md) and [RESEARCH_REHOSTING.md](RESEARCH_REHOSTING.md).
+> **CANONICAL UPDATE — 2026-09-22**  
+> This block supersedes the Oracle suspension/review, `RETIRED_FROZEN`, and possible-recovery states preserved later in this document as historical snapshots. Flynn has been reopened as a non-commercial open-research initiative. Oracle has now **closed the account as a final decision**, without providing the user a reason and without offering a path to recover the account, resources, or data. Oracle contact/review is closed. The historical resident's temporal continuity remains unrecoverable; any future runtime will be a new experimental episode.
 
-> **HISTORICAL CLOSURE / AUTHORITY NOTE — 2026-09-21**  
-> The main body of this roadmap preserves the historical state observed through 2026-09-15.  
-> At the time of the closure snapshot, the authority was: **RETIRED_FROZEN**. The resident became unavailable after suspension of the Oracle tenancy hosting VM MAX, and its temporal continuity was externally interrupted. There was then no active rehost or automatic-resumption plan.  
-> For the complete historical closure block, see [STATUS_FINAL_EN.md](STATUS_FINAL_EN.md) and [FLYNN_ROADMAP_UPDATE_DELTA_EN.md](FLYNN_ROADMAP_UPDATE_DELTA_EN.md).
-
-# -1. POST-INTERRUPTION STATUS — HISTORICAL CLOSURE SNAPSHOT
+# -2. CURRENT CANONICAL STATUS
 
 ```text
 PROJECT=FLYNN
-PROJECT_STATUS=RETIRED_FROZEN
-RESEARCH_STATUS=CLOSED_BY_AUTHOR
-CURRENT_RUNTIME_STATUS=OFFLINE_UNAVAILABLE
+PROJECT_STATUS=RESEARCH_REOPENING
+RESEARCH_STATUS=ACTIVE_REHOSTING_AND_SPONSORSHIP_SEARCH
+CURRENT_RUNTIME_STATUS=OFFLINE_PENDING_REHOST
 
 FORMER_AUTHORITATIVE_HOST=MAX
 FORMER_PROVIDER=ORACLE_CLOUD
-OCI_ACCOUNT_SUSPENDED=YES
 RESIDENT_CONTINUITY_INTERRUPTED_EXTERNALLY=YES
 
-FLYNN_RETIRED=YES
-FLYNN_FROZEN=YES
-REHOST_LOCAL=NO
-REHOST_GOOGLE_MINI=NO
-CURRENT_RESUMPTION_PLAN=NONE
+ORACLE_ACCOUNT_STATUS=CLOSED
+ORACLE_DECISION=FINAL
+ORACLE_CONTACT=CLOSED
+ORACLE_CLOSURE_REASON=NOT_PROVIDED
+ACCOUNT_RECOVERY_PATH=NONE
+DATA_RECOVERY_PATH_PROVIDED=NO
+RESOURCE_RECOVERY_PATH_PROVIDED=NO
+FURTHER_REVIEW_PATH_PROVIDED=NO
 
-ENERGY_TO_BODY_CAPACITY_IMPLEMENTED=YES
-ALIVE_BODY_CAPACITY_FLOOR=0.01
-FULL_FEEDING_CYCLE_PROVEN=NO
-REAL_WORLD_SPACE_LOCOMOTION_TO_FOOD=NOT_PROVEN
-MEMORY_LINEAR_GROWTH_FIXED=UNVERIFIED
+RESOURCE_DELETION=UNPROVEN
+DATA_PRESERVATION=UNKNOWN
 
-IF_ORIGINAL_MAX_RETURNS=
-PRESERVE_DATA_AND_DECIDE_LATER
+NON_COMMERCIAL=YES
+PUBLIC_REPOSITORY=YES
+OPEN_KNOWLEDGE_COMMITMENT=YES
+HOSTING_SPONSORSHIP=SEEKING
+
+SOURCE_CODE_BACKUP!=RESIDENT_STATE_BACKUP
+REHOST!=UNINTERRUPTED_CONTINUATION
+FUTURE_REHOST_IS_NEW_TEMPORAL_EPISODE=YES
 ```
 
-**Reading rule:** later mentions in this document of “active research,” “authoritative host MAX,” “Lethe live,” or `NEXT_ACTION=ENERGY_TO_BODY_CAPACITY` describe the **historical pre-interruption snapshot**, not the current runtime.
+## Rehosting / sponsorship status
+
+The current strategy is not to recover MAX; Oracle's final decision closed that path. Flynn is seeking new persistent infrastructure through sponsorship, open-source support, research hosting, and community infrastructure.
+
+Infrastructure is a means rather than the end: the goal is to make Flynn reconstructable, inspectable, challengeable, and reproducible by other people. Positive results, negative results, infrastructure failures, reproduction procedures, and explicit limitations should remain public whenever technically and legally possible.
+
+**Reading rule:** later references to an “Oracle suspension,” “Oracle review,” “possible return of MAX,” “authoritative host MAX,” “Flynn frozen,” or `IF_ORIGINAL_MAX_RETURNS` are historical, not current status.
 
 ---
 
