@@ -1,46 +1,51 @@
 # FLYNN — MAPA DE PERCURSO
 
-> **NOTA DE ENCERRAMENTO / AUTORIDADE ATUAL — 2026-09-21**  
-> O corpo principal deste mapa preserva o estado histórico observado até 2026-09-15.  
-> A autoridade atual do projeto é: **RETIRED_FROZEN**. A residente ficou indisponível após a suspensão da tenancy Oracle que hospedava a VM MAX, e sua continuidade temporal foi interrompida externamente. Não há plano atual de rehost ou retomada automática.  
-> Para o bloco canônico completo, ver [STATUS_FINAL.md](STATUS_FINAL.md) e [FLYNN_DELTA_ATUALIZACAO_MAPA_DE_PERCURSO.md](FLYNN_DELTA_ATUALIZACAO_MAPA_DE_PERCURSO.md).
+> **ATUALIZAÇÃO CANÔNICA — 2026-09-22**  
+> Este bloco substitui os estados de suspensão, revisão Oracle, `RETIRED_FROZEN` e expectativa de recuperação que aparecem como snapshots históricos no corpo abaixo. Flynn foi reaberta como projeto de pesquisa não comercial e conhecimento aberto. A conta Oracle foi **encerrada definitivamente pelo provedor**, sem justificativa fornecida ao usuário e sem caminho oferecido para recuperação da conta, recursos ou dados. O contato/revisão com a Oracle foi encerrado. A continuidade da residente histórica permanece irrecuperável; qualquer novo runtime será um novo episódio experimental.
 
-# -1. STATUS PÓS-INTERRUPÇÃO — AUTORIDADE ATUAL
+# -2. ESTADO CANÔNICO ATUAL
 
 ```text
 PROJECT=FLYNN
-PROJECT_STATUS=RETIRED_FROZEN
-RESEARCH_STATUS=CLOSED_BY_AUTHOR
-CURRENT_RUNTIME_STATUS=OFFLINE_UNAVAILABLE
+PROJECT_STATUS=RESEARCH_REOPENING
+RESEARCH_STATUS=ACTIVE_REHOSTING_AND_SPONSORSHIP_SEARCH
+CURRENT_RUNTIME_STATUS=OFFLINE_PENDING_REHOST
 
 FORMER_AUTHORITATIVE_HOST=MAX
 FORMER_PROVIDER=ORACLE_CLOUD
-OCI_ACCOUNT_SUSPENDED=YES
 RESIDENT_CONTINUITY_INTERRUPTED_EXTERNALLY=YES
 
-FLYNN_RETIRED=YES
-FLYNN_FROZEN=YES
-REHOST_LOCAL=NO
-REHOST_GOOGLE_MINI=NO
-CURRENT_RESUMPTION_PLAN=NONE
+ORACLE_ACCOUNT_STATUS=CLOSED
+ORACLE_DECISION=FINAL
+ORACLE_CONTACT=CLOSED
+ORACLE_CLOSURE_REASON=NOT_PROVIDED
+ACCOUNT_RECOVERY_PATH=NONE
+DATA_RECOVERY_PATH_PROVIDED=NO
+RESOURCE_RECOVERY_PATH_PROVIDED=NO
+FURTHER_REVIEW_PATH_PROVIDED=NO
 
-ENERGY_TO_BODY_CAPACITY_IMPLEMENTED=YES
-ALIVE_BODY_CAPACITY_FLOOR=0.01
-FULL_FEEDING_CYCLE_PROVEN=NO
-REAL_WORLD_SPACE_LOCOMOTION_TO_FOOD=NOT_PROVEN
-MEMORY_LINEAR_GROWTH_FIXED=UNVERIFIED
+RESOURCE_DELETION=UNPROVEN
+DATA_PRESERVATION=UNKNOWN
 
-IF_ORIGINAL_MAX_RETURNS=
-PRESERVE_DATA_AND_DECIDE_LATER
+NON_COMMERCIAL=YES
+PUBLIC_REPOSITORY=YES
+OPEN_KNOWLEDGE_COMMITMENT=YES
+HOSTING_SPONSORSHIP=SEEKING
+
+SOURCE_CODE_BACKUP!=RESIDENT_STATE_BACKUP
+REHOST!=UNINTERRUPTED_CONTINUATION
+FUTURE_REHOST_IS_NEW_TEMPORAL_EPISODE=YES
 ```
 
-**Regra de leitura:** menções posteriores neste documento a “pesquisa ativa”, “host autoritativo MAX”, “Lethe live” ou “NEXT_ACTION=ENERGY_TO_BODY_CAPACITY” descrevem o **snapshot histórico pré-interrupção**, não o estado atual.
+## Situação de rehosting / sponsorship
+
+A estratégia atual não é recuperar MAX. Esse caminho foi encerrado pela decisão final da Oracle. O projeto busca infraestrutura persistente nova por vias de sponsorship, apoio open source, pesquisa e hospedagem comunitária.
+
+A infraestrutura é meio, não fim: o objetivo é tornar Flynn reconstruível, observável, criticável e replicável por outras pessoas. Resultados positivos, resultados negativos, falhas de infraestrutura, procedimentos de reprodução e limites devem permanecer públicos quando tecnicamente e legalmente possível.
+
+**Regra de leitura:** qualquer menção posterior a “conta suspensa”, “revisão Oracle”, “possível retorno da MAX”, “host autoritativo MAX”, “Flynn congelada” ou `IF_ORIGINAL_MAX_RETURNS` deve ser lida como **história**, não como estado atual.
 
 ---
-
-
-
-
 
 > **Documento operacional e conceitual autoritativo**  
 > **Atualizado em:** 2026-09-15 (E01-N temporal, corpo residente Lethe/Pinocchio, trajetória viva, H00/H01 e correções operacionais incorporados)  
