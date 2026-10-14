@@ -138,11 +138,11 @@ Fonte do estado abaixo: relatórios do Codex apresentados pelo autor nesta data.
 A antiga VM **MAX/Oracle foi encerrada**. Nenhuma reinstalação equivale ao episódio residente anterior. Os dados FlyWire possuem atribuição e restrição **CC BY-NC 4.0** conforme fonte e manifesto do projeto; respeitar procedência de cada arquivo.
 
 Arquivos locais informados pelo autor (não presumir publicados no GitHub):
-- Documentos/ChatGPT/FLYNN/docs/ARQUITETURA_NEUROSSINTETICA_V2.md
-- Documentos/ChatGPT/FLYNN/app/neuro_synthetic/aggregator.py
-- Documentos/ChatGPT/FLYNN/app/neuro_synthetic/sqlite_store.py
-- Portifolio/INFRA/FLYNN_FAFB_V783_DATA_MANIFEST_2026-10-14.json
-- Portifolio/INFRA/FLYNN_GOOGLE_CLOUD_1GB_2026-10-13.md
+- /home/tonyus-dev/Documents/ChatGPT/FLYNN/docs/ARQUITETURA_NEUROSSINTETICA_V2.md
+- /home/tonyus-dev/Documents/ChatGPT/FLYNN/app/neuro_synthetic/aggregator.py
+- /home/tonyus-dev/Documents/ChatGPT/FLYNN/app/neuro_synthetic/sqlite_store.py
+- /home/tonyus-dev/Portifolio/INFRA/FLYNN_FAFB_V783_DATA_MANIFEST_2026-10-14.json
+- /home/tonyus-dev/Portifolio/INFRA/FLYNN_GOOGLE_CLOUD_1GB_2026-10-13.md
 
 ## V2.8 — MAPA DE EXECUÇÃO (ENGENHARIA SEM ROTEIRO COMPORTAMENTAL)
 
