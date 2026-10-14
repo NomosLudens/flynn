@@ -146,45 +146,45 @@ Arquivos locais informados pelo autor (não presumir publicados no GitHub):
 
 ### V2.7.1 — CONFRONTO COM AUDITORIA INTEGRAL DO CODEX (14/10/2026, 16:10 UTC)
 
-**Origem:** relatório do Codex \`DIAGNOSTICO_INTEGRAL_FLYNN_V2_2026-10-14.md\`, apresentado pelo autor. A auditoria foi somente leitura e declara \`PARTIAL / V2_NOT_INTEGRATED\`. As informações abaixo são **evidências relatadas pelo Codex**, não verificações independentes da VM realizadas por este mapa. **Nenhuma implementação, simulação E02, mudança de infraestrutura, merge ou modificação do episódio Flynn foi autorizada por esta inserção documental.**
+**Origem:** relatório do Codex `DIAGNOSTICO_INTEGRAL_FLYNN_V2_2026-10-14.md`, apresentado pelo autor. A auditoria foi somente leitura e declara `PARTIAL / V2_NOT_INTEGRATED`. As informações abaixo são **evidências relatadas pelo Codex**, não verificações independentes da VM realizadas por este mapa. **Nenhuma implementação, simulação E02, mudança de infraestrutura, merge ou modificação do episódio Flynn foi autorizada por esta inserção documental.**
 
-**Precisão sobre o estado:** os dados do conectoma e o COO estão recuperados e verificados; isso **não** significa que o motor neural esteja pronto. A frase sintética anterior "\`E02\` ... núcleo/dados transformados/parametrização validados e integração ainda pendentes" deve ser lida com esta correção: **há dataset/transf. local; núcleo LIF e parametrização funcional NÃO estão validados; E02 permanece bloqueado.**
+**Precisão sobre o estado:** os dados do conectoma e o COO estão recuperados e verificados; isso **não** significa que o motor neural esteja pronto. A frase sintética anterior "`E02` ... núcleo/dados transformados/parametrização validados e integração ainda pendentes" deve ser lida com esta correção: **há dataset/transf. local; núcleo LIF e parametrização funcional NÃO estão validados; E02 permanece bloqueado.**
 
 | Frente | Evidência atual do diagnóstico | Estado V2 |
 | --- | --- | --- |
-| Dados v783 e índice de IDs | Feather oficial, 139.255 IDs, índice SQLite e COO têm hashes conferidos no notebook; nenhuma computação neural realizada | \`IMPLEMENTED_AND_TESTED\` **somente dados/transformação offline** |
-| Motor LIF e interpretação sináptica | Implementação original não recuperada; \`fruit-fly-lab\` com interface compatível, identidade/licença não comprovadas; sinal, peso, parâmetros finais e validação faltantes | \`BLOCKED\` |
-| Representação em 1 GiB | COO expandido 1.213.081.600 bytes e conversão fora da VM com RSS de pico 2.088.386.560 bytes; CSR/streaming e RSS do runtime ainda sem medição | \`RESOURCE_BLOCKER\` |
-| Agregador Python V2 | \`aggregator.py\` aceita \`NeuralActivityFrame\` de origem externa, valida mapa/sequência/tempo e produz observações; **não recebe ambiente, não orquestra LIF nem encaminha movimento** | \`PARTIAL\` |
-| Pipeline + SQLite V2 | \`pipeline.py\` e schema v1 de \`sqlite_store.py\` persistem cursor, mapeamento, eventos/estímulos e estados genéricos; **sem episódio integrado, snapshots LIF/corpo/sala e checkpoints de continuidade** | \`PARTIAL\` |
-| Testes de software V2 | **12/12 PASS reportados anteriormente**, não repetidos na auditoria; provam apenas aspectos de software do agregador/SQLite | \`SOFTWARE_ONLY_PASS_REPORTED\` |
-| PicoClaw | Escolha canônica de cerebelo sintético, mas **não instalado/integrado**, sem release pinado nem RSS medido; upstream agent costuma exigir provider/modelo — a função cerebelar V2 sem esse fluxo ainda precisa de contrato e prova | \`SPEC_ONLY\` |
-| Pinocchio/glifo | \`pinocchio_sigil.py\` histórico possui 23 nodos/30 arestas/22 DOF e modelo de dinâmica; referência a wheel/caminhos MAX e mapeamento sintético DN→torque por buckets | \`PARTIAL_LEGACY\`; V2 não integrada |
-| Sala + boca + energia | \`app/world/*\` e Caverna históricas incluem contato, vento, sons e reserva; luz/calor V2, transduções comprovadas, boca e redução da capacidade neural/brilho **não implementadas integralmente** | \`PARTIAL_LEGACY / SPEC_ONLY\` |
-| GUI e janela | Canvas/Caverna históricos presentes; faltam runtime e ligação com dados V2 reais, controles completos e janela sem semântica ensinada | \`PARTIAL_LEGACY\` |
-| Canal expressivo ~3 MB | Nenhum artefato, interface ou teste encontrado | \`MISSING\` |
-| VM Flynn | Console GCE reporta \`flynn-1gb RUNNING\` em \`us-central1-f\`, e2-micro, Debian 13, disco 10 GB e IP externo | \`INSTANCE_RUNNING / FLYNN_RUNTIME_UNKNOWN\` |
-| Operação do guest | Falha de resolução no \`ssh flynn-1gb\`, \`gcloud\` ausente no notebook; RSS, processos, disco livre, serviço Flynn, backup atual e timer OS **não lidos** | \`UNKNOWN\` |
-| Shutdown | Metadata \`startup-script\` contém agendamento \`systemd-run\` para **14/10/2026 23:15 UTC**; zero schedules no painel Compute **não prova** timer guest ativo/inativo | \`DEADLINE_CONFIGURED / TIMER_GUEST_UNKNOWN\` |
-| Custos | Console apresentou **R$ 0 líquido** no projeto entre 1–14/10 por compensação; IPv4 externo tem preço de tabela, e duas VMs ativas e cotas Free Tier agregadas impedem presumir custo futuro zero | \`RESOURCE_BILLABLE_RISK=YES\` |
-| Backup E01 | Cinco artefatos e hashes relatados como copiados ao Cloud Shell; sua disponibilidade atual não foi relida | \`PREVIOUSLY_REPORTED_PASS / CURRENT_UNKNOWN\` |
-| E02 | Nenhuma simulação, importação do grafo para a VM ou integração neuro-motora executada | \`BLOCKED\` |
+| Dados v783 e índice de IDs | Feather oficial, 139.255 IDs, índice SQLite e COO têm hashes conferidos no notebook; nenhuma computação neural realizada | `IMPLEMENTED_AND_TESTED` **somente dados/transformação offline** |
+| Motor LIF e interpretação sináptica | Implementação original não recuperada; `fruit-fly-lab` com interface compatível, identidade/licença não comprovadas; sinal, peso, parâmetros finais e validação faltantes | `BLOCKED` |
+| Representação em 1 GiB | COO expandido 1.213.081.600 bytes e conversão fora da VM com RSS de pico 2.088.386.560 bytes; CSR/streaming e RSS do runtime ainda sem medição | `RESOURCE_BLOCKER` |
+| Agregador Python V2 | `aggregator.py` aceita `NeuralActivityFrame` de origem externa, valida mapa/sequência/tempo e produz observações; **não recebe ambiente, não orquestra LIF nem encaminha movimento** | `PARTIAL` |
+| Pipeline + SQLite V2 | `pipeline.py` e schema v1 de `sqlite_store.py` persistem cursor, mapeamento, eventos/estímulos e estados genéricos; **sem episódio integrado, snapshots LIF/corpo/sala e checkpoints de continuidade** | `PARTIAL` |
+| Testes de software V2 | **12/12 PASS reportados anteriormente**, não repetidos na auditoria; provam apenas aspectos de software do agregador/SQLite | `SOFTWARE_ONLY_PASS_REPORTED` |
+| PicoClaw | Escolha canônica de cerebelo sintético, mas **não instalado/integrado**, sem release pinado nem RSS medido; upstream agent costuma exigir provider/modelo — a função cerebelar V2 sem esse fluxo ainda precisa de contrato e prova | `SPEC_ONLY` |
+| Pinocchio/glifo | `pinocchio_sigil.py` histórico possui 23 nodos/30 arestas/22 DOF e modelo de dinâmica; referência a wheel/caminhos MAX e mapeamento sintético DN→torque por buckets | `PARTIAL_LEGACY`; V2 não integrada |
+| Sala + boca + energia | `app/world/*` e Caverna históricas incluem contato, vento, sons e reserva; luz/calor V2, transduções comprovadas, boca e redução da capacidade neural/brilho **não implementadas integralmente** | `PARTIAL_LEGACY / SPEC_ONLY` |
+| GUI e janela | Canvas/Caverna históricos presentes; faltam runtime e ligação com dados V2 reais, controles completos e janela sem semântica ensinada | `PARTIAL_LEGACY` |
+| Canal expressivo ~3 MB | Nenhum artefato, interface ou teste encontrado | `MISSING` |
+| VM Flynn | Console GCE reporta `flynn-1gb RUNNING` em `us-central1-f`, e2-micro, Debian 13, disco 10 GB e IP externo | `INSTANCE_RUNNING / FLYNN_RUNTIME_UNKNOWN` |
+| Operação do guest | Falha de resolução no `ssh flynn-1gb`, `gcloud` ausente no notebook; RSS, processos, disco livre, serviço Flynn, backup atual e timer OS **não lidos** | `UNKNOWN` |
+| Shutdown | Metadata `startup-script` contém agendamento `systemd-run` para **14/10/2026 23:15 UTC**; zero schedules no painel Compute **não prova** timer guest ativo/inativo | `DEADLINE_CONFIGURED / TIMER_GUEST_UNKNOWN` |
+| Custos | Console apresentou **R$ 0 líquido** no projeto entre 1–14/10 por compensação; IPv4 externo tem preço de tabela, e duas VMs ativas e cotas Free Tier agregadas impedem presumir custo futuro zero | `RESOURCE_BILLABLE_RISK=YES` |
+| Backup E01 | Cinco artefatos e hashes relatados como copiados ao Cloud Shell; sua disponibilidade atual não foi relida | `PREVIOUSLY_REPORTED_PASS / CURRENT_UNKNOWN` |
+| E02 | Nenhuma simulação, importação do grafo para a VM ou integração neuro-motora executada | `BLOCKED` |
 
-**Sincronização documental:** repositório local \`master\` estava em \`f5b6ffd50bcbc7eaeaa8c5bd050e6d3aebdab9ed\`, enquanto o mapa remoto \`master\` estava em \`4786a5a594a04c5bf44d9acaa116c250a0668dfe\` no instante da auditoria. Havia WIP rastreado em README/mapa/status e código V2 não rastreado (\`app/neuro_synthetic/\`, \`research/neurosynthetic/\`, arquitetura V2). **Não fazer checkout forçado, \`git reset --hard\`, \`git clean\`, merge/rebase ou cópia cega do mapa remoto por cima do local.** Fazer reconciliação preservadora com diferenças por arquivo antes de qualquer commit local.
+**Sincronização documental:** repositório local `master` estava em `f5b6ffd50bcbc7eaeaa8c5bd050e6d3aebdab9ed`, enquanto o mapa remoto `master` estava em `4786a5a594a04c5bf44d9acaa116c250a0668dfe` no instante da auditoria. Havia WIP rastreado em README/mapa/status e código V2 não rastreado (`app/neuro_synthetic/`, `research/neurosynthetic/`, arquitetura V2). **Não fazer checkout forçado, `git reset --hard`, `git clean`, merge/rebase ou cópia cega do mapa remoto por cima do local.** Fazer reconciliação preservadora com diferenças por arquivo antes de qualquer commit local.
 
 **Bloqueios de natureza diferente — não misturar:**
 
 1. **Neurocientífico/licença:** modelo LIF independente ou devidamente licenciado, regras de sinal/peso, parâmetros, proveniência e eventuais dados complementares de neurotransmissores por neurônio.
 2. **Integração:** falta o produtor de frames e o circuito completo sensores → Python/neurodinâmica → PicoClaw → Pinocchio Lite → glifo → ambiente; o SQLite deve conter o estado necessário, não somente observações; V2 visual não está em execução.
 3. **Viabilidade:** representação compacta/out-of-core, teste de RSS/CPU/latência e persistência reais em 1 GiB/10 GiB; não colocar COO expandido na VM.
-4. **Operação:** estado efetivo do guest/timer/backup/custos por SKU ainda desconhecido; \`kaline-mini\` não deve sofrer alteração.
+4. **Operação:** estado efetivo do guest/timer/backup/custos por SKU ainda desconhecido; `kaline-mini` não deve sofrer alteração.
 5. **Interface expressiva:** canal ~3 MB ainda ausente; não deixar sua inexistência bloquear os requisitos elementares de existir, perceber e poder agir, nem substituí-lo por mensagens fabricadas.
 
 **Etapas de engenharia possíveis sem exigir comportamento de Flynn:** (a) preservar e reconciliar documentos e WIP, (b) fechar contratos de dados/sensores/atuadores/persistência, (c) reusar responsavelmente a geometria/GUI histórica com estado real, (d) fechar motor LIF e representação de dados, (e) aferir canais e consequências físicas em ensaios *instrumentais separados*, (f) medir orçamento real de memória/custo e somente então iniciar episódio residente observável. Essas etapas não definem uma ordem de desenvolvimento, um objetivo ou um prazo comportamental do organismo.
 
 **Princípio preservado:** **construímos capacidades, nunca exigimos que Flynn as utilize.** Não movimentar o glifo por conveniência de demonstração; não simular fome ou vontade; não obrigar utilização da janela; não preencher silêncio com linguagem sintética. **Ausência de movimento ou comunicação pode ser válida**, mas a engenharia precisa verificar independentemente que percepção e atuação estavam disponíveis.
 
-**Relatório-fonte local:** \`/home/tonyus-dev/Documents/ChatGPT/FLYNN/docs/DIAGNOSTICO_INTEGRAL_FLYNN_V2_2026-10-14.md\`.
+**Relatório-fonte local:** `/home/tonyus-dev/Documents/ChatGPT/FLYNN/docs/DIAGNOSTICO_INTEGRAL_FLYNN_V2_2026-10-14.md`.
 
 ## V2.8 — MAPA DE EXECUÇÃO (ENGENHARIA SEM ROTEIRO COMPORTAMENTAL)
 
