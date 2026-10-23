@@ -1,0 +1,2491 @@
+Flynn T2 significant persistence port
+Date: 2026-10-23
+Target: installed T2 baseline at /home/tonyus-dev/flynn-v2-vm-validation-20261019/resident-app
+Baseline source copy: /tmp/flynn-installed-baseline-20261023 (exact installed hashes recorded before modification)
+Port source: /tmp/flynn-t2-installed-port-20261023 (final deployed hashes)
+This patch records the deployed delta. It is intentionally separate from the 42 existing work-in-progress paths.
+
+--- a/app/neuro_synthetic/sqlite_store.py
++++ b/app/neuro_synthetic/sqlite_store.py
+@@ -107,6 +107,83 @@
+     return json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False)
+ 
+ 
++def picoclaw_frame_digest(frame: Mapping[str, Any], dn_readout: Mapping[str, Any] | None) -> str:
++    """Digest the identity, exact LIF frame and official DN readout sent to PicoClaw."""
++    def canonical_number(value: Any) -> Any:
++        # The deployed Go bridge decodes generic DN JSON numbers as float64.
++        # Normalize integral values back to integers so the same readout has
++        # one digest before and after the JSON-RPC hop.
++        if isinstance(value, float) and math.isfinite(value) and value.is_integer():
++            return int(value)
++        if isinstance(value, dict):
++            return {key: canonical_number(item) for key, item in value.items()}
++        if isinstance(value, list):
++            return [canonical_number(item) for item in value]
++        return value
++
++    fields = (
++        "episode_id", "causal_generation_id", "sequence", "dataset_version",
++        "manifest_sha256", "mapping_sha256", "core_id", "model_sha256",
++        "config_sha256", "connectome_sha256", "start_tick", "end_tick", "dt_ms",
++        "neural_time_ms", "active_neuron_count", "total_spikes", "input_sha256",
++        "mapped_spikes",
++    )
++    canonical = canonical_number({key: frame.get(key) for key in fields})
++    canonical["dn_readout"] = canonical_number(dict(dn_readout)) if dn_readout is not None else None
++    return hashlib.sha256(_json(canonical).encode("utf-8")).hexdigest()
++
++def _compact_component_state(component: str, state: Mapping[str, Any]) -> dict[str, Any]:
++    """Losslessly sparse-encode DN counts when that is smaller than the dense JSON."""
++    value = dict(state)
++    if component != "descending_motor_readout_v2":
++        return value
++    indices = value.get("compact_indices")
++    counts = value.get("spike_counts")
++    if not isinstance(indices, list) or not isinstance(counts, list) or len(indices) != len(counts):
++        return value
++    if any(isinstance(count, bool) or not isinstance(count, int) or count < 0 for count in counts):
++        raise ValueError("DN spike counts must be non-negative integers")
++    if (sum(counts) != state.get("total_spikes")
++            or sum(count > 0 for count in counts) != state.get("active_neurons")):
++        raise ValueError("DN spike count vector disagrees with the readout totals")
++    sparse = [[index, count] for index, count in enumerate(counts) if count]
++    if len(_json(sparse).encode("utf-8")) >= len(_json(counts).encode("utf-8")):
++        return value
++    value.pop("spike_counts")
++    value["_flynn_observation_encoding"] = "dn_sparse_counts_v1"
++    value["spike_counts_sparse"] = sparse
++    return value
++
++def _expand_component_state(component: str, state: Mapping[str, Any]) -> dict[str, Any]:
++    """Read losslessly compacted states through the historical dense interface."""
++    value = dict(state)
++    encoding = value.pop("_flynn_observation_encoding", None)
++    if encoding is None:
++        return value
++    if component != "descending_motor_readout_v2" or encoding != "dn_sparse_counts_v1":
++        raise RuntimeError(f"unsupported persisted observation encoding: {encoding}")
++    sparse = value.pop("spike_counts_sparse", None)
++    indices = value.get("compact_indices")
++    if not isinstance(indices, list) or not isinstance(sparse, list):
++        raise RuntimeError("sparse DN observation is missing its canonical index map or counts")
++    counts = [0] * len(indices)
++    previous = -1
++    for pair in sparse:
++        if not isinstance(pair, list) or len(pair) != 2:
++            raise RuntimeError("invalid sparse DN count entry")
++        index, count = pair
++        if (isinstance(index, bool) or not isinstance(index, int) or index <= previous
++                or index < 0 or index >= len(counts) or isinstance(count, bool)
++                or not isinstance(count, int) or count <= 0):
++            raise RuntimeError("sparse DN counts violate ordered index or value constraints")
++        counts[index] = count
++        previous = index
++    if sum(counts) != value.get("total_spikes") or sum(count > 0 for count in counts) != value.get("active_neurons"):
++        raise RuntimeError("sparse DN counts disagree with their persisted totals")
++    value["spike_counts"] = counts
++    return value
++
++
+ def _validate_event_time(occurred_at_utc: str, neural_time_ms: float | None) -> None:
+     try:
+         parsed = datetime.fromisoformat(occurred_at_utc.replace("Z", "+00:00"))
+@@ -187,33 +264,38 @@
+             raise RuntimeError("this SQLite connection is read-only; writes belong to the resident coordinator")
+ 
+     def event_payload(self, event_id: str) -> dict[str, Any] | None:
+-        """Resolve compact component-state references and legacy inline payloads."""
++        """Resolve both legacy inline event payloads and compact state references."""
+         row = self.connection.execute(
+-            "SELECT event_type,payload_json FROM events WHERE event_id=?", (event_id,)
++            "SELECT event_type, payload_json FROM events WHERE event_id=?", (event_id,)
+         ).fetchone()
+         if row is None:
+             return None
+         payload = json.loads(row[1])
+-        reference = payload.get("_component_state_ref") if isinstance(payload, dict) else None
+-        if reference is None:
++        ref = payload.get("_component_state_ref") if isinstance(payload, dict) else None
++        if ref is None:
+             return payload
+-        if row[0] != "COMPONENT_STATE_RECORDED" or not isinstance(reference, dict):
++        if row[0] != "COMPONENT_STATE_RECORDED" or not isinstance(ref, dict):
+             raise RuntimeError("invalid component-state event reference")
+         state = self.connection.execute(
+             "SELECT state_json FROM component_states WHERE state_id=? AND event_id=? AND component=?",
+-            (reference.get("state_id"), event_id, reference.get("component")),
++            (ref.get("state_id"), event_id, ref.get("component")),
+         ).fetchone()
+         if state is None:
+-            raise RuntimeError(f"unresolved component-state event reference: {event_id}")
+-        return json.loads(state[0])
+-
+-    def _state_event_reference(self, state_id: str, event_id: str, component: str,
+-                               neural_time_ms: float | None, state: Mapping[str, Any]) -> str:
+-        episode_id = state.get("episode_id") or self._active_episode_id
+-        generation_id = state.get("causal_generation_id") or self._active_generation_id
+-        if self._active_generation_id is not None and generation_id != self._active_generation_id:
+-            raise RuntimeError("component-state event generation differs from active generation")
+-        payload = {
++            raise RuntimeError(f"component-state event reference is unresolved: {event_id}")
++        return self.decode_component_state(str(ref.get("component")), json.loads(state[0]))
++
++    def _state_event_reference(
++        self, *, state_id: str, event_id: str, component: str,
++        neural_time_ms: float | None, state: Mapping[str, Any],
++    ) -> str:
++        """Build a compact event payload while retaining indexed causal identity."""
++        causal = self.active_causal_generation()
++        generation_id = state.get("causal_generation_id")
++        episode_id = state.get("episode_id")
++        if causal is not None:
++            generation_id = generation_id or causal["generation_id"]
++            episode_id = episode_id or causal["episode_id"]
++        reference = {
+             "_component_state_ref": {
+                 "schema_version": SCHEMA_VERSION,
+                 "state_id": state_id,
+@@ -225,8 +307,8 @@
+         }
+         for key in ("tick", "end_tick", "sequence"):
+             if key in state:
+-                payload[key] = state[key]
+-        return _json(payload)
++                reference[key] = state[key]
++        return _json(reference)
+ 
+     @property
+     def causal_generation_id(self) -> str | None:
+@@ -362,17 +444,17 @@
+ 
+     def latest_component_state(self, component: str) -> dict[str, Any] | None:
+         """Read the most recently committed snapshot for one component."""
+-        row = None
+-        if self._active_generation_id is not None:
++        if self._active_generation_id is None:
+             row = self.connection.execute(
+                 "SELECT state_id, event_id, neural_time_ms, schema_version, state_json "
+-                "FROM component_states WHERE component=? AND json_extract(state_json,'$.causal_generation_id')=? "
+-                "ORDER BY rowid DESC LIMIT 1", (component, self._active_generation_id),
++                "FROM component_states WHERE component=? ORDER BY rowid DESC LIMIT 1", (component,),
+             ).fetchone()
+         else:
+             row = self.connection.execute(
+                 "SELECT state_id, event_id, neural_time_ms, schema_version, state_json "
+-                "FROM component_states WHERE component=? ORDER BY rowid DESC LIMIT 1", (component,),
++                "FROM component_states WHERE component=? "
++                "AND json_extract(state_json,'$.causal_generation_id')=? ORDER BY rowid DESC LIMIT 1",
++                (component, self._active_generation_id),
+             ).fetchone()
+         if row is None and component == "integrated_world_neural_checkpoint":
+             return self.active_checkpoint()
+@@ -396,7 +478,7 @@
+             return None
+         return {
+             "state_id": row[0], "event_id": row[1], "neural_time_ms": row[2],
+-            "schema_version": row[3], "state": json.loads(row[4]),
++            "schema_version": row[3], "state": self.decode_component_state(component, json.loads(row[4])),
+         }
+ 
+     def coordinator_status(self) -> dict[str, Any]:
+@@ -568,18 +650,20 @@
+         state_value = dict(state)
+         if self._active_generation_id is not None:
+             state_value.setdefault("causal_generation_id", self._active_generation_id)
++            if state_value["causal_generation_id"] != self._active_generation_id:
++                raise ValueError("component state belongs to a non-active causal generation")
+             if component == "neural_activity_aggregator":
+-                generation_id = self._active_generation_id
+                 episode_id = state_value.get("episode_id")
+                 end_tick = state_value.get("end_tick")
+                 if not episode_id or isinstance(end_tick, bool) or not isinstance(end_tick, int):
+                     raise ValueError("generation-scoped neural state requires episode_id and integer end_tick")
+-                state_id = event_id = f"{episode_id}:generation:{generation_id}:tick:{end_tick}"
++                state_id = event_id = f"{episode_id}:generation:{self._active_generation_id}:tick:{end_tick}"
+         state_id = self.qualify_id(state_id)
+         event_id = self.qualify_id(event_id)
+-        state_json = _json(state_value)
++        state_json = _json(_compact_component_state(component, state_value))
+         event_payload_json = self._state_event_reference(
+-            state_id, event_id, component, neural_time_ms, state_value
++            state_id=state_id, event_id=event_id, component=component,
++            neural_time_ms=neural_time_ms, state=state_value,
+         )
+         with self.connection:
+             self.connection.execute(
+@@ -591,28 +675,31 @@
+                 (state_id, event_id, component, neural_time_ms, SCHEMA_VERSION, state_json),
+             )
+ 
+-    def record_states_atomically(self, records: Iterable[Mapping[str, Any]], *,
+-                                 causal_cursor: Mapping[str, Any] | None = None) -> None:
++    def record_states_atomically(
++        self, records: Iterable[Mapping[str, Any]], *,
++        causal_cursor: Mapping[str, Any] | None = None,
++    ) -> None:
+         """Append related component states as one SQLite commit boundary."""
+         self._require_writer()
+         prepared = []
+         for record in records:
+-            state_id = record["state_id"]
+-            event_id = record["event_id"]
++            state_id = self.qualify_id(record["state_id"])
++            event_id = self.qualify_id(record["event_id"])
+             component = record["component"]
+             occurred_at_utc = record["occurred_at_utc"]
+             neural_time_ms = record.get("neural_time_ms")
+-            state_id = self.qualify_id(state_id)
+-            event_id = self.qualify_id(event_id)
+             state_value = dict(record["state"])
+             if self._active_generation_id is not None:
+                 state_value.setdefault("causal_generation_id", self._active_generation_id)
+-            state_json = _json(state_value)
++                if state_value["causal_generation_id"] != self._active_generation_id:
++                    raise ValueError("atomic component state belongs to a non-active causal generation")
++            state_json = _json(_compact_component_state(component, state_value))
+             if not all((state_id, event_id, component, occurred_at_utc)):
+                 raise ValueError("state ID, event ID, component, and UTC timestamp are required")
+             _validate_event_time(occurred_at_utc, neural_time_ms)
+             event_payload_json = self._state_event_reference(
+-                state_id, event_id, component, neural_time_ms, state_value
++                state_id=state_id, event_id=event_id, component=component,
++                neural_time_ms=neural_time_ms, state=state_value,
+             )
+             prepared.append((state_id, event_id, component, occurred_at_utc,
+                              neural_time_ms, state_json, event_payload_json))
+@@ -630,38 +717,215 @@
+                     (state_id, event_id, component, neural_time_ms, SCHEMA_VERSION, state_json),
+                 )
+             if causal_cursor is not None:
+-                active = self.active_causal_generation()
+-                if (active is None or active["generation_id"] != causal_cursor.get("generation_id")
+-                        or active["episode_id"] != causal_cursor.get("episode_id")):
+-                    raise RuntimeError("checkpoint confirmation does not match the active causal generation")
+-                tick = int(causal_cursor["checkpoint_tick"])
+-                if tick < active["checkpoint_tick"]:
+-                    raise RuntimeError("causal checkpoint cursor cannot move backwards")
++                current = self.active_causal_generation()
++                if (current is None
++                        or current["episode_id"] != causal_cursor.get("episode_id")
++                        or current["generation_id"] != causal_cursor.get("generation_id")):
++                    raise ValueError("checkpoint confirmation does not belong to the active causal generation")
++                checkpoint_tick = int(causal_cursor["checkpoint_tick"])
++                if checkpoint_tick < current["checkpoint_tick"]:
++                    raise ValueError("confirmed causal checkpoint cannot move its cursor backwards")
+                 checkpoint_state_id = self.qualify_id(str(causal_cursor["checkpoint_state_id"]))
+-                checkpoint_record = next((record for record in prepared if record[0] == checkpoint_state_id), None)
++                checkpoint_record = next((item for item in prepared if item[0] == checkpoint_state_id), None)
+                 if checkpoint_record is None or checkpoint_record[2] != "integrated_world_neural_checkpoint":
+                     raise RuntimeError("causal cursor update must commit with its integrated checkpoint state")
+-                checkpoint_json = json.loads(checkpoint_record[5])
+-                if (checkpoint_json.get("episode_id") != causal_cursor.get("episode_id")
+-                        or checkpoint_json.get("checkpoint_sha256") != causal_cursor.get("checkpoint_sha256")
+-                        or int(checkpoint_json.get("neural_tick", -1)) != tick
+-                        or checkpoint_json.get("execution_kind") != "RESIDENT"):
++                checkpoint_state = json.loads(checkpoint_record[5])
++                if (checkpoint_state.get("episode_id") != causal_cursor.get("episode_id")
++                        or checkpoint_state.get("checkpoint_sha256") != causal_cursor.get("checkpoint_sha256")
++                        or int(checkpoint_state.get("neural_tick", -1)) != checkpoint_tick
++                        or checkpoint_state.get("execution_kind") != "RESIDENT"):
+                     raise RuntimeError("causal cursor metadata differs from the checkpoint committed in this transaction")
+                 confirmed_cycle = False
+-                for record in prepared:
+-                    if record[2] != "neuro_world_coordinator":
++                for item in prepared:
++                    if item[2] != "neuro_world_coordinator":
+                         continue
+-                    cycle_state = json.loads(record[5])
++                    cycle_state = json.loads(item[5])
+                     if (cycle_state.get("cycle_status") == "CYCLE_CONFIRMED"
+                             and cycle_state.get("checkpoint_sha256") == causal_cursor.get("checkpoint_sha256")
+-                            and int(cycle_state.get("checkpoint_tick", -1)) == tick
++                            and int(cycle_state.get("checkpoint_tick", -1)) == checkpoint_tick
+                             and cycle_state.get("checkpoint_state_id") == checkpoint_state_id):
+                         confirmed_cycle = True
+                         break
+                 if not confirmed_cycle:
+                     raise RuntimeError("causal cursor update requires its matching confirmed cycle in the same transaction")
+                 self.connection.execute(
+-                    "UPDATE causal_generation_control SET checkpoint_state_id=?,checkpoint_sha256=?,checkpoint_tick=?,"
+-                    "revision=revision+1,updated_at_utc=? WHERE singleton=1",
+-                    (checkpoint_state_id, causal_cursor["checkpoint_sha256"], tick, causal_cursor["updated_at_utc"]),
++                    "UPDATE causal_generation_control SET checkpoint_state_id=?, checkpoint_sha256=?, "
++                    "checkpoint_tick=?, revision=revision+1, updated_at_utc=? WHERE singleton=1",
++                    (checkpoint_state_id, causal_cursor["checkpoint_sha256"],
++                     checkpoint_tick, causal_cursor["updated_at_utc"]),
+                 )
++    @staticmethod
++    def decode_component_state(component: str, state: Mapping[str, Any]) -> dict[str, Any]:
++        """Return the historical full shape for losslessly compacted observations."""
++        return _expand_component_state(component, state)
++
++
++    @staticmethod
++    def _frame_receipt_ids(episode_id: str, generation_id: str, frame_seq: int) -> tuple[str, str]:
++        key_json = _json([episode_id, generation_id, frame_seq])
++        key_hash = hashlib.sha256(key_json.encode("utf-8")).hexdigest()
++        generation_marker = f":generation:{generation_id}"
++        prefix = f"picoclaw-frame-receipt:{key_hash}{generation_marker}"
++        return f"{prefix}:prepared", f"{prefix}:confirmed"
++
++
++    def read_picoclaw_frame_receipt(
++        self, *, episode_id: str, generation_id: str, frame_seq: int,
++    ) -> dict[str, Any] | None:
++        """Read the durable prepared/confirmed receipt; this never moves the causal cursor."""
++        prepared_id, confirmed_id = self._frame_receipt_ids(episode_id, generation_id, frame_seq)
++        prepared_id = self.qualify_id(prepared_id)
++        confirmed_id = self.qualify_id(confirmed_id)
++        event = self.connection.execute(
++            "SELECT event_type,source,neural_time_ms,occurred_at_utc,payload_json,provenance_sha256 "
++            "FROM events WHERE event_id=?", (prepared_id,),
++        ).fetchone()
++        if event is None:
++            return None
++        prepared = json.loads(event[4])
++        if (prepared.get("episode_id") != episode_id
++                or prepared.get("causal_generation_id") != generation_id
++                or int(prepared.get("frame_seq", -1)) != int(frame_seq)):
++            raise RuntimeError("frame receipt key resolves to different causal identity")
++        confirmed = self.component_state_by_id(confirmed_id)
++        if confirmed is not None:
++            state = confirmed["state"]
++            for key in ("episode_id", "causal_generation_id", "frame_seq", "frame_digest"):
++                if state.get(key) != prepared.get(key):
++                    raise RuntimeError("confirmed frame receipt conflicts with its prepared identity")
++            return {**prepared, "status": "CONFIRMED", "prepared": prepared,
++                    "confirmed": state, "state_id": confirmed_id}
++        return {**prepared, "status": "PREPARED", "prepared": prepared,
++                "confirmed": None, "state_id": confirmed_id}
++
++
++    def prepare_picoclaw_frame_receipt(
++        self, *, frame: Mapping[str, Any], dn_readout: Mapping[str, Any] | None,
++        occurred_at_utc: str, delivery_epoch: str,
++    ) -> dict[str, Any]:
++        """Durably record minimal frame identity before calling the MCP/PicoClaw path."""
++        self._require_writer()
++        active = self.active_causal_generation()
++        episode_id = str(frame.get("episode_id", ""))
++        generation_id = str(frame.get("causal_generation_id") or (active or {}).get("generation_id") or "")
++        sequence = frame.get("sequence")
++        if (not episode_id or not generation_id or not isinstance(delivery_epoch, str)
++                or not delivery_epoch or isinstance(sequence, bool)
++                or not isinstance(sequence, int) or sequence < 0):
++            raise ValueError("resident frame receipt requires episode, generation, and non-negative sequence")
++        if active is not None and (active["episode_id"] != episode_id or active["generation_id"] != generation_id):
++            raise ValueError("frame receipt identity differs from the active causal generation")
++        digest = picoclaw_frame_digest(frame, dn_readout)
++        receipt = {
++            "schema": "flynn.picoclaw_frame_receipt.v1",
++            "episode_id": episode_id,
++            "causal_generation_id": generation_id,
++            "frame_seq": sequence,
++            "start_tick": int(frame["start_tick"]),
++            "end_tick": int(frame["end_tick"]),
++            "start_neural_time_ms": float(frame["start_tick"]) * float(frame["dt_ms"]),
++            "end_neural_time_ms": float(frame["neural_time_ms"]),
++            "input_provenance_sha256": str(frame["input_sha256"]),
++            "mapping_sha256": str(frame["mapping_sha256"]),
++            "manifest_sha256": str(frame["manifest_sha256"]),
++            "model_sha256": str(frame["model_sha256"]),
++            "config_sha256": str(frame["config_sha256"]),
++            "connectome_sha256": str(frame["connectome_sha256"]),
++            "dn_readout_sha256": hashlib.sha256(_json(dn_readout).encode("utf-8")).hexdigest()
++                if dn_readout is not None else None,
++            "frame_digest": digest,
++            "idempotency_key": f"{episode_id}|{generation_id}|{sequence}",
++            "delivery_epoch": delivery_epoch,
++            "status": "PREPARED",
++            "replay_policy": "PENDING_FROM_ANOTHER_DELIVERY_EPOCH_REQUIRES_RECONCILIATION",
++        }
++        current = self.read_picoclaw_frame_receipt(
++            episode_id=episode_id, generation_id=generation_id, frame_seq=sequence,
++        )
++        if current is not None:
++            if current["prepared"].get("frame_digest") != digest:
++                raise ValueError("frame idempotency conflict: same episode/generation/sequence has different content")
++            return {**current["prepared"], "created": False,
++                    "status": current["status"],
++                    "confirmed": current["confirmed"]}
++        prepared_id, _ = self._frame_receipt_ids(episode_id, generation_id, sequence)
++        inserted = self.record_event(
++            event_id=prepared_id,
++            event_type="PICOCLAW_FRAME_RECEIPT_PREPARED",
++            source="resident_t2_coordinator",
++            occurred_at_utc=occurred_at_utc,
++            neural_time_ms=float(frame["neural_time_ms"]),
++            provenance_sha256=str(frame["input_sha256"]),
++            payload=receipt,
++        )
++        if not inserted:
++            current = self.read_picoclaw_frame_receipt(
++                episode_id=episode_id, generation_id=generation_id, frame_seq=sequence,
++            )
++            if current is None or current["prepared"].get("frame_digest") != digest:
++                raise ValueError("concurrent frame receipt preparation conflicts with this frame")
++            return {**receipt, "status": current["status"], "created": False,
++                    "confirmed": current["confirmed"]}
++        return {**receipt, "created": True, "confirmed": None}
++
++
++    def picoclaw_frame_confirmation_record(
++        self, *, receipt: Mapping[str, Any], occurred_at_utc: str,
++        result_sha256: str, result_status: str, output_state_id: str | None,
++        body_checkpoint_state_id: str | None,
++    ) -> dict[str, Any]:
++        """Prepare an append-only confirmation row for an atomic state transaction."""
++        self._require_writer()
++        if receipt.get("status") != "PREPARED":
++            raise ValueError("only a prepared PicoClaw receipt can be confirmed")
++        if len(result_sha256) != 64 or any(c not in "0123456789abcdef" for c in result_sha256):
++            raise ValueError("PicoClaw receipt result must have a lowercase SHA-256 digest")
++        episode_id = str(receipt["episode_id"])
++        generation_id = str(receipt["causal_generation_id"])
++        sequence = int(receipt["frame_seq"])
++        _, state_id = self._frame_receipt_ids(episode_id, generation_id, sequence)
++        return {
++            "state_id": state_id,
++            "event_id": f"{state_id}:state",
++            "component": "picoclaw_frame_receipt",
++            "occurred_at_utc": occurred_at_utc,
++            "neural_time_ms": float(receipt["end_neural_time_ms"]),
++            "state": {
++                **{key: receipt[key] for key in (
++                    "schema", "episode_id", "causal_generation_id", "frame_seq",
++                    "start_tick", "end_tick", "start_neural_time_ms", "end_neural_time_ms",
++                    "input_provenance_sha256", "mapping_sha256", "manifest_sha256",
++                    "model_sha256", "config_sha256", "connectome_sha256",
++                    "dn_readout_sha256", "frame_digest", "idempotency_key",
++                )},
++                "status": "CONFIRMED",
++                "pico_version": "v0.2.9",
++                "provider_used": False,
++                "result_sha256": result_sha256,
++                "result_status": result_status,
++                "output_state_id": output_state_id,
++                "body_checkpoint_state_id": body_checkpoint_state_id,
++            },
++        }
++
++
++    def confirm_picoclaw_frame_receipt(self, **kwargs: Any) -> dict[str, Any]:
++        """Append the confirmation when no body state must join the same transaction."""
++        record = self.picoclaw_frame_confirmation_record(**kwargs)
++        receipt = kwargs["receipt"]
++        current = self.read_picoclaw_frame_receipt(
++            episode_id=str(receipt["episode_id"]),
++            generation_id=str(receipt["causal_generation_id"]),
++            frame_seq=int(receipt["frame_seq"]),
++        )
++        if current is None or current["prepared"].get("frame_digest") != receipt.get("frame_digest"):
++            raise RuntimeError("PicoClaw receipt confirmation has no matching durable preparation")
++        if current["status"] == "CONFIRMED":
++            existing = current["confirmed"]
++            if (existing.get("result_sha256") != record["state"].get("result_sha256")
++                    or existing.get("output_state_id") != record["state"].get("output_state_id")):
++                raise RuntimeError("PicoClaw confirmation retry conflicts with the durable result")
++            return existing
++        self.record_state(**record)
++        return record["state"]
++
+--- a/app/neuro_synthetic/pipeline.py
++++ b/app/neuro_synthetic/pipeline.py
+@@ -2,7 +2,10 @@
+ 
+ from __future__ import annotations
+ 
++import hashlib
++import math
+ from dataclasses import asdict
++from datetime import datetime, timezone
+ from typing import Iterable
+ 
+ from .aggregator import NeuralActivityAggregator, NeuralActivityFrame
+@@ -13,6 +16,8 @@
+     """Bind the verified root map, observation aggregator, and durable SQLite."""
+ 
+     COMPONENT = "neural_activity_aggregator"
++    PERSISTENCE_MODE_COMPONENT = "flynn_observability_persistence_mode"
++    PERSISTENCE_MODES = {"dense", "sampled"}
+ 
+     def __init__(
+         self,
+@@ -23,6 +28,9 @@
+         manifest_sha256: str,
+         mapping_sha256: str,
+         root_ids: Iterable[int],
++        restore_latest_cursor: bool = True,
++        sampling_window_ms: float | None = None,
++        requested_persistence_mode: str | None = None,
+     ):
+         self.store = store
+         self.aggregator = NeuralActivityAggregator(
+@@ -32,7 +40,7 @@
+             mapping_sha256=mapping_sha256,
+             root_ids=root_ids,
+         )
+-        latest = store.latest_component_state(self.COMPONENT)
++        latest = store.latest_component_state(self.COMPONENT) if restore_latest_cursor else None
+         if latest is not None:
+             state = latest["state"]
+             if state.get("episode_id") == episode_id:
+@@ -43,40 +51,369 @@
+                 self.aggregator.restore_cursor(
+                     state["sequence"], state["neural_time_ms"],
+                 )
++        # FlynnStore loads the active generation from its durable cursor when
++        # it opens. Reuse that authority on restore instead of requiring a
++        # second, potentially divergent activation call in the pipeline.
++        self.causal_generation_id: str | None = store.causal_generation_id
++        if sampling_window_ms is not None and (
++            isinstance(sampling_window_ms, bool) or not math.isfinite(sampling_window_ms)
++            or sampling_window_ms <= 0
++        ):
++            raise ValueError("sampling_window_ms must be a finite positive duration")
++        self.sampling_window_ms = float(sampling_window_ms) if sampling_window_ms is not None else None
++        if requested_persistence_mode is None:
++            requested_persistence_mode = "sampled" if self.sampling_window_ms is not None else "dense"
++        if requested_persistence_mode not in self.PERSISTENCE_MODES:
++            raise ValueError("requested persistence mode must be 'dense' or 'sampled'")
++        self.requested_persistence_mode = requested_persistence_mode
++        mode_record = store.latest_component_state(self.PERSISTENCE_MODE_COMPONENT)
++        if mode_record is None:
++            last_observation = store.latest_component_state(self.COMPONENT)
++            last_state = last_observation["state"] if last_observation else {}
++            # Older sampled candidates did not persist a mode event. A window
++            # record is unambiguous evidence of their active writer; otherwise
++            # legacy history remains dense by default.
++            self.persistence_mode = (
++                "sampled" if last_state.get("observation_kind") == "NEURAL_ACTIVITY_WINDOW"
++                else "dense"
++            )
++            self._mode_is_explicit = False
++        else:
++            mode_state = mode_record["state"]
++            if (mode_state.get("episode_id") != episode_id
++                    or mode_state.get("causal_generation_id") != self.causal_generation_id
++                    or mode_state.get("mode") not in self.PERSISTENCE_MODES):
++                raise ValueError("persisted observability mode belongs to another episode or generation")
++            self.persistence_mode = mode_state["mode"]
++            self._mode_is_explicit = True
++        if self.persistence_mode == "sampled" and self.sampling_window_ms is None:
++            raise ValueError("sampled persistence requires an explicit observation window")
++        self._window: dict | None = None
++        self._ready_windows: list[dict] = []
++
++    def activate_causal_generation(
++        self, generation_id: str, *, last_sequence: int | None = None,
++        last_neural_time_ms: float | None = None,
++    ) -> None:
++        if not generation_id:
++            raise ValueError("causal generation identity is required")
++        self.causal_generation_id = generation_id
++        if last_sequence is not None:
++            if last_neural_time_ms is None:
++                raise ValueError("restored frame time is required with a sequence cursor")
++            self.aggregator.restore_cursor(last_sequence, last_neural_time_ms)
+ 
+     def process(self, frame: NeuralActivityFrame, *, occurred_at_utc: str):
+         if self.store.coordinator_status()["ingestion_paused"]:
+             raise RuntimeError("neural activity ingestion is paused by coordinator control")
+         observation = self.aggregator.aggregate(frame)
++        if self.persistence_mode == "dense":
++            state = {
++                "episode_id": observation.episode_id,
++                "dataset_version": observation.dataset_version,
++                "manifest_sha256": self.aggregator.manifest_sha256,
++                "mapping_sha256": self.aggregator.mapping_sha256,
++                "sequence": observation.sequence,
++                "neural_time_ms": observation.neural_time_ms,
++                "core_id": observation.core_id,
++                "model_sha256": observation.model_sha256,
++                "config_sha256": observation.config_sha256,
++                "connectome_sha256": observation.connectome_sha256,
++                "start_tick": observation.start_tick,
++                "end_tick": observation.end_tick,
++                "dt_ms": observation.dt_ms,
++                "stimulus": observation.stimulus,
++                "active_neuron_count": observation.active_neuron_count,
++                "total_spikes": observation.total_spikes,
++                "input_sha256": observation.input_sha256,
++                "mapped_spikes": [asdict(item) for item in observation.mapped_spikes],
++                "effect": "OBSERVATION_ONLY",
++            }
++            generation_id = self.causal_generation_id
++            if generation_id is not None:
++                state["causal_generation_id"] = generation_id
++                state["tick_identity"] = observation.end_tick
++                event_id = f"{observation.episode_id}:generation:{generation_id}:tick:{observation.end_tick}"
++            else:
++                event_id = f"{observation.episode_id}:activity:{observation.sequence}"
++            self.store.record_state(
++                state_id=event_id,
++                event_id=event_id,
++                component=self.COMPONENT,
++                occurred_at_utc=occurred_at_utc,
++                state=state,
++                neural_time_ms=observation.neural_time_ms,
++            )
++        else:
++            self._accumulate_window(observation, occurred_at_utc)
++        self.aggregator.commit(observation)
++        return observation
++
++    def observation_state(self, observation) -> dict:
++        """Build an exact transient frame for PicoClaw without a per-frame SQLite row."""
+         state = {
+-            "episode_id": observation.episode_id,
+-            "dataset_version": observation.dataset_version,
++            "episode_id": observation.episode_id, "dataset_version": observation.dataset_version,
+             "manifest_sha256": self.aggregator.manifest_sha256,
+             "mapping_sha256": self.aggregator.mapping_sha256,
+-            "sequence": observation.sequence,
+-            "neural_time_ms": observation.neural_time_ms,
+-            "core_id": observation.core_id,
+-            "model_sha256": observation.model_sha256,
+-            "config_sha256": observation.config_sha256,
+-            "connectome_sha256": observation.connectome_sha256,
+-            "start_tick": observation.start_tick,
+-            "end_tick": observation.end_tick,
+-            "dt_ms": observation.dt_ms,
+-            "stimulus": observation.stimulus,
++            "sequence": observation.sequence, "neural_time_ms": observation.neural_time_ms,
++            "core_id": observation.core_id, "model_sha256": observation.model_sha256,
++            "config_sha256": observation.config_sha256, "connectome_sha256": observation.connectome_sha256,
++            "start_tick": observation.start_tick, "end_tick": observation.end_tick,
++            "dt_ms": observation.dt_ms, "stimulus": observation.stimulus,
+             "active_neuron_count": observation.active_neuron_count,
+-            "total_spikes": observation.total_spikes,
+-            "input_sha256": observation.input_sha256,
++            "total_spikes": observation.total_spikes, "input_sha256": observation.input_sha256,
+             "mapped_spikes": [asdict(item) for item in observation.mapped_spikes],
+-            "effect": "OBSERVATION_ONLY",
++            "effect": "OBSERVATION_ONLY_TRANSIENT_FRAME",
+         }
+-        event_id = f"{observation.episode_id}:activity:{observation.sequence}"
+-        self.store.record_state(
+-            state_id=event_id,
+-            event_id=event_id,
+-            component=self.COMPONENT,
+-            occurred_at_utc=occurred_at_utc,
+-            state=state,
+-            neural_time_ms=observation.neural_time_ms,
++        if self.causal_generation_id is not None:
++            state["causal_generation_id"] = self.causal_generation_id
++            state["tick_identity"] = observation.end_tick
++        return state
++
++    def _accumulate_window(self, observation, occurred_at_utc: str) -> None:
++        if self._window is None:
++            self._window = {
++                "start_sequence": observation.sequence, "end_sequence": observation.sequence,
++                # Before the first frame is accumulated, the previous window
++                # boundary is the frame's start tick. Setting end_tick to this
++                # frame's end made the continuity check reject the first frame.
++                "start_tick": observation.start_tick, "end_tick": observation.start_tick,
++                "start_neural_time_ms": observation.start_tick * observation.dt_ms,
++                "end_neural_time_ms": observation.neural_time_ms, "dt_ms": observation.dt_ms,
++                "frame_count": 0, "frame_spike_totals": [], "neuron_spike_totals": {},
++                "first_input_sha256": observation.input_sha256,
++                "last_input_sha256": observation.input_sha256,
++                "input_hash_chain_sha256": "0" * 64,
++                "dataset_version": observation.dataset_version,
++                "manifest_sha256": self.aggregator.manifest_sha256,
++                "mapping_sha256": self.aggregator.mapping_sha256,
++                "core_id": observation.core_id, "model_sha256": observation.model_sha256,
++                "config_sha256": observation.config_sha256,
++                "connectome_sha256": observation.connectome_sha256,
++                "started_at_utc": occurred_at_utc, "ended_at_utc": occurred_at_utc,
++            }
++        window = self._window
++        if (observation.sequence != window["end_sequence"] + (1 if window["frame_count"] else 0)
++                or observation.start_tick != window["end_tick"]):
++            raise RuntimeError("neural observation window received a discontinuous frame")
++        window["end_sequence"] = observation.sequence
++        window["end_tick"] = observation.end_tick
++        window["end_neural_time_ms"] = observation.neural_time_ms
++        window["ended_at_utc"] = occurred_at_utc
++        window["frame_count"] += 1
++        window["frame_spike_totals"].append(int(observation.total_spikes))
++        for item in observation.mapped_spikes:
++            key = str(item.compact_index)
++            record = window["neuron_spike_totals"].setdefault(key, [int(item.root_id), 0])
++            if record[0] != int(item.root_id):
++                raise RuntimeError("neural observation window root ID changed for a compact index")
++            record[1] += int(item.count)
++            if record[1] > 2**64 - 1:
++                raise OverflowError("neural observation window count exceeds uint64")
++        link = f"{window['input_hash_chain_sha256']}:{observation.sequence}:{observation.input_sha256}"
++        window["input_hash_chain_sha256"] = hashlib.sha256(link.encode("ascii")).hexdigest()
++        window["last_input_sha256"] = observation.input_sha256
++        elapsed_ms = float(window["end_neural_time_ms"] - window["start_neural_time_ms"])
++        if elapsed_ms + 1e-9 >= self.sampling_window_ms:
++            self._ready_windows.append(self._window_record(window))
++            self._window = None
++        elif elapsed_ms > self.sampling_window_ms + 1e-9:
++            raise RuntimeError("neural observation window exceeded its configured sampling interval")
++
++    def _window_record(self, window: dict, *, partial: bool = False) -> dict:
++        generation = self.causal_generation_id or "legacy"
++        state_id = (f"{self.aggregator.episode_id}:generation:{generation}:neural-window:"
++                    f"{window['start_tick']}-{window['end_tick']}")
++        totals = [[int(index), int(value[0]), int(value[1])]
++                  for index, value in sorted(window["neuron_spike_totals"].items(), key=lambda item: int(item[0]))]
++        frame_rle: list[list[int]] = []
++        for count in window["frame_spike_totals"]:
++            if frame_rle and frame_rle[-1][0] == count:
++                frame_rle[-1][1] += 1
++            else:
++                frame_rle.append([count, 1])
++        state = {
++            "episode_id": self.aggregator.episode_id, "causal_generation_id": self.causal_generation_id,
++            "dataset_version": window["dataset_version"],
++            "manifest_sha256": window["manifest_sha256"], "mapping_sha256": window["mapping_sha256"],
++            "core_id": window["core_id"], "model_sha256": window["model_sha256"],
++            "config_sha256": window["config_sha256"], "connectome_sha256": window["connectome_sha256"],
++            "observation_kind": "NEURAL_ACTIVITY_WINDOW", "sampling_policy": "flynn.significant-observation.v2",
++            "sample_resolution_ms": self.sampling_window_ms,
++            "partial_window": bool(partial),
++            "window_close_reason": "PERSISTENCE_MODE_TRANSITION" if partial else "SAMPLE_INTERVAL_REACHED",
++            "start_sequence": window["start_sequence"], "end_sequence": window["end_sequence"],
++            "sequence": window["end_sequence"], "start_tick": window["start_tick"],
++            "end_tick": window["end_tick"], "neural_time_ms": window["end_neural_time_ms"],
++            "window_start_neural_time_ms": window["start_neural_time_ms"],
++            "window_end_neural_time_ms": window["end_neural_time_ms"],
++            "window_duration_ms": window["end_neural_time_ms"] - window["start_neural_time_ms"],
++            "dt_ms": window["dt_ms"], "frame_count": window["frame_count"],
++            "frame_resolution_ms": 10.0, "frame_total_spikes_rle": frame_rle,
++            "silent_frame_count": sum(run for count, run in frame_rle if count == 0),
++            "total_spikes": sum(value[1] for value in window["neuron_spike_totals"].values()),
++            "active_neuron_count": len(window["neuron_spike_totals"]),
++            "spike_counts_by_compact_index": totals,
++            "first_input_sha256": window["first_input_sha256"],
++            "last_input_sha256": window["last_input_sha256"],
++            "ordered_input_hash_chain_sha256": window["input_hash_chain_sha256"],
++            "started_at_utc": window["started_at_utc"], "ended_at_utc": window["ended_at_utc"],
++            "effect": "OBSERVATION_AGGREGATE_ONLY",
++        }
++        if self.causal_generation_id is not None:
++            state["tick_identity"] = window["end_tick"]
++        return {"state_id": state_id, "event_id": state_id, "component": self.COMPONENT,
++                "occurred_at_utc": window["ended_at_utc"],
++                "neural_time_ms": window["end_neural_time_ms"], "state": state}
++
++    def completed_observation_windows(self) -> list[dict]:
++        return list(self._ready_windows)
++
++    def acknowledge_persisted_observation_windows(self, records: list[dict]) -> None:
++        ids = {record["state_id"] for record in records}
++        if len(ids) != len(records) or any(record not in self._ready_windows for record in records):
++            raise RuntimeError("attempted to acknowledge an unknown observation window")
++        self._ready_windows = [record for record in self._ready_windows if record["state_id"] not in ids]
++
++    @staticmethod
++    def _state_digest(value: dict) -> str:
++        import json
++        return hashlib.sha256(json.dumps(
++            value, sort_keys=True, separators=(",", ":"), allow_nan=False,
++        ).encode("utf-8")).hexdigest()
++
++    def transition_persistence_mode(self, target_mode: str, checkpoint: dict) -> dict | None:
++        """Change only after the referenced paired checkpoint is durably active."""
++        if target_mode not in self.PERSISTENCE_MODES:
++            raise ValueError("persistence mode must be 'dense' or 'sampled'")
++        if target_mode == "sampled" and self.sampling_window_ms is None:
++            raise ValueError("sampled persistence requires a positive sampling window")
++        if target_mode == self.persistence_mode:
++            return None
++        active = self.store.active_causal_generation()
++        saved = self.store.active_checkpoint()
++        if (active is None or saved is None
++                or active.get("episode_id") != self.aggregator.episode_id
++                or active.get("generation_id") != self.causal_generation_id
++                or active.get("checkpoint_sha256") != checkpoint.get("checkpoint_sha256")
++                or int(active.get("checkpoint_tick", -1)) != int(checkpoint.get("neural_tick", -2))
++                or saved.get("state", {}).get("checkpoint_sha256") != checkpoint.get("checkpoint_sha256")):
++            raise RuntimeError("persistence mode can change only after its paired checkpoint is the active causal cursor")
++        records = []
++        flushed_window_sha256 = None
++        if target_mode == "dense" and self._window is not None:
++            window = self._window
++            if (int(window["end_tick"]) != int(checkpoint["neural_tick"])
++                    or int(window["end_sequence"]) + 1 != int(checkpoint["next_sequence"])):
++                raise RuntimeError("cannot close sampled history outside the confirmed checkpoint boundary")
++            partial = self._window_record(window, partial=True)
++            flushed_window_sha256 = self._state_digest(window)
++            records.append(partial)
++        timestamp = datetime.now(timezone.utc).isoformat()
++        state_id = (f"observability-mode:{self.aggregator.episode_id}:"
++                    f"{self.causal_generation_id}:{checkpoint['neural_tick']}:{target_mode}")
++        mode_state = {
++            "episode_id": self.aggregator.episode_id,
++            "causal_generation_id": self.causal_generation_id,
++            "mode": target_mode,
++            "previous_mode": self.persistence_mode,
++            "effective_after_checkpoint_state_id": active.get("checkpoint_state_id"),
++            "effective_after_checkpoint_sha256": checkpoint["checkpoint_sha256"],
++            "effective_after_tick": int(checkpoint["neural_tick"]),
++            "effective_after_sequence": int(checkpoint["next_sequence"]),
++            "flushed_window_sha256": flushed_window_sha256,
++            "transitioned_at_utc": timestamp,
++            "effect": "OBSERVABILITY_POLICY_ONLY",
++        }
++        records.append({
++            "state_id": state_id, "event_id": f"{state_id}:event",
++            "component": self.PERSISTENCE_MODE_COMPONENT,
++            "occurred_at_utc": timestamp,
++            "neural_time_ms": float(checkpoint["neural_time_ms"]), "state": mode_state,
++        })
++        self.store.record_states_atomically(records)
++        if flushed_window_sha256 is not None:
++            self._window = None
++        self.persistence_mode = target_mode
++        self._mode_is_explicit = True
++        return mode_state
++
++    def export_observability_state(self) -> dict:
++        """Checkpoint the bounded unfinished window; completed windows commit with the checkpoint."""
++        return {"policy": "flynn.significant-observation.v2",
++                "sampling_window_ms": self.sampling_window_ms,
++                "persistence_mode": self.persistence_mode,
++                "pending_window": self._window}
++
++    def restore_observability_state(self, state: dict | None) -> None:
++        if self.sampling_window_ms is None:
++            if self.persistence_mode == "sampled":
++                raise ValueError("sampled persistence has no configured sampling window")
++            if state is not None and state.get("persistence_mode", "dense") != "dense":
++                raise ValueError("sampled checkpoint cannot be restored without its sampling window")
++            return
++        if state is None:
++            if self.persistence_mode == "sampled":
++                raise ValueError("sampled checkpoint is missing its observation cursor")
++            self._window = None
++            self._ready_windows.clear()
++            return
++        if (state.get("policy") != "flynn.significant-observation.v2"
++                or float(state.get("sampling_window_ms", -1)) != self.sampling_window_ms):
++            raise ValueError("checkpoint observation policy differs from the active sampled writer")
++        window = state.get("pending_window")
++        if window is not None:
++            if (not isinstance(window, dict) or int(window.get("frame_count", -1)) < 1
++                    or int(window.get("end_sequence", -1)) < int(window.get("start_sequence", 0))
++                    or int(window.get("end_tick", -1)) <= int(window.get("start_tick", -1))
++                    or len(window.get("input_hash_chain_sha256", "")) != 64):
++                raise ValueError("checkpoint pending neural observation window is invalid")
++        saved_mode = state.get(
++            "persistence_mode",
++            "sampled" if window is not None else self.persistence_mode,
+         )
+-        self.aggregator.commit(observation)
+-        return observation
++        if saved_mode not in self.PERSISTENCE_MODES:
++            raise ValueError("checkpoint persistence mode is invalid")
++        if not self._mode_is_explicit and saved_mode != self.persistence_mode:
++            # A previous sampled checkpoint may have a pending window before
++            # its first aggregate row. Its hash-bound sidecar is the evidence.
++            if saved_mode == "sampled" and isinstance(window, dict):
++                self.persistence_mode = "sampled"
++            else:
++                raise ValueError("legacy checkpoint mode cannot be inferred safely")
++        if saved_mode != self.persistence_mode:
++            mode_record = self.store.latest_component_state(self.PERSISTENCE_MODE_COMPONENT)
++            mode_state = mode_record["state"] if mode_record else {}
++            checkpoint_record = self.store.active_checkpoint()
++            checkpoint_state = checkpoint_record["state"] if checkpoint_record else {}
++            if (mode_state.get("mode") != self.persistence_mode
++                    or mode_state.get("episode_id") != self.aggregator.episode_id
++                    or mode_state.get("causal_generation_id") != self.causal_generation_id
++                    or mode_state.get("effective_after_checkpoint_state_id")
++                        != (self.store.active_causal_generation() or {}).get("checkpoint_state_id")
++                    or mode_state.get("effective_after_checkpoint_sha256") != checkpoint_state.get("checkpoint_sha256")
++                    or int(mode_state.get("effective_after_tick", -1)) != int(checkpoint_state.get("neural_tick", -2))):
++                raise ValueError("checkpoint/mode difference has no matching post-checkpoint transition record")
++            flushed_hash = mode_state.get("flushed_window_sha256")
++            if self.persistence_mode == "dense":
++                if window is not None and self._state_digest(window) != flushed_hash:
++                    raise ValueError("sampled window was not atomically closed by the dense-mode transition")
++                window = None
++            elif window is not None or flushed_hash is not None:
++                raise ValueError("dense-to-sampled transition checkpoint must not carry a closed sample window")
++        self._window = window if self.persistence_mode == "sampled" else None
++        self._ready_windows.clear()
++
++    def restore_checkpoint_cursor(self, next_sequence: int, tick: int, dt_ms: float) -> None:
++        if next_sequence < 0 or tick < 0 or not math.isfinite(dt_ms) or dt_ms <= 0:
++            raise ValueError("checkpoint observation cursor is invalid")
++        if next_sequence == 0:
++            return
++        checkpoint_time = tick * dt_ms
++        if self.aggregator._last_sequence is None:
++            self.aggregator.restore_cursor(next_sequence - 1, checkpoint_time)
++        elif self.aggregator._last_sequence > next_sequence - 1:
++            raise ValueError("durable observation cursor is beyond the paired checkpoint")
++        else:
++            self.aggregator._last_sequence = next_sequence - 1
++            self.aggregator._last_time_ms = checkpoint_time
+--- a/app/neuro_synthetic/world_runtime.py
++++ b/app/neuro_synthetic/world_runtime.py
+@@ -89,6 +89,13 @@
+         latest = self.store.latest_component_state(self.WORLD_COMPONENT)
+         prior = latest["state"].get("snapshot_sequence", -1) if latest else -1
+         self._snapshot_sequence = int(prior) + 1
++        self._last_world_signature = self._world_signature(latest["state"].get("world")) if latest else None
++        self._last_world_persist_wall = time.monotonic()
++        self._last_world_persist_time_ms = (
++            float(latest["state"].get("world_time_ms", 0.0)) if latest else 0.0
++        )
++        self._observation_signatures: dict[str, str] = {}
++        self._observation_last_wall: dict[str, float] = {}
+         latest_cycle = self.store.latest_component_state(self.COORDINATOR_COMPONENT)
+         if latest_cycle and latest_cycle["state"].get("episode_id") == pipeline.aggregator.episode_id:
+             self._cycle_sequence = int(latest_cycle["state"].get("cycle_sequence", -1)) + 1
+@@ -116,15 +123,22 @@
+             "world": world,
+             "effect": "WORLD_OBSERVATION_ONLY",
+         }
+-        event_id = f"world:{self.pipeline.aggregator.episode_id}:{self._snapshot_sequence}"
+-        self.store.record_state(
+-            state_id=event_id,
+-            event_id=event_id,
+-            component=self.WORLD_COMPONENT,
+-            occurred_at_utc=state["timestamp_utc"],
+-            neural_time_ms=state["neural_time_ms"],
+-            state=state,
+-        )
++        signature = self._world_signature(world)
++        now_wall = time.monotonic()
++        changed = signature != self._last_world_signature
++        if changed or now_wall - self._last_world_persist_wall >= 60.0:
++            kind = "WORLD_STATE_CHANGE" if changed else "WORLD_STABILITY_INTERVAL"
++            state["observation_kind"] = kind
++            state["observation_interval_start_world_time_ms"] = self._last_world_persist_time_ms
++            state["observation_interval_end_world_time_ms"] = float(world["world_time_ms"])
++            event_id = f"world:{self.pipeline.aggregator.episode_id}:{self._snapshot_sequence}"
++            self.store.record_state(
++                state_id=event_id, event_id=event_id, component=self.WORLD_COMPONENT,
++                occurred_at_utc=state["timestamp_utc"], neural_time_ms=state["neural_time_ms"], state=state,
++            )
++            self._last_world_signature = signature
++            self._last_world_persist_wall = now_wall
++            self._last_world_persist_time_ms = float(world["world_time_ms"])
+         self._snapshot_sequence += 1
+         return state
+ 
+@@ -186,25 +200,40 @@
+ 
+     def _body_readout_at_boundary(self, boundary_ms: float) -> dict[str, Any] | None:
+         current = self.store.latest_component_state("synthetic_proprioceptive_readout")
+-        if current is None:
+-            body = self.store.latest_component_state("pinocchio_body_checkpoint")
+-            if body is None:
+-                return None
+-            body_state = body["state"]
+-            current = self.store.component_state_by_id(
+-                self._proprio_state_id_for_body(body_state)
+-            )
++        body = self.store.latest_component_state("pinocchio_body_checkpoint")
++        body_state = body["state"] if body is not None else None
++        if (body_state is not None
++                and body_state.get("episode_id") == self.pipeline.aggregator.episode_id
++                and abs(float(body_state.get("physical_time_ms", float("nan"))) - boundary_ms) <= 1e-8):
++            embedded = body_state.get("proprioceptive_readout")
++            if isinstance(embedded, dict):
++                body_state_id = str(body.get("state_id", ""))
++                embedded_body_id = str(embedded.get("body_checkpoint_id", ""))
++                embedded_time = float(embedded.get("time_ms", float("nan")))
++                if (embedded_body_id and (body_state_id == embedded_body_id
++                        or body_state_id.startswith(embedded_body_id + ":"))
++                        and embedded_time == boundary_ms
++                        and embedded.get("stream_id") == body_state.get("stream_id")
++                        and int(embedded.get("stream_sequence", -1)) == int(body_state.get("stream_sequence", -2))):
++                    # The paired body checkpoint carries the exact boundary sample.
++                    # Prefer it over an older dense proprioceptive observation when
++                    # the sampled writer has not emitted its next telemetry row yet.
++                    current = {"state_id": body_state_id, "state": embedded}
+             if current is None:
+-                row = self.store.connection.execute(
+-                    "SELECT state_id,event_id,neural_time_ms,schema_version,state_json "
+-                    "FROM component_states WHERE component='synthetic_proprioceptive_readout' "
+-                    "AND json_extract(state_json,'$.stream_id')=? "
+-                    "AND json_extract(state_json,'$.stream_sequence')=?",
+-                    (body_state.get("stream_id"), body_state.get("stream_sequence")),
+-                ).fetchone()
+-                if row is not None:
+-                    current = {"state_id": row[0], "event_id": row[1], "neural_time_ms": row[2],
+-                               "schema_version": row[3], "state": json.loads(row[4])}
++                current = self.store.component_state_by_id(
++                    self._proprio_state_id_for_body(body_state)
++                )
++                if current is None:
++                    row = self.store.connection.execute(
++                        "SELECT state_id,event_id,neural_time_ms,schema_version,state_json "
++                        "FROM component_states WHERE component='synthetic_proprioceptive_readout' "
++                        "AND json_extract(state_json,'$.stream_id')=? "
++                        "AND json_extract(state_json,'$.stream_sequence')=?",
++                        (body_state.get("stream_id"), body_state.get("stream_sequence")),
++                    ).fetchone()
++                    if row is not None:
++                        current = {"state_id": row[0], "event_id": row[1], "neural_time_ms": row[2],
++                                   "schema_version": row[3], "state": json.loads(row[4])}
+         if current is None:
+             return None
+         state = current["state"]
+@@ -375,22 +404,19 @@
+                     f"visual-transduction:{self.pipeline.aggregator.episode_id}:"
+                     f"{self._cycle_sequence}:{sensory_record['input_sha256']}"
+                 )
+-                self.store.record_state(
+-                    state_id=sensory_state_id,
+-                    event_id=sensory_state_id,
+-                    component="visual_light_transducer",
+-                    occurred_at_utc=datetime.now(timezone.utc).isoformat(),
+-                    neural_time_ms=start_neural_ms,
+-                    state={
+-                        "episode_id": self.pipeline.aggregator.episode_id,
+-                        "execution_kind": self.execution_kind,
+-                        "cycle_sequence": self._cycle_sequence,
+-                        "world_snapshot_sequence": start_snapshot["snapshot_sequence"],
+-                        "world_time_ms": start_world_ms,
+-                        **sensory_record,
+-                        "effect": "INSTRUMENTAL_SYNTHETIC_SENSORY_INPUT",
+-                    },
+-                )
++                if self._should_persist_observation("visual_light_transducer", sensory_record["input_sha256"]):
++                    self.store.record_state(
++                        state_id=sensory_state_id, event_id=sensory_state_id,
++                        component="visual_light_transducer",
++                        occurred_at_utc=datetime.now(timezone.utc).isoformat(),
++                        neural_time_ms=start_neural_ms,
++                        state={"episode_id": self.pipeline.aggregator.episode_id,
++                               "execution_kind": self.execution_kind,
++                               "cycle_sequence": self._cycle_sequence,
++                               "world_snapshot_sequence": start_snapshot["snapshot_sequence"],
++                               "world_time_ms": start_world_ms, **sensory_record,
++                               "effect": "INSTRUMENTAL_SYNTHETIC_SENSORY_INPUT"},
++                    )
+             proprioception_status = "NOT_CONFIGURED"
+             proprioception_record = None
+             if self.proprioceptive_transducer is not None:
+@@ -411,35 +437,34 @@
+                         f"proprioceptive-transduction:{self.pipeline.aggregator.episode_id}:"
+                         f"{self._cycle_sequence}:{proprioception_record['input_sha256']}"
+                     )
+-                    self.store.record_state(
+-                        state_id=proprio_id, event_id=proprio_id,
+-                        component="proprioceptive_neural_transduction",
+-                        occurred_at_utc=datetime.now(timezone.utc).isoformat(),
+-                        neural_time_ms=start_neural_ms,
+-                        state={
+-                            "episode_id": self.pipeline.aggregator.episode_id,
+-                            "execution_kind": self.execution_kind,
+-                            "cycle_sequence": self._cycle_sequence,
+-                            "world_snapshot_sequence": start_snapshot["snapshot_sequence"],
+-                            **proprioception_record,
+-                            "effect": proprioception_record["effect"],
+-                        },
+-                    )
+-                    self.store.record_event(
+-                        event_id=f"{proprio_id}:applied",
+-                        event_type="SYNTHETIC_PROPRIOCEPTIVE_LIF_INPUT_PREPARED",
+-                        source="synthetic_proprioceptive_transducer",
+-                        occurred_at_utc=datetime.now(timezone.utc).isoformat(),
+-                        neural_time_ms=start_neural_ms,
+-                        provenance_sha256=proprioception_record["input_sha256"],
+-                        payload={
+-                            "body_checkpoint_id": body_readout.get("body_checkpoint_id"),
+-                            "body_model_sha256": body_readout.get("body_model_sha256"),
+-                            "target_mapping_sha256": proprioception_record["target_mapping_sha256"],
+-                            "target_count": proprioception_record["target_count"],
+-                            "effect": proprioception_record["effect"],
+-                        },
+-                    )
++                    proprio_signature = self._sensor_signature(proprioception_record)
++                    proprio_changed = self._observation_signatures.get("proprioceptive_neural_transduction") != proprio_signature
++                    if self._should_persist_observation("proprioceptive_neural_transduction", proprio_signature):
++                        self.store.record_state(
++                            state_id=proprio_id, event_id=proprio_id,
++                            component="proprioceptive_neural_transduction",
++                            occurred_at_utc=datetime.now(timezone.utc).isoformat(),
++                            neural_time_ms=start_neural_ms,
++                            state={"episode_id": self.pipeline.aggregator.episode_id,
++                                   "execution_kind": self.execution_kind,
++                                   "cycle_sequence": self._cycle_sequence,
++                                   "world_snapshot_sequence": start_snapshot["snapshot_sequence"],
++                                   **proprioception_record, "effect": proprioception_record["effect"]},
++                        )
++                    if proprio_changed and proprioception_record["target_count"]:
++                        self.store.record_event(
++                            event_id=f"{proprio_id}:applied",
++                            event_type="SYNTHETIC_PROPRIOCEPTIVE_LIF_INPUT_PREPARED",
++                            source="synthetic_proprioceptive_transducer",
++                            occurred_at_utc=datetime.now(timezone.utc).isoformat(),
++                            neural_time_ms=start_neural_ms,
++                            provenance_sha256=proprioception_record["input_sha256"],
++                            payload={"body_checkpoint_id": body_readout.get("body_checkpoint_id"),
++                                     "body_model_sha256": body_readout.get("body_model_sha256"),
++                                     "target_mapping_sha256": proprioception_record["target_mapping_sha256"],
++                                     "target_count": proprioception_record["target_count"],
++                                     "effect": proprioception_record["effect"]},
++                        )
+             sensory_input = self._combine_sensory_inputs(sensory_packets)
+             sensory_record = None
+             if sensory_input is not None:
+@@ -457,6 +482,7 @@
+                 frame_metric: dict[str, Any] = {"steps": steps}
+                 frame_started = time.perf_counter()
+                 observation = self.neural_core.advance_frame(steps=steps, external_input=sensory_input)
++                transient_frame = self.pipeline.observation_state(observation)
+                 frame_metric["neural_core"] = dict(self.neural_core.last_frame_metrics)
+                 frame_state = {
+                     "sequence": observation.sequence,
+@@ -470,43 +496,49 @@
+                 motor_readout = None
+                 if self.descending_readout is not None:
+                     readout_started = time.perf_counter()
+-                    persisted = self.store.latest_component_state("neural_activity_aggregator")
+-                    if persisted is None or persisted["state"].get("sequence") != observation.sequence:
+-                        raise RuntimeError("DN readout requires the exact durable neural frame")
+-                    motor_readout = self.descending_readout.extract(persisted["state"]["mapped_spikes"])
+-                    motor_state_id = f"descending-readout:{self.pipeline.aggregator.episode_id}:{observation.sequence}"
+-                    self.store.record_state(
+-                        state_id=motor_state_id,
+-                        event_id=motor_state_id,
+-                        component="descending_motor_readout_v2",
+-                        occurred_at_utc=datetime.now(timezone.utc).isoformat(),
+-                        neural_time_ms=observation.neural_time_ms,
+-                        state={
+-                            "episode_id": self.pipeline.aggregator.episode_id,
+-                            "sequence": observation.sequence,
+-                            "source_frame_sha256": persisted["state"]["input_sha256"],
+-                            **motor_readout,
+-                            "motor_dispatch": "NO_TORQUE_WHEN_DN_ZERO",
+-                        },
+-                    )
++                    motor_readout = self.descending_readout.extract(transient_frame["mapped_spikes"])
+                     frame_state["dn_active_neurons"] = motor_readout["active_neurons"]
+                     frame_state["dn_spikes"] = motor_readout["total_spikes"]
+                     frame_state["dn_readout_sha256"] = motor_readout["manifest_sha256"]
+-                    frame_metric["dn_readout_and_sqlite_ms"] = (time.perf_counter() - readout_started) * 1000.0
++                    frame_metric["dn_readout_ms"] = (time.perf_counter() - readout_started) * 1000.0
+                 if self.picoclaw_port is not None:
+-                    persisted = self.store.latest_component_state("neural_activity_aggregator")
+-                    if persisted is None or persisted["state"].get("sequence") != observation.sequence:
+-                        raise RuntimeError("PicoClaw handoff requires the exact durable neural frame")
++                    receipt = self.store.prepare_picoclaw_frame_receipt(
++                        frame=transient_frame, dn_readout=motor_readout,
++                        occurred_at_utc=datetime.now(timezone.utc).isoformat(),
++                        delivery_epoch=self.picoclaw_port.delivery_epoch,
++                    )
+                     ack = self.picoclaw_port.coordinate_persisted_frame(
+-                        persisted["state"], dn_readout=motor_readout,
++                        transient_frame, dn_readout=motor_readout, receipt=receipt,
+                     )
+-                    if self.execution_kind == "RESIDENT":
+-                        self._persist_picoclaw_result(ack, frame_state, observation.neural_time_ms)
+                     frame_metric["python_picoclaw_roundtrip_ms"] = ack["pico_bridge_elapsed_ms"]
+                     frame_metric["picoclaw_manager_call_ms"] = ack.get("upstream_call_elapsed_ms")
+                     frame_metric["pinocchio"] = ack.get("pinocchio_timing")
+                     frame_state["picoclaw_status"] = ack["status"]
+                     frame_state["picoclaw_bridge_elapsed_ms"] = ack["pico_bridge_elapsed_ms"]
++                    frame_state["picoclaw_version"] = ack.get("pico_version")
++                    frame_state["picoclaw_effect"] = ack.get("effect")
++                    frame_state["picoclaw_source_provenance_sha256"] = ack.get("source_provenance_sha256")
++                    if ack.get("status") != "IDEMPOTENT_RETRY":
++                        if self.execution_kind == "RESIDENT" and ack.get("pinocchio_result") is not None:
++                            self._persist_picoclaw_result(
++                                ack, frame_state, observation.neural_time_ms, receipt=receipt,
++                            )
++                        else:
++                            stable_result = {
++                                "status": ack.get("status"), "receipt_key": receipt["idempotency_key"],
++                                "frame_digest": receipt["frame_digest"], "sequence": frame_state["sequence"],
++                                "neural_time_ms": float(observation.neural_time_ms),
++                                "provider_used": ack.get("provider_used"),
++                                "effect": ack.get("effect"),
++                            }
++                            result_sha256 = hashlib.sha256(json.dumps(
++                                stable_result, sort_keys=True, separators=(",", ":"), allow_nan=False,
++                            ).encode("utf-8")).hexdigest()
++                            self.store.confirm_picoclaw_frame_receipt(
++                                receipt=receipt, occurred_at_utc=datetime.now(timezone.utc).isoformat(),
++                                result_sha256=result_sha256, result_status=str(ack.get("status")),
++                                output_state_id=None, body_checkpoint_state_id=None,
++                            )
+                     picoclaw_acks.append(ack)
+                 frame_metric["coordinator_frame_ms"] = (time.perf_counter() - frame_started) * 1000.0
+                 frame_execution_metrics.append(frame_metric)
+@@ -557,7 +589,26 @@
+                 "world_start_boundary_elapsed_ms": world_start_elapsed_ms,
+                 "sensory_transduction_timing_ms": sensory_timing_ms,
+                 "neural_pipeline_elapsed_ms": neural_pipeline_elapsed_ms,
+-                "frame_execution_metrics": frame_execution_metrics,
++                "observability_policy_id": "flynn.significant-observation.v1",
++                "neural_observation": {
++                    "frame_count": len(frames),
++                    "observed_spike_count": sum(int(frame.get("spikes", 0)) for frame in frames),
++                    "frames_with_spikes": sum(int(frame.get("spikes", 0)) > 0 for frame in frames),
++                    "silence_observed": all(int(frame.get("spikes", 0)) == 0 for frame in frames),
++                    "silence_scope": "LIF_FRAME_SPIKE_COUNTS_ONLY",
++                },
++                "frame_execution_metrics": [{
++                    "steps": metric.get("steps"),
++                    "neural_core_total_ms": metric.get("neural_core", {}).get("total_ms"),
++                    "lif_engine_ms": metric.get("neural_core", {}).get("lif_engine_ms"),
++                    "aggregator_sqlite_ms": metric.get("neural_core", {}).get("aggregator_sqlite_ms"),
++                    "dn_readout_and_sqlite_ms": metric.get("dn_readout_and_sqlite_ms"),
++                    "picoclaw_roundtrip_ms": metric.get("python_picoclaw_roundtrip_ms"),
++                    "picoclaw_manager_call_ms": metric.get("picoclaw_manager_call_ms"),
++                    "coordinator_frame_ms": metric.get("coordinator_frame_ms"),
++                    "pinocchio_worker_ms": (metric.get("pinocchio") or {}).get("worker_ms"),
++                    "pinocchio_worker_cpu_ms": (metric.get("pinocchio") or {}).get("worker_cpu_ms"),
++                } for metric in frame_execution_metrics],
+                 "world_end_boundary_elapsed_ms": world_end_elapsed_ms,
+                 "coordination_pre_journal_elapsed_ms": max(
+                     0.0, elapsed_real_ms - world_start_elapsed_ms - neural_pipeline_elapsed_ms - world_end_elapsed_ms
+@@ -644,102 +695,122 @@
+                 "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+             }
+             state_id = f"neuro-world:{self.pipeline.aggregator.episode_id}:{self._cycle_sequence}"
++            durable_cycle_state = dict(state)
++            durable_cycle_state["neural_observation"] = {
++                "sampling_policy": "flynn.significant-observation.v2",
++                "sample_resolution_ms": self.pipeline.sampling_window_ms,
++                "frame_resolution_ms": self.FRAME_MS,
++                "frames_processed_this_cycle": len(frames),
++            }
++            for transient_key in (
++                "frames", "frame_execution_metrics", "start_boundary_command_receipts",
++                "end_boundary_command_receipts", "elapsed_real_ms", "cpu_ms",
++                "world_start_boundary_elapsed_ms", "sensory_transduction_timing_ms",
++                "neural_pipeline_elapsed_ms", "world_end_boundary_elapsed_ms",
++                "coordination_pre_journal_elapsed_ms", "neural_simulation_speed",
++                "picoclaw_mean_bridge_elapsed_ms",
++            ):
++                durable_cycle_state.pop(transient_key, None)
+             self.store.record_state(
+                 state_id=state_id,
+                 event_id=state_id,
+                 component=self.COORDINATOR_COMPONENT,
+                 occurred_at_utc=state["timestamp_utc"],
+                 neural_time_ms=end_neural_ms,
+-                state=state,
++                state=durable_cycle_state,
+             )
+             self._cycle_sequence += 1
+             self._restored_checkpoint_sha256 = None
+             return state
+ 
+     def _persist_picoclaw_result(self, ack: dict[str, Any], frame: dict[str, Any],
+-                                  neural_time_ms: float) -> None:
+-        """Persist PicoClaw/Pinocchio output through the resident DB owner only."""
++                                  neural_time_ms: float, *, receipt: dict[str, Any]) -> None:
++        """Atomically persist body result and confirmation of its durable frame receipt."""
+         timestamp = datetime.now(timezone.utc).isoformat()
+         episode_id = self.pipeline.aggregator.episode_id
+         sequence = int(frame["sequence"])
+-        generation_id = self.store.causal_generation_id
+-        ack_id = (f"picoclaw-frame:{episode_id}:generation:{generation_id}:{sequence}"
+-                  if generation_id is not None else f"picoclaw-frame:{episode_id}:{sequence}")
+-        ack_state = {
+-            key: value for key, value in ack.items()
+-            if key not in {"pico_bridge_elapsed_ms", "upstream_call_elapsed_ms", "pinocchio_timing",
+-                           "pinocchio_result", "provider_used"}
+-        }
+-        self.store.record_state(
+-            state_id=ack_id, event_id=ack_id, component="picoclaw_cerebellar_coordinator",
+-            occurred_at_utc=timestamp, neural_time_ms=neural_time_ms, state=ack_state,
+-        )
+-        self.store.record_event(
+-            event_id=f"{ack_id}:ack", event_type="PICOCLAW_FRAME_COORDINATED",
+-            source="picoclaw_cerebellar_coordinator", occurred_at_utc=timestamp,
+-            neural_time_ms=neural_time_ms,
+-            provenance_sha256=str(ack_state["source_provenance_sha256"]), payload=ack_state,
+-        )
++        ack_id = f"picoclaw-frame:{episode_id}:{sequence}"
+         physical = ack.get("pinocchio_result")
+         if not isinstance(physical, dict):
+-            return
+-        physical_id = (f"pinocchio-neural:{episode_id}:generation:{generation_id}:{sequence}"
+-                       if generation_id is not None else f"pinocchio-neural:{episode_id}:{sequence}")
++            raise RuntimeError("PicoClaw frame receipt cannot be confirmed without its expected physical result")
++        physical_id = f"pinocchio-neural:{episode_id}:{sequence}"
+         physical["source_event_id"] = ack_id
+         physical["source_frame_sequences"] = physical.get("source_frame_sequences", [sequence])
+-        self.store.record_state(
+-            state_id=physical_id, event_id=f"{physical_id}:state",
+-            component="pinocchio_motor_actuation", occurred_at_utc=timestamp,
+-            neural_time_ms=neural_time_ms, state=physical,
+-        )
+         mode = physical.get("mode")
+-        self.store.record_event(
+-            event_id=f"{physical_id}:applied",
+-            event_type="PINOCCHIO_NEURAL_ZERO_CONTROL_APPLIED" if mode == "NEURAL_ZERO_CONTROL"
+-            else "PINOCCHIO_NEURAL_DN_READOUT_APPLIED",
+-            source="picoclaw_motor_coordinator", occurred_at_utc=timestamp,
+-            neural_time_ms=neural_time_ms,
+-            provenance_sha256=(physical.get("manifest_sha256")
+-                               if isinstance(physical.get("manifest_sha256"), str)
+-                               and len(physical["manifest_sha256"]) == 64 else None), payload=physical,
+-        )
++        dn_spikes = int(physical.get("dn_spike_sum", 0))
++        torque_max = float(physical.get("torque_max_abs", 0.0))
++        records = []
++        if dn_spikes or torque_max:
++            physical_state = {
++                key: physical.get(key) for key in (
++                    "episode_id", "mode", "origin", "sequence", "neural_time_ms", "status",
++                    "manifest_sha256", "mapping_sha256", "connectome_sha256", "dn_root_count",
++                    "dn_spike_sum", "dn_active_neurons", "torque_max_abs", "q_delta_max_abs",
++                    "within_mechanical_limits", "source_frame_sequences", "source_frame_hashes",
++                )
++            }
++            physical_state["source_event_id"] = ack_id
++            physical_state["frame_receipt_key"] = receipt["idempotency_key"]
++            physical_state["frame_digest"] = receipt["frame_digest"]
++            records.append({
++                "state_id": physical_id, "event_id": f"{physical_id}:state",
++                "component": "pinocchio_motor_actuation", "occurred_at_utc": timestamp,
++                "neural_time_ms": neural_time_ms, "state": physical_state,
++            })
+         body = physical.get("body_checkpoint")
+-        if isinstance(body, dict):
+-            body_id = str(physical["body_checkpoint_state_id"])
+-            self.store.record_state(
+-                state_id=body_id, event_id=f"{body_id}:state", component="pinocchio_body_checkpoint",
+-                occurred_at_utc=timestamp, neural_time_ms=neural_time_ms, state=body,
+-            )
+-            self.store.record_event(
+-                event_id=f"{body_id}:recorded", event_type="PINOCCHIO_BODY_CHECKPOINT_RECORDED",
+-                source="pico_pinocchio_coordinator", occurred_at_utc=timestamp,
+-                neural_time_ms=neural_time_ms,
+-                provenance_sha256=(body.get("manifest_sha256")
+-                                   if isinstance(body.get("manifest_sha256"), str)
+-                                   and len(body["manifest_sha256"]) == 64 else None),
+-                payload={"stream_id": body.get("stream_id"),
+-                         "stream_sequence": body.get("stream_sequence"),
+-                         "body_model_sha256": body.get("body_model_sha256")},
+-            )
++        if not isinstance(body, dict):
++            raise RuntimeError("Pinocchio result lacks the body checkpoint required for receipt confirmation")
++        body_id = str(physical["body_checkpoint_state_id"])
++        body["frame_receipt_key"] = receipt["idempotency_key"]
++        body["frame_digest"] = receipt["frame_digest"]
+         proprio = physical.get("proprioceptive_readout")
+         if isinstance(proprio, dict):
+-            proprio_id = str(physical["proprioceptive_state_id"])
+-            self.store.record_state(
+-                state_id=proprio_id, event_id=f"{proprio_id}:state",
+-                component="synthetic_proprioceptive_readout", occurred_at_utc=timestamp,
+-                neural_time_ms=neural_time_ms, state=proprio,
+-            )
++            joint = proprio.get("joint_state_by_name", {}).get("AUDITORY_L")
++            if not isinstance(joint, dict):
++                raise RuntimeError("Pinocchio proprioceptive readout lacks the calibrated joint")
++            body["proprioceptive_readout"] = {
++                "schema": proprio.get("schema"), "source": proprio.get("source"),
++                "body_model_sha256": proprio.get("body_model_sha256"),
++                "body_checkpoint_id": body_id, "stream_id": proprio.get("stream_id"),
++                "stream_sequence": proprio.get("stream_sequence"),
++                "sequence": proprio.get("sequence"), "time_ms": proprio.get("time_ms"),
++                "q": proprio.get("q"), "qdot": proprio.get("qdot"),
++                "joint_state_by_name": {"AUDITORY_L": joint},
++                "provenance": proprio.get("provenance"),
++                "body_model": proprio.get("body_model"),
++            }
++        body_state = {
++            "state_id": body_id, "event_id": f"{body_id}:state",
++            "component": "pinocchio_body_checkpoint", "occurred_at_utc": timestamp,
++            "neural_time_ms": neural_time_ms, "state": body,
++        }
++        result_payload = {
++            "frame_digest": receipt["frame_digest"],
++            "dn_spike_sum": int(physical.get("dn_spike_sum", 0)),
++            "torque": physical.get("torque"),
++            "body_state": body.get("body_state"),
++            "body_model_sha256": body.get("body_model_sha256"),
++            "source_frame_hashes": physical.get("source_frame_hashes"),
++        }
++        result_sha256 = hashlib.sha256(json.dumps(
++            result_payload, sort_keys=True, separators=(",", ":"), allow_nan=False,
++        ).encode("utf-8")).hexdigest()
++        receipt_record = self.store.picoclaw_frame_confirmation_record(
++            receipt=receipt, occurred_at_utc=timestamp, result_sha256=result_sha256,
++            result_status=str(ack.get("status")),
++            output_state_id=physical_id if dn_spikes or torque_max else body_id,
++            body_checkpoint_state_id=body_id,
++        )
++        records.extend((body_state, receipt_record))
++        self.store.record_states_atomically(records)
++        if dn_spikes or torque_max:
+             self.store.record_event(
+-                event_id=f"{proprio_id}:sampled", event_type="SYNTHETIC_PROPRIOCEPTION_MEASURED",
+-                source="pinocchio_body_state_transducer", occurred_at_utc=timestamp,
++                event_id=f"{physical_id}:applied",
++                event_type="PINOCCHIO_NEURAL_DN_READOUT_APPLIED",
++                source="picoclaw_motor_coordinator", occurred_at_utc=timestamp,
+                 neural_time_ms=neural_time_ms,
+-                provenance_sha256=(proprio.get("manifest_sha256")
+-                                   if isinstance(proprio.get("manifest_sha256"), str)
+-                                   and len(proprio["manifest_sha256"]) == 64 else None),
+-                payload={"stream_id": proprio.get("stream_id"),
+-                         "stream_sequence": proprio.get("stream_sequence"),
+-                         "body_checkpoint_id": proprio.get("body_checkpoint_id"),
+-                         "neural_projection": proprio.get("neural_projection")},
++                provenance_sha256=physical.get("manifest_sha256"),
++                payload=physical_state,
+             )
+ 
+     def save_integrated_checkpoint(self, checkpoint_dir: str | Path) -> dict[str, Any]:
+@@ -770,6 +841,12 @@
+             destination = checkpoint_dir / filename
+             temporary = checkpoint_dir / f".{filename}.tmp"
+             engine_state = runtime_state["engine_state"]
++            observability_state = runtime_state.get("observability_state")
++            observability_state_json = json.dumps(
++                observability_state, sort_keys=True, separators=(",", ":"), allow_nan=False,
++            ) if observability_state is not None else "null"
++            observability_state_sha256 = hashlib.sha256(observability_state_json.encode("utf-8")).hexdigest()
++            ready_windows = self.pipeline.completed_observation_windows()
+             checkpoint_started = time.perf_counter()
+             try:
+                 with temporary.open("wb") as output:
+@@ -780,6 +857,7 @@
+                         neural_tick=np.asarray([tick], dtype=np.uint64),
+                         next_sequence=np.asarray([runtime_state["next_sequence"]], dtype=np.uint64),
+                         world_snapshot_json=np.asarray(snapshot_json),
++                        observability_state_json=np.asarray(observability_state_json),
+                         state_version=np.asarray([engine_state["state_version"]], dtype=np.uint32),
+                         v=engine_state["v"],
+                         g=engine_state["g"],
+@@ -790,11 +868,6 @@
+                     output.flush()
+                     os.fsync(output.fileno())
+                 os.replace(temporary, destination)
+-                directory_fd = os.open(checkpoint_dir, os.O_RDONLY)
+-                try:
+-                    os.fsync(directory_fd)
+-                finally:
+-                    os.close(directory_fd)
+             except Exception:
+                 temporary.unlink(missing_ok=True)
+                 raise
+@@ -816,6 +889,7 @@
+                 "neural_time_ms": neural_time_ms,
+                 "world_time_ms": world_time_ms,
+                 "world_snapshot_sha256": world_snapshot_sha256,
++                "observability_state_sha256": observability_state_sha256,
+                 "checkpoint_file": str(destination),
+                 "checkpoint_sha256": checkpoint_sha256,
+                 "checkpoint_bytes": destination.stat().st_size,
+@@ -827,21 +901,28 @@
+                 ),
+                 "sensory_event_queue": "DERIVED_FROM_PERSISTED_BODY_SAMPLE_AT_NEXT_CAUSAL_BOUNDARY",
+                 "saved_at_utc": datetime.now(timezone.utc).isoformat(),
+-                "causal_generation_id": self.store.causal_generation_id,
+             }
+-            state_id = f"integrated-checkpoint:{self.pipeline.aggregator.episode_id}:{tick}:{checkpoint_sha256[:16]}"
++            state_id = self.store.qualify_id(
++                f"integrated-checkpoint:{self.pipeline.aggregator.episode_id}:{tick}:{checkpoint_sha256[:16]}"
++            )
+             if self.execution_kind == "RESIDENT":
+                 cycle_state = dict(latest_cycle["state"])
+                 if cycle_state.get("cycle_status") != "CYCLE_PREPARED":
+                     raise RuntimeError("resident checkpoint requires an unconfirmed prepared cycle")
+                 cycle_state.update({
+                     "cycle_status": "CYCLE_CONFIRMED",
+-                    "checkpoint_state_id": self.store.qualify_id(state_id),
++                    "checkpoint_state_id": state_id,
+                     "checkpoint_sha256": checkpoint_sha256,
+                     "checkpoint_tick": tick,
+                 })
+-                cycle_id = f"neuro-world:{self.pipeline.aggregator.episode_id}:{cycle_state['cycle_sequence']}:confirmed"
+-                self.store.record_states_atomically((
++                cycle_id = self.store.qualify_id(
++                    f"neuro-world:{self.pipeline.aggregator.episode_id}:{cycle_state['cycle_sequence']}:confirmed"
++                )
++                active_generation = self.store.active_causal_generation()
++                if active_generation is None:
++                    raise RuntimeError("resident checkpoint cannot be confirmed without an active causal generation")
++                cycle_state["checkpoint_state_id"] = state_id
++                records = [*ready_windows,
+                     {"state_id": state_id, "event_id": state_id,
+                      "component": self.CHECKPOINT_COMPONENT,
+                      "occurred_at_utc": metadata["saved_at_utc"],
+@@ -850,28 +931,32 @@
+                      "component": self.COORDINATOR_COMPONENT,
+                      "occurred_at_utc": metadata["saved_at_utc"],
+                      "neural_time_ms": neural_time_ms, "state": cycle_state},
+-                ), causal_cursor={
++                ]
++                self.store.record_states_atomically(records, causal_cursor={
+                     "episode_id": self.pipeline.aggregator.episode_id,
+-                    "generation_id": self.store.causal_generation_id,
++                    "generation_id": active_generation["generation_id"],
+                     "checkpoint_state_id": state_id,
+                     "checkpoint_sha256": checkpoint_sha256,
+                     "checkpoint_tick": tick,
+                     "updated_at_utc": metadata["saved_at_utc"],
+                 })
+             else:
+-                self.store.record_state(
+-                    state_id=state_id, event_id=state_id,
+-                    component=self.CHECKPOINT_COMPONENT,
+-                    occurred_at_utc=metadata["saved_at_utc"],
+-                    neural_time_ms=neural_time_ms, state=metadata,
+-                )
++                records = [*ready_windows, {
++                    "state_id": state_id, "event_id": state_id,
++                    "component": self.CHECKPOINT_COMPONENT,
++                    "occurred_at_utc": metadata["saved_at_utc"],
++                    "neural_time_ms": neural_time_ms, "state": metadata,
++                }]
++                self.store.record_states_atomically(records)
++            if ready_windows:
++                self.pipeline.acknowledge_persisted_observation_windows(ready_windows)
+             metadata["cycle_status"] = "CYCLE_CONFIRMED" if self.execution_kind == "RESIDENT" else "CYCLE_COMPLETE"
+             return metadata
+ 
+     def restore_integrated_checkpoint(self) -> dict[str, Any] | None:
+         """Validate one paired checkpoint, then restore its LIF and world states."""
+         with self._cycle_lock:
+-            latest = self.store.active_checkpoint()
++            latest = self.store.latest_component_state(self.CHECKPOINT_COMPONENT)
+             if latest is None:
+                 return None
+             metadata = latest["state"]
+@@ -966,6 +1051,14 @@
+                 next_sequence = int(archive["next_sequence"][0])
+                 snapshot_json = str(archive["world_snapshot_json"].item())
+                 world_snapshot = json.loads(snapshot_json)
++                observability_state = (
++                    json.loads(str(archive["observability_state_json"].item()))
++                    if "observability_state_json" in archive.files else None
++                )
++                if observability_state is not None and hashlib.sha256(
++                        json.dumps(observability_state, sort_keys=True, separators=(",", ":"),
++                                   allow_nan=False).encode("utf-8")).hexdigest() != metadata.get("observability_state_sha256"):
++                    raise ValueError("integrated checkpoint observation window hash mismatch")
+                 state = {
+                     "state_version": int(archive["state_version"][0]),
+                     "tick": tick,
+@@ -996,14 +1089,12 @@
+                     "config_sha256": metadata["config_sha256"],
+                     "core_id": metadata["core_id"],
+                     "next_sequence": next_sequence,
++                    "observability_state": observability_state,
+                     "engine_state": state,
+                 }
+                 # Validate the durable frame cursor and arrays before mutating
+                 # either component. Both restores are fail-closed on mismatch.
+                 self.neural_core.restore_runtime_state(runtime_state)
+-                if next_sequence > 0 and self.pipeline.aggregator._last_sequence is None:
+-                    # NeuralActivityPipeline already restores this cursor from its durable frame row.
+-                    self.pipeline.aggregator.restore_cursor(next_sequence - 1, float(metadata["neural_time_ms"]))
+                 self.world.restore(world_snapshot)
+ 
+             restored_world_time, restored_neural_time = self._assert_aligned()
+@@ -1031,3 +1122,32 @@
+             for block in iter(lambda: source.read(1024 * 1024), b""):
+                 digest.update(block)
+         return digest.hexdigest()
++    @staticmethod
++    def _world_signature(world: dict[str, Any] | None) -> str | None:
++        if not isinstance(world, dict):
++            return None
++        stable = {key: value for key, value in world.items()
++                  if key not in {"world_time_ms", "neural_time_ms", "timestamps", "updated_at_utc"}}
++        encoded = json.dumps(stable, sort_keys=True, separators=(",", ":"), allow_nan=False)
++        return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
++
++
++    def _should_persist_observation(self, component: str, signature: str, *, force: bool = False) -> bool:
++        now = time.monotonic()
++        changed = self._observation_signatures.get(component) != signature
++        due = now - self._observation_last_wall.get(component, 0.0) >= 60.0
++        if force or changed or due:
++            self._observation_signatures[component] = signature
++            self._observation_last_wall[component] = now
++            return True
++        return False
++
++
++    @staticmethod
++    def _sensor_signature(record: dict[str, Any]) -> str:
++        semantic = {key: value for key, value in record.items() if key not in {
++            "input_sha256", "body_checkpoint_id", "body_stream_sequence", "body_sample_sequence",
++            "body_sample_time_ms", "neural_boundary_time_ms", "sequence", "time_ms",
++        }}
++        return hashlib.sha256(json.dumps(semantic, sort_keys=True, separators=(",", ":"),
++                                      allow_nan=False).encode("utf-8")).hexdigest()
+--- a/app/neuro_synthetic/mcp_server.py
++++ b/app/neuro_synthetic/mcp_server.py
+@@ -8,6 +8,7 @@
+ 
+ from __future__ import annotations
+ 
++import hashlib
+ import json
+ import math
+ import os
+@@ -22,12 +23,15 @@
+ from pathlib import Path
+ from typing import Any
+ 
+-from .sqlite_store import FlynnStore
++from .sqlite_store import FlynnStore, picoclaw_frame_digest
+ 
+ 
+ SERVER_INFO = {"name": "flynn-neurosynthetic", "version": "0.1.0"}
+ _PINOCCHIO_WORKER: subprocess.Popen[str] | None = None
+ _PINOCCHIO_WORKER_LOCK = threading.Lock()
++_NEURAL_FRAME_CACHE: dict[str, list[dict[str, Any]]] = {}
++_NEURAL_FRAME_CURSOR: dict[str, tuple[int, float]] = {}
++_DN_MANIFEST_CACHE: dict[str, dict[str, Any]] = {}
+ TOOLS = [
+     {
+         "name": "flynn_status",
+@@ -276,64 +280,145 @@
+     if not isinstance(provenance, str) or len(provenance) != 64 or any(ch not in "0123456789abcdef" for ch in provenance):
+         raise ValueError("provenance must be a lowercase SHA-256 digest")
+ 
+-    frame = store.latest_component_state("neural_activity_aggregator")
+-    if frame is None:
+-        raise RuntimeError("no real neural frame has been persisted")
+-    source = frame["state"]
+-    generation_id = store.causal_generation_id
+-    if generation_id is not None and source.get("causal_generation_id") != generation_id:
+-        raise ValueError("neural frame belongs to another causal generation")
+-    if (source.get("episode_id") != arguments["episode_id"]
+-            or source.get("sequence") != arguments["sequence"]
+-            or source.get("neural_time_ms") != simulation_time
+-            or source.get("input_sha256") != provenance
+-            or (generation_id is not None and frame["event_id"] != arguments["event_id"])):
+-        raise ValueError("event does not match the latest durable neural frame")
+-    if not all(source.get(key) is not None for key in ("core_id", "model_sha256", "config_sha256", "connectome_sha256", "start_tick", "end_tick", "dt_ms")):
+-        raise ValueError("frame lacks real LIF core provenance")
+-    expected_payload = {
+-        "dataset_version": source["dataset_version"],
+-        "mapping_sha256": source["mapping_sha256"],
+-        "manifest_sha256": source["manifest_sha256"],
+-        "core_id": source["core_id"],
+-        "model_sha256": source["model_sha256"],
+-        "config_sha256": source["config_sha256"],
+-        "connectome_sha256": source["connectome_sha256"],
+-        "start_tick": source["start_tick"],
+-        "end_tick": source["end_tick"],
+-        "dt_ms": source["dt_ms"],
+-        "active_neuron_count": source["active_neuron_count"],
+-        "total_spikes": source["total_spikes"],
+-        "input_sha256": source["input_sha256"],
+-        "mapped_spikes": source["mapped_spikes"],
+-    }
+-    if generation_id is not None:
++    identity_prefix = f"{arguments['episode_id']}:generation:"
++    identity_suffix = f":frame:{arguments['sequence']}"
++    event_id = arguments["event_id"]
++    if not event_id.startswith(identity_prefix) or not event_id.endswith(identity_suffix):
++        raise ValueError("transient PicoClaw event identity does not encode its generation and sequence")
++    generation_id = event_id[len(identity_prefix):-len(identity_suffix)]
++    if not generation_id or ":generation:" in generation_id or ":frame:" in generation_id:
++        raise ValueError("transient PicoClaw event identity has an invalid causal generation")
++
++    payload = arguments["payload"]
++    source = {key: payload.get(key) for key in (
++        "dataset_version", "mapping_sha256", "manifest_sha256", "core_id", "model_sha256",
++        "config_sha256", "connectome_sha256", "start_tick", "end_tick", "dt_ms",
++        "active_neuron_count", "total_spikes", "input_sha256", "mapped_spikes",
++    )}
++    source.update({"episode_id": arguments["episode_id"], "sequence": arguments["sequence"],
++                   "neural_time_ms": simulation_time})
++    if not all(source.get(key) is not None for key in (
++            "core_id", "model_sha256", "config_sha256", "connectome_sha256",
++            "start_tick", "end_tick", "dt_ms", "mapped_spikes")):
++        raise ValueError("transient frame lacks complete LIF provenance")
++    expected_payload = {key: source[key] for key in (
++        "dataset_version", "mapping_sha256", "manifest_sha256", "core_id", "model_sha256",
++        "config_sha256", "connectome_sha256", "start_tick", "end_tick", "dt_ms",
++        "active_neuron_count", "total_spikes", "input_sha256", "mapped_spikes",
++    )}
++    if "causal_generation_id" in payload:
++        if payload["causal_generation_id"] != generation_id:
++            raise ValueError("PicoClaw payload generation differs from its event identity")
+         expected_payload["causal_generation_id"] = generation_id
+-    if arguments["payload"] != expected_payload:
+-        differences = sorted(
+-            key for key in set(arguments["payload"]) | set(expected_payload)
+-            if arguments["payload"].get(key) != expected_payload.get(key)
++    if "delivery_epoch" in payload:
++        expected_payload["delivery_epoch"] = payload["delivery_epoch"]
++    if payload != expected_payload:
++        missing = sorted(set(expected_payload) - set(payload))
++        extra = sorted(set(payload) - set(expected_payload))
++        mismatched = sorted(key for key in set(payload) & set(expected_payload)
++                            if payload[key] != expected_payload[key])
++        raise ValueError("PicoClaw transient payload differs from its frame descriptor "
++                         f"(missing={missing}, extra={extra}, mismatched={mismatched})")
++    if source.get("input_sha256") != provenance:
++        raise ValueError("transient frame provenance differs from its input SHA-256")
++    if (source["dataset_version"] != "fafb-v783"
++            or source["end_tick"] <= source["start_tick"]
++            or abs(float(source["end_tick"]) * float(source["dt_ms"]) - simulation_time) > max(1e-9, float(source["dt_ms"]) * 1e-9)
++            or int(source["active_neuron_count"]) != len(source["mapped_spikes"])
++            or int(source["total_spikes"]) != sum(int(item["count"]) for item in source["mapped_spikes"])):
++        raise ValueError("transient frame time or sparse spike counts violate the LIF contract")
++    # The deployed PicoClaw v0.2.9 bridge forwards the legacy envelope fields
++    # only. Recover the generation from its deterministic event identity and
++    # derive the idempotency key and digest from the validated frame below.
++    # This keeps retries tied to the same durable receipt without a bridge ABI
++    # change or another binary dependency.
++    active_generation = store.active_causal_generation()
++    if (active_generation is None or active_generation["episode_id"] != source["episode_id"]
++            or active_generation["generation_id"] != generation_id):
++        raise ValueError("transient frame differs from the active episode/generation")
++    episode_id, sequence = source["episode_id"], int(source["sequence"])
++    idempotency_key = f"{episode_id}|{generation_id}|{sequence}"
++    if event_id != f"{episode_id}:generation:{generation_id}:frame:{sequence}":
++        raise ValueError("transient PicoClaw identity does not match episode/generation/sequence")
++    motor_readout = arguments.get("dn_readout")
++    _validate_transient_dn_readout(source, motor_readout)
++    digest_frame = {**source, "causal_generation_id": generation_id}
++    actual_digest = picoclaw_frame_digest(digest_frame, motor_readout)
++    receipt = store.read_picoclaw_frame_receipt(
++        episode_id=episode_id, generation_id=generation_id, frame_seq=sequence,
++    )
++    if receipt is None or receipt["prepared"].get("frame_digest") != actual_digest:
++        prepared_id, _ = store._frame_receipt_ids(episode_id, generation_id, sequence)
++        direct = store.connection.execute(
++            "SELECT event_id FROM events WHERE event_id=?", (prepared_id,),
++        ).fetchone()
++        raise RuntimeError(
++            "PicoClaw has no matching durable coordinator receipt "
++            f"(db={store.path}, active={store.causal_generation_id}, requested={generation_id}/{sequence}, "
++            f"prepared_id_present={direct is not None}, digest_matches="
++            f"{receipt is not None and receipt['prepared'].get('frame_digest') == actual_digest})"
+         )
+-        raise ValueError(f"payload differs from the durable aggregated frame: {differences}")
+-
+-    motor_readout = arguments.get("dn_readout")
+-    if motor_readout is not None:
+-        persisted_readout = store.latest_component_state("descending_motor_readout_v2")
+-        if (persisted_readout is None
+-                or persisted_readout["state"].get("episode_id") != arguments["episode_id"]
+-                or persisted_readout["state"].get("sequence") != arguments["sequence"]
+-                or any(persisted_readout["state"].get(key) != motor_readout.get(key)
+-                       for key in ("manifest_sha256", "mapping_sha256", "connectome_sha256", "active_neurons", "total_spikes", "spike_counts"))):
+-            raise ValueError("PicoClaw motor input differs from the durable official DN readout")
++    if receipt["status"] == "CONFIRMED":
++        cache = _NEURAL_FRAME_CACHE.setdefault(episode_id, [])
++        cached = next((item for item in cache if item.get("sequence") == sequence), None)
++        if cached is None:
++            cache.append({"sequence": sequence, "neural_time_ms": simulation_time,
++                          "source_frame_sha256": provenance, "dn_readout": motor_readout})
++        elif (cached.get("source_frame_sha256") != provenance
++                or cached.get("dn_readout") != motor_readout):
++            raise ValueError("confirmed frame retry conflicts with the MCP transient aggregation cache")
++        previous = _NEURAL_FRAME_CURSOR.get(episode_id)
++        if previous is None or previous == (sequence - 1, float(receipt["confirmed"]["start_neural_time_ms"])):
++            _NEURAL_FRAME_CURSOR[episode_id] = (sequence, simulation_time)
++        elif previous != (sequence, simulation_time):
++            raise ValueError("confirmed PicoClaw retry is out of order for this MCP process")
++        confirmed = receipt["confirmed"]
++        return {
++            "episode_id": episode_id, "causal_generation_id": generation_id,
++            "sequence": sequence, "neural_time_ms": simulation_time,
++            "source_event_id": arguments["event_id"],
++            "source_provenance_sha256": provenance,
++            "pico_component": "github.com/sipeed/picoclaw/pkg/mcp.Manager.CallTool",
++            "pico_version": "v0.2.9", "provider_used": False,
++            "coordination": "DURABLE_FRAME_RECEIPT_REPLAY",
++            "receipt_key": idempotency_key,
++            "frame_digest": actual_digest,
++            "receipt_result_sha256": confirmed.get("result_sha256"),
++            "output_state_id": confirmed.get("output_state_id"),
++            "body_checkpoint_state_id": confirmed.get("body_checkpoint_state_id"),
++            "status": "IDEMPOTENT_RETRY",
++            "effect": "PRIOR_CONFIRMED_RESULT_RETURNED_NO_REDISPATCH",
++            "pinocchio_timing": None, "pinocchio_result": None,
++        }
++    receipt_epoch = receipt["prepared"].get("delivery_epoch")
++    request_epoch = payload.get("delivery_epoch")
++    if not receipt_epoch or (request_epoch is not None and request_epoch != receipt_epoch):
++        raise RuntimeError(
++            "prepared PicoClaw operation is indeterminate after a delivery-epoch change; "
++            "automatic redispatch is blocked pending reconciliation"
++        )
++    orphan_output = store.connection.execute(
++        "SELECT 1 FROM component_states WHERE component='pinocchio_body_checkpoint' "
++        "AND json_extract(state_json,'$.frame_receipt_key')=? LIMIT 1", (idempotency_key,),
++    ).fetchone()
++    if orphan_output is not None:
++        raise RuntimeError("prepared frame has durable Pinocchio output but no confirmation; refusing blind replay")
++
++    previous_cursor = _NEURAL_FRAME_CURSOR.get(episode_id)
++    if previous_cursor is None:
++        checkpoint = store.active_checkpoint()
++        expected_sequence = int(checkpoint["state"].get("next_sequence", 0)) if checkpoint else 0
++        if sequence != expected_sequence:
++            raise ValueError("first transient frame sequence does not continue the confirmed checkpoint")
++    elif sequence != previous_cursor[0] + 1 or simulation_time <= previous_cursor[1]:
++        raise ValueError("transient PicoClaw frame sequence or neural time is not contiguous")
+ 
+     component = "picoclaw_cerebellar_coordinator"
+-    state_id = (f"picoclaw-frame:{arguments['episode_id']}:generation:{generation_id}:{arguments['sequence']}"
+-                if generation_id is not None else
+-                f"picoclaw-frame:{arguments['episode_id']}:{arguments['sequence']}")
++    state_id = f"picoclaw-frame:{episode_id}:{generation_id}:{sequence}"
+     state = {
+-        "episode_id": arguments["episode_id"],
+-        "causal_generation_id": generation_id,
+-        "sequence": arguments["sequence"],
++        "episode_id": episode_id,
++        "causal_generation_id": active_generation["generation_id"] if active_generation else None,
++        "sequence": sequence,
+         "neural_time_ms": simulation_time,
+         "source_event_id": arguments["event_id"],
+         "source_provenance_sha256": provenance,
+@@ -351,54 +436,29 @@
+         ),
+         "physical_actuation": "WAITING_FOR_20MS_BODY_BOUNDARY" if motor_readout is not None else "NOT_REQUESTED",
+         "effect": "FRAME_COORDINATED_OBSERVATION_ONLY",
++        "receipt_key": idempotency_key,
++        "frame_digest": actual_digest,
++        "receipt_status": "PREPARED",
+     }
+-    # Stable IDs make an exact retry idempotent; the append-only store rejects
+-    # reuse of the same sequence with different frame contents.
+-    existing = store.connection.execute(
+-        "SELECT state_json FROM component_states WHERE state_id=?", (state_id,)
+-    ).fetchone()
+-    if existing is not None:
+-        if json.loads(existing[0]) != state:
+-            raise ValueError("PicoClaw sequence already exists with different provenance")
+-        return {**state, "status": "IDEMPOTENT_RETRY"}
+-    previous = store.latest_component_state(component)
+-    if previous and previous["state"].get("episode_id") == arguments["episode_id"]:
+-        previous_state = previous["state"]
+-        if arguments["sequence"] != previous_state.get("sequence", -1) + 1:
+-            raise ValueError("PicoClaw frame sequence must be contiguous within an episode")
+-        if simulation_time <= previous_state.get("neural_time_ms", -1):
+-            raise ValueError("PicoClaw neural frame time must advance monotonically")
+-    else:
+-        checkpoint = store.active_checkpoint()
+-        expected_first_sequence = int((checkpoint or {"state": {}})["state"].get("next_sequence", 0))
+-        if arguments["sequence"] != expected_first_sequence:
+-            raise ValueError("first PicoClaw frame must continue from the active confirmed checkpoint cursor")
+-    if not store.readonly:
+-        store.record_state(
+-            state_id=state_id, event_id=state_id, component=component,
+-            occurred_at_utc=timestamp, neural_time_ms=simulation_time, state=state,
+-        )
+-        store.record_event(
+-            event_id=f"{state_id}:ack", event_type="PICOCLAW_FRAME_COORDINATED",
+-            source=component, occurred_at_utc=timestamp, neural_time_ms=simulation_time,
+-            provenance_sha256=provenance, payload=state,
+-        )
++    cache = _NEURAL_FRAME_CACHE.setdefault(episode_id, [])
++    cache.append({"sequence": sequence, "neural_time_ms": simulation_time,
++                  "source_frame_sha256": provenance, "dn_readout": motor_readout})
+     is_physical_boundary = abs((simulation_time / 20.0) - round(simulation_time / 20.0)) < 1e-8
+     pinocchio_timing = None
+     if motor_readout is not None and is_physical_boundary:
+         physical_input = _aggregate_neural_dn_boundary(
+-            store, episode_id=arguments["episode_id"], boundary_ms=simulation_time,
++            store, episode_id=episode_id, boundary_ms=simulation_time,
+             current_sequence=arguments["sequence"], current_readout=motor_readout,
+-            generation_id=str(generation_id),
++            cached_frames=cache,
+         )
+         mode = "NEURAL_ZERO_CONTROL" if physical_input["total_spikes"] == 0 else "NEURAL_DN_READOUT"
+         physical = _run_pinocchio_packet(store, {
+             "mode": mode, "sequence": arguments["sequence"],
+-            "stream_id": (f"neural:{arguments['episode_id']}:generation:{generation_id}"
+-                          if generation_id is not None else f"neural:{arguments['episode_id']}"),
+-            "episode_id": arguments["episode_id"],
+-            "causal_generation_id": generation_id,
++            "stream_id": f"neural:{episode_id}",
++            "episode_id": episode_id,
+             "neural_time_ms": simulation_time, "occurred_at_utc": timestamp,
++            "frame_receipt_key": idempotency_key,
++            "frame_digest": actual_digest,
+             "manifest_sha256": physical_input["manifest_sha256"],
+             "mapping_sha256": physical_input["mapping_sha256"],
+             "connectome_sha256": physical_input["connectome_sha256"],
+@@ -411,21 +471,12 @@
+             "worker_phase_ms": physical.get("worker_phase_ms"),
+             "worker_transfer_timing": physical.get("worker_transfer_timing"),
+         }
+-        physical_state_id = (f"pinocchio-neural:{arguments['episode_id']}:generation:{generation_id}:{arguments['sequence']}"
+-                             if generation_id is not None else
+-                             f"pinocchio-neural:{arguments['episode_id']}:{arguments['sequence']}")
++        physical_state_id = f"pinocchio-neural:{episode_id}:{sequence}"
+         physical["source_event_id"] = state_id
+         physical["source_frame_sequences"] = physical_input["source_frame_sequences"]
+         physical["source_frame_hashes"] = physical_input["source_frame_hashes"]
+-        if not store.readonly:
+-            store.record_state(state_id=physical_state_id, event_id=f"{physical_state_id}:state",
+-                               component="pinocchio_motor_actuation", occurred_at_utc=timestamp,
+-                               neural_time_ms=simulation_time, state=physical)
+-            store.record_event(event_id=f"{physical_state_id}:applied",
+-                               event_type="PINOCCHIO_NEURAL_ZERO_CONTROL_APPLIED" if mode == "NEURAL_ZERO_CONTROL"
+-                               else "PINOCCHIO_NEURAL_DN_READOUT_APPLIED",
+-                               source="picoclaw_motor_coordinator", occurred_at_utc=timestamp,
+-                               neural_time_ms=simulation_time, provenance_sha256=provenance, payload=physical)
++        cache[:] = [item for item in cache if item["neural_time_ms"] > simulation_time]
++    _NEURAL_FRAME_CURSOR[episode_id] = (sequence, simulation_time)
+     return {**state, "status": "FRAME_COORDINATED_OBSERVATION_ONLY",
+             "pinocchio_timing": pinocchio_timing,
+             "pinocchio_result": physical if motor_readout is not None and is_physical_boundary else None}
+@@ -433,50 +484,40 @@
+ 
+ def _aggregate_neural_dn_boundary(store: FlynnStore, *, episode_id: str, boundary_ms: float,
+                                   current_sequence: int, current_readout: dict[str, Any],
+-                                  generation_id: str) -> dict[str, Any]:
+-    """Sum only measured official DN frame counts since the preceding 20 ms body step."""
+-    stream_id = (f"neural:{episode_id}:generation:{generation_id}"
+-                 if generation_id is not None else f"neural:{episode_id}")
+-    prior_physical = None
+-    rows = (store.connection.execute(
+-        "SELECT state_json FROM component_states WHERE component='pinocchio_body_checkpoint' "
+-        "AND json_extract(state_json,'$.causal_generation_id')=? ORDER BY rowid DESC", (generation_id,)
+-    ).fetchall() if generation_id is not None else store.connection.execute(
+-        "SELECT state_json FROM component_states WHERE component='pinocchio_body_checkpoint' "
+-        "AND json_extract(state_json,'$.causal_generation_id') IS NULL ORDER BY rowid DESC"
+-    ).fetchall())
+-    for (raw,) in rows:
+-        state = json.loads(raw)
+-        if state.get("stream_id") == stream_id:
+-            prior_physical = state
+-            break
+-    if prior_physical is None:
+-        anchor = store.latest_component_state("pinocchio_body_checkpoint")
+-        if anchor is not None:
+-            prior_physical = anchor["state"]
++                                  cached_frames: list[dict[str, Any]]) -> dict[str, Any]:
++    """Sum transient, validated frame readouts since the last paired body checkpoint."""
++    stream_id = f"neural:{episode_id}"
++    checkpoint = store.active_checkpoint()
++    body_ref = (checkpoint or {}).get("state", {}).get("body_checkpoint")
++    if isinstance(body_ref, dict):
++        body_record = store.component_state_by_id(str(body_ref.get("component_state_id", "")))
++        prior_physical = body_record["state"] if body_record is not None else None
++        if prior_physical is None:
++            raise RuntimeError("active causal checkpoint body state is missing from the physical readout")
++    else:
++        row = store.connection.execute(
++            "SELECT state_json FROM component_states WHERE component='pinocchio_body_checkpoint' ORDER BY rowid DESC LIMIT 1"
++        ).fetchone()
++        prior_physical = json.loads(row[0]) if row else None
++    if prior_physical is not None and prior_physical.get("stream_id") != stream_id:
++        prior_physical = None
+     start_ms = float(prior_physical["physical_time_ms"]) if prior_physical else boundary_ms - 20.0
+     if not math.isclose(boundary_ms - start_ms, 20.0, rel_tol=0, abs_tol=1e-8):
+         raise ValueError("neural-to-body dispatch must cover exactly one 20 ms physical interval")
+-    frame_rows = (store.connection.execute(
+-        "SELECT state_json FROM component_states WHERE component='descending_motor_readout_v2' "
+-        "AND json_extract(state_json, '$.episode_id')=? AND neural_time_ms>? AND neural_time_ms<=? "
+-        "AND json_extract(state_json,'$.causal_generation_id')=? ORDER BY neural_time_ms, rowid", (episode_id, start_ms, boundary_ms, generation_id),
+-    ).fetchall() if generation_id is not None else store.connection.execute(
+-        "SELECT state_json FROM component_states WHERE component='descending_motor_readout_v2' "
+-        "AND json_extract(state_json, '$.episode_id')=? AND neural_time_ms>? AND neural_time_ms<=? "
+-        "AND json_extract(state_json,'$.causal_generation_id') IS NULL ORDER BY neural_time_ms, rowid", (episode_id, start_ms, boundary_ms),
+-    ).fetchall())
+-    frames = [json.loads(row[0]) for row in frame_rows]
++    frames = [frame for frame in cached_frames
++              if float(frame["neural_time_ms"]) > start_ms and float(frame["neural_time_ms"]) <= boundary_ms]
+     if not frames or frames[-1].get("sequence") != current_sequence:
+-        raise ValueError("20 ms body interval lacks the current persisted official DN readout")
++        raise ValueError("20 ms body interval lacks its transient official DN readouts")
+     expected_sequences = list(range(int(frames[0]["sequence"]), current_sequence + 1))
+     if [int(frame["sequence"]) for frame in frames] != expected_sequences:
+         raise ValueError("neural DN frames in physical interval are discontinuous")
+     for frame in frames:
++        readout = frame["dn_readout"]
+         for key in ("manifest_sha256", "mapping_sha256", "connectome_sha256", "compact_indices"):
+-            if frame.get(key) != current_readout.get(key):
++            if readout.get(key) != current_readout.get(key):
+                 raise ValueError(f"DN physical interval changed population provenance: {key}")
+-    counts = [sum(int(frame["spike_counts"][index]) for frame in frames) for index in range(1303)]
++    counts = [sum(int(frame["dn_readout"]["spike_counts"][index]) for frame in frames)
++              for index in range(1303)]
+     if max(counts, default=0) > 2**32 - 1:
+         raise OverflowError("aggregated 20 ms DN count exceeds uint32")
+     return {
+@@ -540,27 +581,22 @@
+         packet["root_ids"] = manifest_obj["root_ids"]
+     stream_id = str(packet["stream_id"])
+     previous = None
+-    rows = (store.connection.execute(
+-        "SELECT state_json FROM component_states WHERE component='pinocchio_body_checkpoint' "
+-        "AND json_extract(state_json,'$.causal_generation_id')=? ORDER BY rowid DESC", (store.causal_generation_id,)
+-    ).fetchall() if store.causal_generation_id is not None else store.connection.execute(
+-        "SELECT state_json FROM component_states WHERE component='pinocchio_body_checkpoint' "
+-        "AND json_extract(state_json,'$.causal_generation_id') IS NULL ORDER BY rowid DESC"
+-    ).fetchall())
+-    for (raw_state,) in rows:
+-        candidate = json.loads(raw_state)
++    checkpoint = store.active_checkpoint()
++    body_ref = (checkpoint or {}).get("state", {}).get("body_checkpoint")
++    if isinstance(body_ref, dict):
++        body_record = store.component_state_by_id(str(body_ref.get("component_state_id", "")))
++        if body_record is None:
++            raise RuntimeError("active causal checkpoint body state is missing from Pinocchio input")
++        candidate = body_record["state"]
+         if candidate.get("stream_id") == stream_id:
+             previous = candidate
+-            break
+-    if (previous is None and store.causal_generation_id is not None
+-            and packet.get("causal_generation_id") == store.causal_generation_id):
+-        anchor = store.latest_component_state("pinocchio_body_checkpoint")
+-        if anchor is not None:
+-            candidate = anchor["state"]
+-            expected_gap_ms = float(packet.get("chunk_ms", 20.0))
+-            if (candidate.get("episode_id") == packet.get("episode_id")
+-                    and math.isclose(float(packet["neural_time_ms"]) - float(candidate["physical_time_ms"]),
+-                                     expected_gap_ms, rel_tol=0, abs_tol=1e-8)):
++    else:
++        row = store.connection.execute(
++            "SELECT state_json FROM component_states WHERE component='pinocchio_body_checkpoint' ORDER BY rowid DESC LIMIT 1"
++        ).fetchone()
++        if row:
++            candidate = json.loads(row[0])
++            if candidate.get("stream_id") == stream_id:
+                 previous = candidate
+     stream_sequence = int(previous["stream_sequence"]) + 1 if previous else 0
+     if packet["mode"] == "ARTIFICIAL_CALIBRATION_ONLY" and int(packet["sequence"]) != stream_sequence:
+@@ -649,7 +685,7 @@
+     physical["episode_id"] = packet.get("episode_id")
+     physical["stream_sequence"] = stream_sequence
+     checkpoint_hash = __import__("hashlib").sha256(stream_id.encode("utf-8")).hexdigest()[:20]
+-    checkpoint_id = store.qualify_id(f"pinocchio-body:{checkpoint_hash}:{stream_sequence}")
++    checkpoint_id = f"pinocchio-body:{checkpoint_hash}:{stream_sequence}"
+     checkpoint = {
+         "schema": "flynn.pinocchio_body_checkpoint.v1",
+         "episode_id": packet.get("episode_id"),
+@@ -672,10 +708,12 @@
+         "canonical_node_count": physical["body_state"]["topology_nodes"],
+         "canonical_edge_count": physical["proprioceptive_readout"]["body_model"]["canonical_edge_count"],
+         "physical_time_ms": float(packet["neural_time_ms"]),
+-        "checkpoint_precision": "float64_roundtrip_json",
+-    }
++            "checkpoint_precision": "float64_roundtrip_json",
++            "frame_receipt_key": packet.get("frame_receipt_key"),
++            "frame_digest": packet.get("frame_digest"),
++        }
+     sqlite_persist_started = time.perf_counter()
+-    proprio_id = store.qualify_id(f"pinocchio-proprio:{checkpoint_hash}:{stream_sequence}")
++    proprio_id = f"pinocchio-proprio:{checkpoint_hash}:{stream_sequence}"
+     proprio = physical["proprioceptive_readout"]
+     proprio.update({"stream_id": stream_id, "stream_sequence": stream_sequence,
+                     "episode_id": packet.get("episode_id"),
+@@ -716,6 +754,8 @@
+     physical["body_checkpoint"] = checkpoint
+     physical["body_checkpoint_state_id"] = checkpoint_id
+     physical["proprioceptive_state_id"] = proprio_id
++    physical["frame_receipt_key"] = packet.get("frame_receipt_key")
++    physical["frame_digest"] = packet.get("frame_digest")
+     return physical
+ 
+ 
+@@ -766,5 +806,47 @@
+             sys.stdout.flush()
+ 
+ 
++def _validate_transient_dn_readout(source: dict[str, Any], readout: dict[str, Any] | None) -> None:
++    if not isinstance(readout, dict):
++        raise ValueError("transient frame is missing the official DN readout")
++    manifest_path = os.environ.get("FLYNN_PINOCCHIO_POPULATION_MANIFEST")
++    if not manifest_path:
++        raise RuntimeError("official DN manifest is required to validate the transient readout")
++    manifest_path = str(Path(manifest_path).resolve())
++    manifest = _DN_MANIFEST_CACHE.get(manifest_path)
++    if manifest is None:
++        manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
++        _DN_MANIFEST_CACHE[manifest_path] = manifest
++    compact = [int(value) for value in manifest.get("compact_indices", [])]
++    roots = [int(value) for value in manifest.get("root_ids", [])]
++    if len(compact) != 1303 or len(roots) != 1303:
++        raise ValueError("official DN manifest does not contain 1,303 root mappings")
++    by_index = {index: position for position, index in enumerate(compact)}
++    counts = [0] * 1303
++    seen: set[int] = set()
++    for item in source["mapped_spikes"]:
++        index, root, count = int(item["compact_index"]), int(item["root_id"]), int(item["count"])
++        if index in seen or count <= 0:
++            raise ValueError("transient mapped spikes contain duplicate indices or non-positive counts")
++        seen.add(index)
++        position = by_index.get(index)
++        if position is not None:
++            if roots[position] != root:
++                raise ValueError("transient DN root ID does not match its canonical compact index")
++            counts[position] = count
++    expected = {
++        "population": "flywire-v2.1.0-descending-1303",
++        "annotation_sha256": manifest.get("annotation_file_sha256"),
++        "mapping_sha256": manifest.get("population_mapping_sha256"),
++        "manifest_sha256": hashlib.sha256(Path(manifest_path).read_bytes()).hexdigest(),
++        "connectome_sha256": manifest.get("connectome_sha256"),
++        "active_neurons": sum(value > 0 for value in counts), "total_spikes": sum(counts),
++        "compact_indices": compact, "spike_counts": counts, "effect": "MEASURED_DN_READOUT_ONLY",
++    }
++    if readout != expected:
++        raise ValueError("transient DN readout differs from the official root map and measured LIF spikes")
++
++
+ if __name__ == "__main__":
+     serve()
++
+--- a/app/neuro_synthetic/resident_runtime.py
++++ b/app/neuro_synthetic/resident_runtime.py
+@@ -421,11 +421,16 @@
+     )
+     if mapping_hash != connectome.mapping_sha256:
+         raise RuntimeError("resident SQLite canonical mapping differs from CSR")
++    requested_persistence_mode = os.environ.get("FLYNN_PERSISTENCE_MODE", "sampled").strip().lower()
++    if requested_persistence_mode not in {"dense", "sampled"}:
++        raise RuntimeError("FLYNN_PERSISTENCE_MODE must be 'dense' or 'sampled'")
+     pipeline = NeuralActivityPipeline(
+         store=store, episode_id=episode_id, dataset_version="fafb-v783",
+         manifest_sha256=connectome.manifest_sha256,
+         mapping_sha256=connectome.mapping_sha256,
+         root_ids=(int(value) for value in connectome.root_ids),
++        restore_latest_cursor=False, sampling_window_ms=1000.0,
++        requested_persistence_mode=requested_persistence_mode,
+     )
+     core = NeuralCore(connectome=connectome, pipeline=pipeline, episode_id=episode_id)
+     readout = DescendingReadoutV2(motor_manifest, expected_connectome_sha256=connectome.matrix_sha256)
+@@ -464,6 +469,7 @@
+             if cycle.get("execution_kind") != EXECUTION_KIND:
+                 raise RuntimeError("initial resident cycle was not persisted with RESIDENT identity")
+             checkpoint = runtime.save_integrated_checkpoint(checkpoint_dir)
++            pipeline.transition_persistence_mode(requested_persistence_mode, checkpoint)
+             _prune_checkpoints(checkpoint_dir, Path(checkpoint["checkpoint_file"]), logger)
+             _log(logger, "resident_first_checkpoint", episode_id=episode_id,
+                  tick=checkpoint["neural_tick"], neural_time_ms=checkpoint["neural_time_ms"],
+@@ -491,6 +497,7 @@
+             _log(logger, "resident_checkpoint_restored", episode_id=episode_id,
+                  tick=restored["neural_tick"], neural_time_ms=restored["neural_time_ms"],
+                  world_time_ms=restored["world_time_ms"], sha256=restored["checkpoint_sha256"])
++            pipeline.transition_persistence_mode(requested_persistence_mode, restored)
+ 
+         episode_metadata["last_start_at_utc"] = _utc_now()
+         episode_metadata["last_stop_at_utc"] = None
+@@ -530,6 +537,7 @@
+             if cycle.get("execution_kind") != EXECUTION_KIND:
+                 raise RuntimeError("resident loop received an instrumental cycle")
+             checkpoint = runtime.save_integrated_checkpoint(checkpoint_dir)
++            pipeline.transition_persistence_mode(requested_persistence_mode, checkpoint)
+             _prune_checkpoints(checkpoint_dir, Path(checkpoint["checkpoint_file"]), logger)
+             _log(logger, "resident_cycle_committed", episode_id=episode_id,
+                  cycle_sequence=cycle["cycle_sequence"], tick=cycle["end_tick"],
+--- a/app/neuro_synthetic/picoclaw_port.py
++++ b/app/neuro_synthetic/picoclaw_port.py
+@@ -7,6 +7,7 @@
+ 
+ from __future__ import annotations
+ 
++import hashlib
+ import json
+ import os
+ import subprocess
+@@ -16,6 +17,7 @@
+ from datetime import datetime, timezone
+ from pathlib import Path
+ from typing import Any
++from .sqlite_store import picoclaw_frame_digest
+ 
+ 
+ PROTOCOL_VERSION = "flynn.picoclaw.frame.v1"
+@@ -52,6 +54,7 @@
+         self.timeout_seconds = timeout_seconds
+         self._lock = threading.Lock()
+         self._process: subprocess.Popen[str] | None = None
++        self._delivery_epoch: str | None = None
+ 
+     def start(self) -> None:
+         with self._lock:
+@@ -65,10 +68,12 @@
+         if not Path(self.database_path).is_file():
+             raise FileNotFoundError(f"existing Flynn V2 database not found: {self.database_path}")
+         env = os.environ.copy()
++        delivery_epoch = uuid.uuid4().hex
+         env.update({
+             "FLYNN_V2_DB": self.database_path,
+             "FLYNN_PROJECT_ROOT": self.project_root,
+             "FLYNN_PYTHON_EXECUTABLE": self.python_executable,
++            "FLYNN_PICOCLAW_DELIVERY_EPOCH": delivery_epoch,
+         })
+         if self.resident_mode:
+             env["FLYNN_RESIDENT_SINGLE_WRITER"] = "1"
+@@ -82,10 +87,12 @@
+             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=None,
+             text=True, encoding="utf-8", bufsize=1,
+         )
++        self._delivery_epoch = delivery_epoch
+         return self._process
+ 
+     def coordinate_persisted_frame(self, state: dict[str, Any], *,
+-                                   dn_readout: dict[str, Any] | None = None) -> dict[str, Any]:
++                                   dn_readout: dict[str, Any] | None = None,
++                                   receipt: dict[str, Any] | None = None) -> dict[str, Any]:
+         """Forward a latest aggregator snapshot; fail closed on every mismatch."""
+         required = (
+             "episode_id", "sequence", "neural_time_ms", "dataset_version",
+@@ -101,9 +108,17 @@
+         if state["dataset_version"] != "fafb-v783":
+             raise ValueError("PicoClaw port accepts only the approved FAFB v783 frames")
+         timestamp = datetime.now(timezone.utc).isoformat()
+-        event_id = (f"{state['episode_id']}:generation:{state['causal_generation_id']}:tick:{state['end_tick']}"
+-                    if state.get("causal_generation_id") else
+-                    f"{state['episode_id']}:neural-frame:{state['sequence']}")
++        if self.resident_mode and (not isinstance(receipt, dict)
++                or receipt.get("status") not in {"PREPARED", "CONFIRMED"}):
++            raise ValueError("resident PicoClaw call requires its durable coordinator receipt")
++        generation_id = str(state.get("causal_generation_id") or "legacy")
++        event_id = f"{state['episode_id']}:generation:{generation_id}:frame:{state['sequence']}"
++        idempotency_key = f"{state['episode_id']}|{generation_id}|{state['sequence']}"
++        frame_digest = picoclaw_frame_digest(state, dn_readout)
++        if self.resident_mode and (receipt.get("idempotency_key") != idempotency_key
++                or receipt.get("frame_digest") != frame_digest):
++            raise ValueError("resident PicoClaw receipt does not match the exact transient frame")
++        delivery_epoch = str(receipt.get("delivery_epoch") or "")
+         payload = {key: state[key] for key in (
+             "dataset_version", "mapping_sha256", "manifest_sha256", "core_id",
+             "model_sha256", "config_sha256", "connectome_sha256", "start_tick",
+@@ -112,6 +127,11 @@
+         )}
+         if state.get("causal_generation_id"):
+             payload["causal_generation_id"] = state["causal_generation_id"]
++        if self.resident_mode:
++            current_epoch = self.delivery_epoch
++            if receipt.get("status") == "PREPARED" and delivery_epoch != current_epoch:
++                raise RuntimeError("indeterminate prepared PicoClaw operation belongs to a prior bridge epoch; reconciliation required")
++            payload["delivery_epoch"] = delivery_epoch
+         if dn_readout is not None:
+             if (dn_readout.get("population") != "flywire-v2.1.0-descending-1303"
+                     or dn_readout.get("connectome_sha256") != state["connectome_sha256"]
+@@ -121,7 +141,7 @@
+             payload["dn_readout"] = dn_readout
+         message = {
+             "protocol_version": PROTOCOL_VERSION,
+-            "request_id": uuid.uuid4().hex,
++            "request_id": hashlib.sha256(idempotency_key.encode("utf-8")).hexdigest()[:32],
+             "event_id": event_id,
+             "episode_id": state["episode_id"],
+             "source_component": "neural_activity_aggregator",
+@@ -130,6 +150,9 @@
+             "sequence": state["sequence"],
+             "occurred_at_utc": timestamp,
+             "provenance_sha256": state["input_sha256"],
++            "causal_generation_id": generation_id,
++            "idempotency_key": idempotency_key,
++            "frame_digest": frame_digest,
+             "payload": payload,
+         }
+         with self._lock:
+@@ -163,6 +186,12 @@
+             "upstream_call_elapsed_ms": result.get("elapsed_ms"),
+             "pinocchio_timing": mcp_result.get("pinocchio_timing"),
+             "pinocchio_result": mcp_result.get("pinocchio_result"),
++            "receipt_status": "CONFIRMED" if mcp_result.get("status") == "IDEMPOTENT_RETRY" else "PREPARED",
++            "receipt_key": idempotency_key,
++            "frame_digest": frame_digest,
++            "receipt_result_sha256": mcp_result.get("receipt_result_sha256"),
++            "output_state_id": mcp_result.get("output_state_id"),
++            "body_checkpoint_state_id": mcp_result.get("body_checkpoint_state_id"),
+             "provider_used": False,
+         }
+ 
+@@ -276,3 +305,11 @@
+ 
+     def __exit__(self, *_: object) -> None:
+         self.close()
++    @property
++    def delivery_epoch(self) -> str:
++        with self._lock:
++            self._start_locked()
++            if self._delivery_epoch is None:
++                raise RuntimeError("PicoClaw delivery epoch was not initialized")
++            return self._delivery_epoch
++
+--- a/app/neuro_synthetic/neural_core.py
++++ b/app/neuro_synthetic/neural_core.py
+@@ -27,6 +27,8 @@
+ # byte-identical to the verified packaged baseline below.
+ LEGACY_PERSISTENCE_MODEL_SHA256 = "e2c1a52274acee4c6959aec6c1befd982ac5cfbcb0df8e87e6a928dbdf791779"
+ LEGACY_NEURAL_BUNDLE_SHA256 = "82be39f3c81ff33248418ae97946a3c13de0972d7e75f9c7bf00c5e70a52766f"
++LEGACY_OBSERVATION_MODEL_SHA256 = "82be39f3c81ff33248418ae97946a3c13de0972d7e75f9c7bf00c5e70a52766f"
++LEGACY_NEURAL_DYNAMICS_SHA256 = "ca078196b52dd2504e4e4faeb283ac32519bdc5caed6fee61050a406bd8590f2"
+ 
+ 
+ def _sha256_file(path: Path) -> str:
+@@ -38,6 +40,11 @@
+ 
+ 
+ def _model_sha256() -> str:
++    # The approved sampling change modifies persistence only. Preserve the
++    # installed model identity while the dynamics/transducer bundle remains
++    # byte-identical, so existing checkpoints and code rollback stay valid.
++    if _legacy_neural_dynamics_sha256() == LEGACY_NEURAL_DYNAMICS_SHA256:
++        return LEGACY_OBSERVATION_MODEL_SHA256
+     digest = hashlib.sha256()
+     package_dir = Path(__file__).parent
+     for filename in (
+@@ -57,6 +64,27 @@
+     package_dir = Path(__file__).parent
+     for filename in (
+         "lif_engine.py", "signed_connectome.py", "aggregator.py", "pipeline.py",
++        "visual_light_transducer.py",
++        "proprioceptive_transducer.py", "descending_readout.py",
++    ):
++        path = package_dir / filename
++        digest.update(path.name.encode("utf-8") + b"\0")
++        digest.update(path.read_bytes())
++    return digest.hexdigest()
++
++
++def _legacy_neural_dynamics_sha256() -> str:
++    """Fingerprint dynamics and transducers for the attested legacy checkpoint.
++
++    The old checkpoint's model hash also included pipeline.py. That file is
++    persistence/observation plumbing, so a lossless sampling change must not
++    invalidate the neural state when every dynamics-bearing module is byte
++    identical to the installed baseline.
++    """
++    digest = hashlib.sha256()
++    package_dir = Path(__file__).parent
++    for filename in (
++        "lif_engine.py", "signed_connectome.py", "aggregator.py",
+         "visual_light_transducer.py",
+         "proprioceptive_transducer.py", "descending_readout.py",
+     ):
+@@ -105,7 +133,7 @@
+         self.engine = LIFEngine(connectome, parameters)
+         self.model_sha256 = _model_sha256()
+         self._legacy_model_compatible = (
+-            _legacy_neural_bundle_sha256() == LEGACY_NEURAL_BUNDLE_SHA256
++            _legacy_neural_dynamics_sha256() == LEGACY_NEURAL_DYNAMICS_SHA256
+         )
+         self.config_sha256 = _config_sha256(parameters)
+         latest = pipeline.store.latest_component_state(NeuralActivityPipeline.COMPONENT)
+@@ -298,10 +326,11 @@
+             "config_sha256": self.config_sha256,
+             "core_id": CORE_ID,
+             "next_sequence": self._next_sequence,
++            "observability_state": self.pipeline.export_observability_state(),
+             "engine_state": self.engine.export_state(),
+         }
+ 
+-    def restore_runtime_state(self, runtime_state: dict[str, Any]) -> None:
++    def restore_runtime_state(self, runtime_state: dict[str, Any], *, validate_latest_frame: bool = True) -> None:
+         """Restore state from a verified enclosing checkpoint at the frame cursor."""
+         expected = {
+             "episode_id": self.episode_id,
+@@ -323,47 +352,67 @@
+         if not isinstance(engine_state, dict):
+             raise ValueError("integrated checkpoint has no neural engine state")
+ 
+-        frame_state = self.pipeline.store.latest_component_state(NeuralActivityPipeline.COMPONENT)
+-        if frame_state and frame_state["state"].get("episode_id") == self.episode_id:
+-            saved = frame_state["state"]
+-            if (saved.get("end_tick") != engine_state.get("tick")
+-                    or int(saved.get("sequence", -1)) + 1 != next_sequence):
+-                raise ValueError("integrated checkpoint does not match the durable neural frame cursor")
+-        elif next_sequence != 0:
+-            active = self.pipeline.store.active_causal_generation()
+-            checkpoint = self.pipeline.store.active_checkpoint()
+-            checkpoint_state = (checkpoint or {}).get("state", {})
+-            checkpoint_state_id = (checkpoint or {}).get("state_id")
+-            pointer_matches = (
+-                active is not None and checkpoint is not None
+-                and checkpoint_state_id == active["checkpoint_state_id"]
+-                and checkpoint_state.get("checkpoint_sha256") == active["checkpoint_sha256"]
+-                and int(checkpoint_state.get("neural_tick", -1)) == int(engine_state.get("tick", -2))
+-                and int(checkpoint_state.get("neural_tick", -1)) == active["checkpoint_tick"]
+-                and int(checkpoint_state.get("next_sequence", -1)) == next_sequence
+-            )
+-            active_generation_checkpoint = (
+-                pointer_matches
+-                and checkpoint_state.get("causal_generation_id") == active["generation_id"]
+-            )
+-            parent_origin_checkpoint = (
+-                pointer_matches
+-                and checkpoint_state_id == active["origin_checkpoint_state_id"]
+-                and checkpoint_state.get("checkpoint_sha256") == active["origin_checkpoint_sha256"]
+-                and int(checkpoint_state.get("neural_tick", -1)) == active["origin_tick"]
+-                and checkpoint_state.get("causal_generation_id") == active["parent_generation_id"]
+-            )
+-            legacy_root_origin_checkpoint = (
+-                pointer_matches
+-                and active["parent_generation_id"] is None
+-                and checkpoint_state_id == active["origin_checkpoint_state_id"]
+-                and checkpoint_state.get("causal_generation_id") is None
+-            )
+-            if not (active_generation_checkpoint or parent_origin_checkpoint or legacy_root_origin_checkpoint):
+-                raise ValueError("causal generation checkpoint has no matching durable frame cursor")
++        if validate_latest_frame:
++            frame_state = self.pipeline.store.latest_component_state(NeuralActivityPipeline.COMPONENT)
++            if frame_state and frame_state["state"].get("episode_id") == self.episode_id:
++                saved = frame_state["state"]
++                if saved.get("observation_kind") == "NEURAL_ACTIVITY_WINDOW":
++                    if (int(saved.get("end_tick", -1)) > int(engine_state.get("tick", -2))
++                            or int(saved.get("end_sequence", saved.get("sequence", -1))) >= next_sequence):
++                        raise ValueError("integrated checkpoint precedes its durable neural observation window")
++                elif (saved.get("end_tick") != engine_state.get("tick")
++                        or int(saved.get("sequence", -1)) + 1 != next_sequence):
++                    observation_state = runtime_state.get("observability_state")
++                    window = (observation_state.get("pending_window")
++                              if isinstance(observation_state, dict) else None)
++                    frame_sequence = int(saved.get("sequence", -1))
++                    frame_end_tick = int(saved.get("end_tick", -1))
++                    window_covers_gap = (
++                        isinstance(observation_state, dict)
++                        and observation_state.get("policy") == "flynn.significant-observation.v2"
++                        and isinstance(window, dict)
++                        and int(window.get("start_sequence", -1)) == frame_sequence + 1
++                        and int(window.get("end_sequence", -1)) + 1 == next_sequence
++                        and int(window.get("start_tick", -1)) == frame_end_tick
++                        and int(window.get("end_tick", -1)) == int(engine_state.get("tick", -2))
++                        and int(window.get("frame_count", -1))
++                            == int(window.get("end_sequence", -1)) - int(window.get("start_sequence", 0)) + 1
++                        and abs(float(window.get("start_neural_time_ms", -1))
++                                - float(saved.get("neural_time_ms", -2))) <= 1e-8
++                        and abs(float(window.get("end_neural_time_ms", -1))
++                                - int(engine_state.get("tick", -2)) * float(window.get("dt_ms", 0))) <= 1e-8
++                        and all(window.get(key) == runtime_state.get(key) for key in (
++                            "dataset_version", "manifest_sha256", "mapping_sha256", "core_id",
++                            "model_sha256", "config_sha256", "connectome_sha256",
++                        ))
++                        and len(str(window.get("input_hash_chain_sha256", ""))) == 64
++                    )
++                    if not window_covers_gap:
++                        raise ValueError("integrated checkpoint does not match the durable neural frame cursor")
++            elif next_sequence != 0:
++                # A recovery generation can begin at a checkpoint whose last
++                # durable neural observation belongs to its parent generation.
++                # In sampled mode, the checkpoint's hashed pending window is
++                # the durable cursor for frames since the last aggregate; use
++                # it only when it terminates exactly at the paired checkpoint.
++                observation_state = runtime_state.get("observability_state")
++                window = (observation_state.get("pending_window")
++                          if isinstance(observation_state, dict) else None)
++                if (not isinstance(observation_state, dict)
++                        or observation_state.get("policy") != "flynn.significant-observation.v2"
++                        or not isinstance(window, dict)
++                        or int(window.get("end_tick", -1)) != int(engine_state.get("tick", -2))
++                        or int(window.get("end_sequence", -1)) + 1 != next_sequence
++                        or abs(float(window.get("end_neural_time_ms", -1))
++                               - int(engine_state.get("tick", -2)) * float(window.get("dt_ms", 0))) > 1e-8):
++                    raise ValueError("integrated checkpoint has no same-generation frame cursor or exact sampled parent cursor")
+ 
+         self.engine.restore_state(engine_state)
+         self._next_sequence = next_sequence
++        self.pipeline.restore_observability_state(runtime_state.get("observability_state"))
++        self.pipeline.restore_checkpoint_cursor(
++            next_sequence, int(engine_state["tick"]), float(self.parameters.dt_ms),
++        )
+         self._faulted = False
+ 
+     def accepts_model_sha256(self, value: Any) -> bool:
