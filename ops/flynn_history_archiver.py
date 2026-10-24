@@ -55,6 +55,38 @@ def sha256_file(path: Path) -> str:
     return h.hexdigest()
 
 
+def sha256_stream(stream: Any) -> str:
+    h = hashlib.sha256()
+    stream.seek(0)
+    for block in iter(lambda: stream.read(1024 * 1024), b""):
+        h.update(block)
+    stream.seek(0)
+    return h.hexdigest()
+
+
+def _checkpoint_identity(stat_result: os.stat_result) -> tuple[int, int, int, int, int]:
+    return (stat_result.st_dev, stat_result.st_ino, stat_result.st_size,
+            stat_result.st_mtime_ns, stat_result.st_ctime_ns)
+
+
+def open_captured_checkpoint(snap: dict[str, Any]):
+    """Open and verify the exact checkpoint captured with the SQLite cursor."""
+    path = Path(snap["checkpoint_file"])
+    stream = path.open("rb")
+    try:
+        identity = _checkpoint_identity(os.fstat(stream.fileno()))
+        if identity != tuple(snap["checkpoint_identity"]):
+            raise RuntimeError("checkpoint file identity changed after cursor capture")
+        if sha256_stream(stream) != snap["checkpoint_sha256"]:
+            raise RuntimeError("checkpoint file SHA-256 changed after cursor capture")
+        if _checkpoint_identity(path.stat()) != identity:
+            raise RuntimeError("checkpoint path was replaced after cursor capture")
+        return stream
+    except Exception:
+        stream.close()
+        raise
+
+
 def atomic_json(path: Path, value: Any) -> None:
     tmp = path.with_suffix(path.suffix + ".tmp")
     with tmp.open("wb") as f:
@@ -101,10 +133,16 @@ def capture(root: Path, db: Path) -> dict[str, Any]:
                 or checkpoint.get("checkpoint_sha256") != control[3]):
             raise RuntimeError("active checkpoint cursor and paired state disagree")
         cp_path = Path(checkpoint["checkpoint_file"]).resolve()
-        if not cp_path.is_relative_to(root.resolve()) or not cp_path.is_file():
+        if not cp_path.is_relative_to(root.resolve()):
             raise RuntimeError("checkpoint file is absent or outside the resident root")
-        if sha256_file(cp_path) != control[3]:
-            raise RuntimeError("checkpoint file SHA-256 does not match SQLite cursor")
+        with cp_path.open("rb") as checkpoint_file:
+            checkpoint_identity = _checkpoint_identity(os.fstat(checkpoint_file.fileno()))
+            if _checkpoint_identity(cp_path.stat()) != checkpoint_identity:
+                raise RuntimeError("checkpoint path changed during cursor capture")
+            if sha256_stream(checkpoint_file) != control[3]:
+                raise RuntimeError("checkpoint file SHA-256 does not match SQLite cursor")
+            if _checkpoint_identity(cp_path.stat()) != checkpoint_identity:
+                raise RuntimeError("checkpoint path changed during cursor capture")
         highwater: dict[str, int] = {}
         for table in ("events", "component_states", "stimuli", "neuron_mapping", "causal_generations", "metadata"):
             highwater[table] = int(c.execute(f'SELECT COALESCE(MAX(rowid),0) FROM "{table}"').fetchone()[0])
@@ -133,7 +171,8 @@ def capture(root: Path, db: Path) -> dict[str, Any]:
             "episode_id": control[0], "generation_id": control[1],
             "checkpoint_state_id": control[2], "checkpoint_sha256": control[3],
             "checkpoint_tick": int(control[4]), "checkpoint_neural_time_ms": float(checkpoint["neural_time_ms"]),
-            "checkpoint_file": str(cp_path), "checkpoint_bytes": cp_path.stat().st_size,
+            "checkpoint_file": str(cp_path), "checkpoint_bytes": checkpoint_identity[2],
+            "checkpoint_identity": checkpoint_identity,
             "checkpoint_state": checkpoint, "control_rows": [[1, *list(control)]],
             "coordinator_control": coordinator, "metadata_rows": metadata,
             "generations": generations, "watermarks": highwater,
@@ -264,8 +303,14 @@ def build_archive(root: Path, db: Path, state_dir: Path, stage_dir: Path,
         "previous_segment_uri": catalog["segments"][-1]["object_uri"] if catalog["segments"] else None,
         "database_basename": db.name, "tables": {}, "created_by": "flynn_history_archiver_v1",
     }
-    c = connect_readonly(db)
+    checkpoint_file = None
+    c = None
     try:
+        # Keep the captured inode open before the long, paged SQLite export.
+        # The resident may prune its path meanwhile; this descriptor still
+        # names the exact bytes whose hash was paired with the captured cursor.
+        checkpoint_file = open_captured_checkpoint(snap)
+        c = connect_readonly(db)
         proc_out = partial.open("wb")
         proc = subprocess.Popen(["zstd", "-q", "-3", "-T1", "-c"], stdin=subprocess.PIPE,
                                 stdout=proc_out, stderr=subprocess.PIPE)
@@ -343,10 +388,12 @@ def build_archive(root: Path, db: Path, state_dir: Path, stage_dir: Path,
                     stim_chunk+=1; add_bytes(tf,f"tables/stimuli/{stim_chunk:06d}.jsonl",b"".join(stim_buf)); stim_buf.clear()
                 internal["tables"]["stimuli"] = {"rows":stim_count,"sha256":stim_digest.hexdigest()}
                 # Paired physical checkpoint artifact is copied into the immutable segment.
-                cp = Path(snap["checkpoint_file"])
                 info = tarfile.TarInfo("checkpoint/integrated.npz")
-                info.size = cp.stat().st_size; info.mode=0o600; info.mtime=0; info.uid=info.gid=0; info.uname=info.gname=""
-                with cp.open("rb") as source: tf.addfile(info, source)
+                info.size = snap["checkpoint_bytes"]; info.mode=0o600; info.mtime=0; info.uid=info.gid=0; info.uname=info.gname=""
+                checkpoint_file.seek(0)
+                tf.addfile(info, checkpoint_file)
+                if sha256_stream(checkpoint_file) != snap["checkpoint_sha256"]:
+                    raise RuntimeError("captured checkpoint bytes changed during archive export")
                 add_bytes(tf, "manifest.json", canonical(internal))
             proc.stdin.close()
             err = proc.stderr.read() if proc.stderr else b""
@@ -369,7 +416,10 @@ def build_archive(root: Path, db: Path, state_dir: Path, stage_dir: Path,
             partial.unlink(missing_ok=True)
             raise
     finally:
-        c.close()
+        if c is not None:
+            c.close()
+        if checkpoint_file is not None:
+            checkpoint_file.close()
 
     archive_sha = sha256_file(archive_path)
     object_uri = bucket_prefix.rstrip("/") + "/" + segment_key
