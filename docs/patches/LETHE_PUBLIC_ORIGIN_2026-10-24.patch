@@ -1,0 +1,43 @@
+# Production viewer patch, captured from the installed T2 service.
+# Apply only to resident-app/server.py with SHA-256
+# 62bfa92c658b1893e4725d1b73a6a3ea6810d242981537000df4b04046dda48d.
+# Resulting server.py SHA-256: 85c0619fbe82651c57e419e333a33dcc34512300f7af962ede17972f425b9e6d
+# Apply with: git apply --unidiff-zero LETHE_PUBLIC_ORIGIN_2026-10-24.patch
+# The companion lethe_public.html is installed alongside server.py.
+--- a/server.py
++++ b/server.py
+@@ -113 +113 @@
+-PUBLIC_LETHE_PATHS = {"/", "/api/flynn/v2/public-observer", "/favicon.ico", "/static/icon.svg", "/static/manifest.webmanifest"}
++PUBLIC_LETHE_PATHS = frozenset({"/", "/api/flynn/v2/public-observer", "/favicon.ico"})
+@@ -627 +627 @@
+-    allowed = ("illumination", "wind", "sound", "contact", "sweet", "bitter", "looming", "window")
++    allowed = ("illumination", "wind", "sound", "contact", "looming", "window")
+@@ -740 +740 @@
+-    body_state_public = {key: value for key in ("state_seq", "body_capacity", "dn_active_neurons", "dn_spike_sum") if (value := _public_scalar(body_state.get(key))) is not None}
++    body_state_public = {key: value for key in ("state_seq", "dn_active_neurons", "dn_spike_sum") if (value := _public_scalar(body_state.get(key))) is not None}
+@@ -760 +760 @@
+-        "energy": "NOT_AVAILABLE", "geometry": {"node_count": LETHE_SIGIL_NODE_COUNT, "edge_count": LETHE_SIGIL_EDGE_COUNT, "source": "canonical static Lethe topology", "runtime_pose": "PINOCCHIO_PAIRED_READOUT" if selected_pose else "STATIC_GLYPH_NO_PAIRED_DYNAMIC_POSE"},
++        "geometry": {"node_count": LETHE_SIGIL_NODE_COUNT, "edge_count": LETHE_SIGIL_EDGE_COUNT, "source": "canonical static Lethe topology", "runtime_pose": "PINOCCHIO_PAIRED_READOUT" if selected_pose else "STATIC_GLYPH_NO_PAIRED_DYNAMIC_POSE"},
+@@ -1612,0 +1613,17 @@
++    host = request.headers.get("host", "").split(":", 1)[0].lower().rstrip(".")
++    if host == PUBLIC_LETHE_HOST:
++        if os.environ.get("FLYNN_PUBLIC_OBSERVER") != "1":
++            raise HTTPException(status_code=404, detail="Public observation is not configured")
++        public_file = PROJECT_ROOT / "lethe_public.html"
++        if not public_file.is_file():
++            raise HTTPException(status_code=404, detail="Public observation is unavailable")
++        return HTMLResponse(
++            content=public_file.read_text(encoding="utf-8"),
++            headers={
++                "Cache-Control": "no-store, max-age=0, must-revalidate",
++                "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; img-src data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
++                "X-Content-Type-Options": "nosniff",
++                "Referrer-Policy": "no-referrer",
++                "X-Frame-Options": "DENY",
++            },
++        )
+@@ -1618,2 +1635,2 @@
+-        return HTMLResponse(content=index_file.read_text(), headers={"Cache-Control": "public, max-age=60, s-maxage=300"})
+-    return HTMLResponse("<h2>Lethe Surface Running</h2>")
++        return HTMLResponse(content=index_file.read_text(), headers={"Cache-Control": "no-store, private"})
++    raise HTTPException(status_code=404, detail="Lethe Surface unavailable")

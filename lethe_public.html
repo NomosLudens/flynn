@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0b0d">
+  <title>LETHE — FLYNN</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0b0b0d; --fg:#e9e5dd; --muted:#99938a; --line:#37312e; --ember:#da5729; }
+    * { box-sizing:border-box }
+    body { margin:0; min-height:100vh; background:radial-gradient(ellipse at 50% 42%,#1b1715 0,#101012 48%,var(--bg) 82%); color:var(--fg); font:14px/1.5 system-ui,sans-serif }
+    main { min-height:100vh; max-width:1400px; margin:auto; padding:clamp(24px,5vw,72px); display:grid; grid-template-rows:auto minmax(320px,1fr) auto; gap:24px }
+    header { display:flex; align-items:center; justify-content:space-between; gap:16px; border-bottom:1px solid #ffffff18; padding-bottom:16px }
+    .brand { font:500 12px/1.3 ui-monospace,monospace; letter-spacing:.22em; text-transform:uppercase }
+    .brand strong { display:block; color:var(--fg); font-size:16px; letter-spacing:.3em }
+    .status { color:var(--muted); font:600 11px/1.4 ui-monospace,monospace; letter-spacing:.12em }
+    .status::before { content:""; display:inline-block; width:7px; height:7px; margin-right:9px; border-radius:50%; background:#807a72 }
+    .status[data-state="LIVE"]::before { background:#9d8062 }
+    .status[data-state="STALE"]::before { background:#da8d56 }
+    .status[data-state="OFFLINE"]::before { background:#9b5140 }
+    .glyph-wrap { display:grid; place-items:center; min-height:0 }
+    svg { display:block; width:min(100%,900px); max-height:66vh; overflow:visible }
+    .edge { stroke:#87634f; stroke-opacity:.46; stroke-width:1.2; fill:none }
+    .node { fill:#171412; stroke:#ba7047; stroke-width:1.5 }
+    .node.central { fill:#da5729; fill-opacity:.24; stroke:#da8a5b }
+    .readout { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:20px; border-top:1px solid #ffffff18; padding-top:16px }
+    .field { min-width:0 }
+    .label { display:block; color:var(--muted); font:10px/1.4 ui-monospace,monospace; letter-spacing:.12em; text-transform:uppercase }
+    .value { display:block; margin-top:5px; overflow-wrap:anywhere; font-variant-numeric:tabular-nums }
+    .note { grid-column:1/-1; color:var(--muted); font-size:12px }
+    @media(max-width:650px) { main { padding:22px 18px; gap:18px } header { align-items:flex-start } svg { max-height:54vh } .readout { grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px } }
+    @media(prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto!important; animation:none!important; transition:none!important } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="brand"><strong>FLYNN</strong>LETHE · OBSERVATÓRIO</div>
+      <div id="status" class="status" data-state="OFFLINE" role="status" aria-live="polite">OFFLINE</div>
+    </header>
+    <section class="glyph-wrap" aria-label="Geometria estrutural canônica da LETHE">
+      <svg id="glyph" viewBox="0 0 1000 760" role="img" aria-labelledby="glyph-title glyph-desc">
+        <title id="glyph-title">Glifo estrutural da LETHE</title>
+        <desc id="glyph-desc">Topologia estrutural estática com 23 nós e 30 conexões. Não representa pose física nem atividade neural.</desc>
+        <g id="edges"></g><g id="nodes"></g>
+      </svg>
+    </section>
+    <section class="readout" aria-label="Último estado observado">
+      <div class="field"><span class="label">Episódio</span><span class="value" id="episode">—</span></div>
+      <div class="field"><span class="label">Geração</span><span class="value" id="generation">—</span></div>
+      <div class="field"><span class="label">Checkpoint confirmado</span><span class="value" id="checkpoint">—</span></div>
+      <div class="field"><span class="label">Tempo mundial</span><span class="value" id="world-time">—</span></div>
+      <div class="field"><span class="label">Última agregação neural</span><span class="value" id="neural">—</span></div>
+      <div class="field"><span class="label">Estado corporal</span><span class="value" id="body">—</span></div>
+      <div class="field"><span class="label">Leitura consultada</span><span class="value" id="read-at">—</span></div>
+      <p class="note" id="note">Carregando observação persistida. O glifo é uma representação estrutural estática; estados ausentes não são interpolados.</p>
+    </section>
+  </main>
+  <script>
+    const modules = {
+      OPTIC_L:[-.80,-.12,.12], OPTIC_R:[.80,-.12,.12], ANTENNAL_L:[-.42,.28,.08], ANTENNAL_R:[.42,.28,.08],
+      AUDITORY_L:[-.58,.06,.09], AUDITORY_R:[.58,.06,.09], GNATHAL_SEZ:[0,.52,.11], MUSHROOM_L:[-.30,-.34,.09],
+      MUSHROOM_R:[.30,-.34,.09], CENTRAL_EB:[0,-.05,.09], CENTRAL_FB:[0,-.22,.10], SUPERIOR_L:[-.34,-.12,.09],
+      SUPERIOR_R:[.34,-.12,.09], VENTROLAT_L:[-.52,-.25,.10], VENTROLAT_R:[.52,-.25,.10], FEMALE_HUB:[0,.14,.08],
+      CIRCADIAN_PACEMAKER:[0,-.42,.07], DN_TAKEOFF:[0,-.68,.08], DN_LONG_MODE:[.22,-.62,.07], DN_STEERING:[-.22,-.62,.07],
+      DN_FEEDING:[0,.76,.09], DN_CANDIDATE:[.34,.62,.08], DN_UNKNOWN:[-.34,.62,.08]
+    };
+    const edges = [
+      ["OPTIC_L","VENTROLAT_L"],["OPTIC_R","VENTROLAT_R"],["OPTIC_L","DN_TAKEOFF"],["OPTIC_R","DN_TAKEOFF"],
+      ["OPTIC_L","DN_LONG_MODE"],["OPTIC_R","DN_LONG_MODE"],["ANTENNAL_L","MUSHROOM_L"],["ANTENNAL_R","MUSHROOM_R"],
+      ["AUDITORY_L","VENTROLAT_L"],["AUDITORY_R","VENTROLAT_R"],["AUDITORY_L","DN_STEERING"],["AUDITORY_R","DN_STEERING"],
+      ["GNATHAL_SEZ","DN_FEEDING"],["GNATHAL_SEZ","DN_CANDIDATE"],["GNATHAL_SEZ","DN_UNKNOWN"],["MUSHROOM_L","SUPERIOR_L"],
+      ["MUSHROOM_R","SUPERIOR_R"],["SUPERIOR_L","CENTRAL_FB"],["SUPERIOR_R","CENTRAL_FB"],["CENTRAL_FB","CENTRAL_EB"],
+      ["CENTRAL_EB","DN_STEERING"],["SUPERIOR_L","FEMALE_HUB"],["SUPERIOR_R","FEMALE_HUB"],["FEMALE_HUB","GNATHAL_SEZ"],
+      ["CIRCADIAN_PACEMAKER","SUPERIOR_L"],["CIRCADIAN_PACEMAKER","SUPERIOR_R"],["VENTROLAT_L","SUPERIOR_L"],
+      ["VENTROLAT_R","SUPERIOR_R"],["VENTROLAT_L","DN_TAKEOFF"],["VENTROLAT_R","DN_TAKEOFF"]
+    ];
+    const point = ([x,y]) => [500 + x*390, 380 - y*390];
+    for (const [a,b] of edges) { const [x1,y1]=point(modules[a]); const [x2,y2]=point(modules[b]); const line=document.createElementNS("http://www.w3.org/2000/svg","line"); line.setAttribute("x1",x1); line.setAttribute("y1",y1); line.setAttribute("x2",x2); line.setAttribute("y2",y2); line.setAttribute("class","edge"); document.getElementById("edges").append(line); }
+    for (const [id,[x,y,r]] of Object.entries(modules)) { const [cx,cy]=point([x,y]); const circle=document.createElementNS("http://www.w3.org/2000/svg","circle"); circle.setAttribute("cx",cx); circle.setAttribute("cy",cy); circle.setAttribute("r",Math.max(5,r*34)); circle.setAttribute("class",`node${id==="CENTRAL_EB"?" central":""}`); circle.setAttribute("aria-label",id); document.getElementById("nodes").append(circle); }
+    const text = (id,value) => { document.getElementById(id).textContent = value ?? "—"; };
+    const ms = value => Number.isFinite(Number(value)) ? `${Number(value).toLocaleString("pt-BR")} ms` : "—";
+    async function refresh() {
+      try {
+        const response = await fetch("/api/flynn/v2/public-observer", {cache:"no-store", credentials:"omit", headers:{"Accept":"application/json"}});
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        const status = ["LIVE","STALE","OFFLINE"].includes(data.status) ? data.status : "OFFLINE";
+        const badge = document.getElementById("status"); badge.dataset.state=status; badge.textContent=status;
+        text("episode",data.episode_id); text("generation",data.causal_generation_id);
+        text("checkpoint",data.checkpoint ? `${ms(data.checkpoint.neural_time_ms)} · ${data.checkpoint.checkpoint_sha256 || "hash confirmado"}` : "—");
+        text("world-time",ms(data.world?.world_time_ms));
+        const lif=data.lif || {}; const lifObs=data.component_observations?.neural_activity_aggregator;
+        text("neural", Number.isFinite(Number(lif.total_spikes)) ? `${lif.total_spikes} spikes · ${ms(lif.window_end_ms ?? lif.neural_time_ms)} · ${lifObs?.age_seconds ?? "?"} s atrás` : "Sem agregação disponível");
+        const physical=data.pinocchio_body?.checkpoint; const bodyState=physical?.body_state;
+        text("body", bodyState ? `checkpoint físico · seq ${bodyState.state_seq ?? "—"} · ${ms(physical.neural_time_ms)}` : "Sem estado corporal pareado");
+        text("read-at",data.observed_at_utc ? new Date(data.observed_at_utc).toLocaleString("pt-BR",{timeZone:"UTC",hour12:false})+" UTC" : "—");
+        const gap=Number(data.checkpoint?.neural_time_ms)-Number(lif.window_end_ms ?? lif.neural_time_ms);
+        text("note", status==="STALE" ? `Último estado confirmado; atualização neural atrasada ${Number.isFinite(gap)?ms(gap):"—"}. A geometria é estrutural, não uma pose.` : status==="OFFLINE" ? "Sem observação disponível. O último estado não é apresentado como atual." : "Observação residente recente. A geometria é estrutural; dados ausentes não são interpolados.");
+      } catch (_) { const badge=document.getElementById("status"); badge.dataset.state="OFFLINE"; badge.textContent="OFFLINE"; text("note","Sem conexão com o observador. Nenhuma atividade é inferida."); }
+    }
+    refresh(); setInterval(refresh,15000);
+  </script>
+</body>
+</html>

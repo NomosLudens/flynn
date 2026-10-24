@@ -24,6 +24,9 @@ from pydantic import BaseModel, Field
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, RedirectResponse, Response, JSONResponse
 
+PROJECT_ROOT = Path(__file__).resolve().parent
+PUBLIC_LETHE_HOST = "lethe.nomosludens.ia.br"
+
 os.environ.setdefault("FLYWIRE_V783_DIR", "/home/ubuntu/Portifolio/flynn-max/data/flywire-v783")
 sys.path.insert(0, "/home/ubuntu/Portifolio/flynn-max/runtime")
 
@@ -797,6 +800,23 @@ if STATIC_DIR.exists():
 @app.get("/caverna/")
 @app.get("/flynn/")
 async def get_index(request: Request):
+    host = request.headers.get("host", "").split(":", 1)[0].lower().rstrip(".")
+    if host == PUBLIC_LETHE_HOST:
+        if os.environ.get("FLYNN_PUBLIC_OBSERVER") != "1":
+            raise HTTPException(status_code=404, detail="Public observation is not configured")
+        public_file = PROJECT_ROOT / "lethe_public.html"
+        if not public_file.is_file():
+            raise HTTPException(status_code=404, detail="Public observation is unavailable")
+        return HTMLResponse(
+            content=public_file.read_text(encoding="utf-8"),
+            headers={
+                "Cache-Control": "no-store, max-age=0, must-revalidate",
+                "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; img-src data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+                "X-Content-Type-Options": "nosniff",
+                "Referrer-Policy": "no-referrer",
+                "X-Frame-Options": "DENY",
+            },
+        )
     if request.url.path == "/flynn":
         return RedirectResponse(url="/flynn/")
     index_file = STATIC_DIR / "index.html"
