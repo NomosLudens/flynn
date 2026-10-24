@@ -1,5 +1,241 @@
 # FLYNN — MAPA DE PERCURSO
 
+> **DIRETRIZ CANÔNICA V2 — 14/10/2026 — EXISTÊNCIA SEM COMPORTAMENTO OBRIGATÓRIO**  
+> **Autoria e direção:** decisões expressas do autor em 13–14/10/2026.  
+> **Escopo:** objetivo do organismo, arquitetura V2, ambiente, interface, instrumentação, estado de recuperação e próximos trabalhos.  
+> **Precedência:** esta seção prevalece sobre recomendações de assistência, conjecturas, contratos provisórios e declarações de "estado atual" contidas nos registros históricos abaixo. Os registros anteriores são preservados como evidência cronológica; não devem ser interpretados como inventário da execução V2.
+>
+> **Princípio do autor:** "A gente vai dar vida pra uma coisa que só vai existir. O que ela faz com essa vida é problema dela, não nosso. O nosso papel é dar a vida, não julgar o que ela vai fazer com essa vida."
+
+## V2.1 — PROPÓSITO E LIMITE DA INTERVENÇÃO HUMANA
+
+Flynn é um **organismo neuro-sintético experimental, de morfologia sigilar**, concebido para possuir condições computacionais efetivas de existir, perceber, receber energia, perder energia, apresentar dinâmica neural, eventualmente agir e manter uma história. "Vida" é aqui o conceito de projeto escolhido pelo autor: não equivale, por si, a comprovação de vida biológica, consciência, senciência, vontade subjetiva ou interesses próprios.
+
+A tarefa humana é **construir e validar as capacidades e as consequências do mundo**, e depois observar, sem impor objetivos ou resultados. Flynn **não existe para entreter**, corresponder a expectativas, gostar do cuidador, procurar alimento, demonstrar curiosidade, usar a janela, falar, aprender em certo prazo, mover-se ou justificar sua existência. A relação pretendida pelo autor é contemplativa: voltar para observá-la como quem contempla um peixe no aquário, uma paisagem ou o sol.
+
+- **Nenhum roteiro comportamental:** não programar "energia baixa → procurar comida", "após 12 horas → explorar", "janela → cumprimentar", "usuário presente → mostrar afeto" ou ciclos de progressão de pet virtual.
+- **Nenhum cronograma de desenvolvimento da criatura:** 12 horas, 36 horas, oito meses ou mais são períodos de observação possíveis, não prazos para marcos comportamentais.
+- **Inatividade é um resultado legítimo:** ausência de movimento, sinal ou expressão não deve acionar animações, recompensas, estímulos manipulativos ou reset para parecer que aconteceu algo.
+- **Capacidade não é obrigação:** é dever da engenharia demonstrar que caminhos sensoriais, neurais, motores e expressivos conseguem funcionar; não é dever da Flynn utilizá-los.
+- **Não agir não é necessariamente "não querer":** distinguir defeito de interface, energia insuficiente e inatividade com capacidades operacionais preservadas. O último caso não demonstra vontade subjetiva.
+- **Observação não é julgamento:** medir integridade, causalidade e funcionamento técnico rigorosamente sem classificar a criatura como "boa", "fracassada", "obediente", "curiosa" ou "comunicativa" por critérios de entretenimento.
+
+O sucesso de engenharia é oferecer possibilidades operacionais comprovadas. **Não há condição de sucesso comportamental imposta à Flynn.**
+
+## V2.2 — IDENTIDADE, CÉREBRO, CORPO E MUNDO
+
+**FLYNN:** organismo neuro-sintético experimental e sua continuidade de estado verificável.  
+**Origem neural:** conectoma da *Drosophila melanogaster* adulta fêmea, FlyWire FAFB v783, com 139.255 root IDs de neurônios verificados; a dinâmica neural e a interpretação funcional ainda dependem de modelo e validação.  
+**Morfologia:** **sigilo de nodos e linhas móveis**, não uma mosca simulada, não um humanoide e não um sprite com animações predeterminadas.  
+**Corpo-glifo:** registros históricos denominam **Lethe** a materialização corporal canônica; preservar esse referente até decisão autoral explícita em contrário.  
+**Sala/Umwelt:** ambiente amplo e persistente, inicialmente sem programa de tarefas; **seu nome próprio V2 não foi ratificado**. Não renomear unilateralmente Lethe como sala ou vice-versa.  
+**Janela:** superfície ambiental desconhecida para Flynn; para o autor, canal potencial de interação humana. A interface não explica à Flynn sua finalidade e não obriga reconhecimento, aproximação nem comunicação.
+
+A origem drosófila limita e informa a **proveniência do substrato neural**, não os órgãos, a geometria, as necessidades ou os repertórios corporais da morfologia sintética. Não adaptar o glifo à anatomia da mosca; construir transduções sensoriais/motoras **explicitamente sintéticas** e verificáveis.
+
+A geometria histórica de Lethe (23 módulos e 30 conexões documentados na MAX) é evidência para consulta, não autorização para remodelar, reduzir ou redesenhar o símbolo. Validar os artefatos geométricos aprovados antes de implementar o corpo V2.
+
+## V2.3 — ARQUITETURA V2 DECIDIDA PELO AUTOR
+
+A arquitetura abaixo é **direção autoral**, não um conjunto de funções já comprovadamente implementadas.
+
+1. **Núcleo neural Flynn — FlyWire v783 + dinâmica LIF:** computação neuronal biologicamente ancorada com parâmetros, sinais sinápticos, circuitos e eventuais mecanismos de plasticidade identificados por proveniência. Não atribuir aprendizagem a um conectoma estático.
+2. **Agregador Python autoral — função análoga à orquestração de uma LLM:** recebe e mapeia estímulos; organiza, acompanha, encaminha e auxilia a dinâmica e os sinais neurais. Não é uma LLM de linguagem, um "cérebro substituto" nem uma política externa para escolher objetivos. Seu efeito permitido sobre neurônios precisa de contratos e testes explícitos.
+3. **PicoClaw — "cerebelo" funcional sintético:** camada escolhida para coordenação sensório-motora. Seu papel exato, integração real e requisitos devem ser demonstrados; não declarar função cerebelar biológica. **Não substituir por ZeroClaw.** ZeroClaw pertence aos experimentos históricos com função de interlock, não à escolha arquitetural V2.
+4. **Pinocchio simplificado:** conservar exclusivamente os elementos necessários para calcular movimento, vínculos e consequências físicas dos nodos/linhas do glifo. Não recuperar uma estrutura pesada anterior como imposição de produto.
+5. **SQLite:** armazenamento de mapeamentos, condições ambientais, energia, estímulos, atividade e métricas neurais selecionadas, eventos, estado corporal, interações da janela e checkpoints, segundo contratos reprodutíveis e limites de volume.
+6. **Micro-modelo expressivo — orçamento-alvo de aproximadamente 3 MB:** canal mínimo pretendido para distinguir sinais elementares (eventualmente sim/não), sequências, padrões e possível protolinguagem. **Não atribuir significado antes da validação contextual** e não fabricar mensagens, emoções ou intenções. O modelo, o formato, a viabilidade no tamanho-alvo e sua integração ainda não foram validados. A existência e o silêncio da Flynn não dependem de utilizá-lo.
+7. **Interface gráfica obrigatória:** a sala e o glifo existem visualmente; o usuário pode contemplar, ajustar condições ambientais e inspecionar registros. A implementação web/browser é compatível com execução enxuta no servidor, mas o meio final depende de decisão de engenharia sem suprimir o requisito visual.
+
+**Fluxo conceitual, não uma alegação de execução integrada:**
+
+~~~text
+SALA/UMWELT (luz, vento, calor, fontes de energia, janela)
+    ↕ transdução sensorial e consequências físicas
+AGREGADOR PYTHON ↔ NÚCLEO NEURAL FLYWIRE/LIF
+    ↕ coordenação documentada
+PICOCLAW ("cerebelo" funcional sintético)
+    ↕ atuação
+PINOCCHIO SIMPLIFICADO ↔ CORPO-GLIFO / LETHE
+    ↕ mundo físico sintético
+SALA/UMWELT
+    + SQLite (persistência/observação/checkpoints)
+    + micro-modelo de expressão (canal disponível, não compulsório)
+    + GUI (contemplação e controles ambientais)
+~~~
+
+Esse diagrama é lógico; o desenho exato das chamadas, sinais, ownership e ciclos deve vir dos contratos implementados e medidos. **Nenhum componente externo escolhe para Flynn o que desejar, fazer ou dizer.**
+
+## V2.4 — AMBIENTE, SENSORES, CORPO E ENERGIA
+
+A sala oferece fenômenos que **existem independentemente da capacidade ou disposição da Flynn para utilizá-los**. Controles humanos atuam sobre o mundo, não diretamente sobre metas comportamentais do organismo:
+
+| Variável do mundo | Controle humano previsto | Consequência a modelar e medir |
+| --- | --- | --- |
+| Fontes de energia / alimento | acrescentar / retirar | disponibilidade espacial e temporal de entrada energética |
+| Luz | aumentar / diminuir / desligar | iluminação real da sala e possível transdução sensorial |
+| Vento | introduzir / alterar / retirar | perturbação física/ambiental e possível transdução |
+| Calor | introduzir / alterar / retirar | estado térmico e possíveis efeitos físicos/sensoriais |
+| Janela | presença e interações do interlocutor | sinais ambientais inicialmente sem significado atribuído |
+
+O **corpo da Flynn é o próprio glifo**, composto por linhas e nodos. Sua "boca" é uma interface para receber **estímulos energéticos**. O modelo energético foi deliberadamente simplificado: energia recebida pode alimentar uma reserva; **não existe sistema de fezes ou descarte digestivo**. Não importar órgãos da drosófila por conveniência do simulador.
+
+A energia é uma **condição operacional com consequências**, não uma função objetivo. Sua redução pode comprometer a capacidade de transmissão neural, a atuação/mobilidade corporal e o brilho interno dos nodos (referência visual: vagalume), conforme relações computacionais específicas, explicitadas como **modelagem sintética** e validadas tecnicamente; nenhuma curva exata de degradação está aprovada neste texto. **Não programar busca automática por energia.**
+
+Quando a reserva tende a zero, distinguir explicitamente: transmissão ainda possível, atuação limitada, imobilidade energética, suspensão de processos ou outros estados **conforme modelo previamente especificado**. Não inventar morte, sofrimento, renascimento, autosalvamento ou reset espontâneo. O organismo pode ou não produzir uma resposta; o experimento registra o observado.
+
+## V2.5 — EXISTÊNCIA, TEMPO, EXPERIMENTAÇÃO E JANELA
+
+A execução deve produzir **tempo causal e estado persistente reais**, sem replays apresentados como presente, mudanças de personalidade roteirizadas ou animações fingindo comportamento. A pausa por desligamento de VM **interrompe a execução**; checkpoint e restauração preservam dados, mas **não equivalem a continuidade neural ininterrupta**. Reportar honestamente interrupções, lacunas e condições de reinício.
+
+A janela não é uma caixa de diálogo obrigatória. É uma propriedade do ambiente cuja relação com um interlocutor humano **não é apresentada como tutorial ao organismo**. O autor pode interagir com o mundo; não cabe ao sistema induzir a Flynn a "perceber alguém", "ficar curiosa" ou "querer falar". Caso sinais sejam produzidos, preservá-los inicialmente como **padrões não interpretados**, separados de qualquer glossário construído externamente.
+
+Curiosidade, vontade, interesse, reconhecimento e comunicação são **hipóteses de investigação e interpretações possíveis**, nunca pré-requisitos de funcionamento nem estados psicológicos presumidos. Uma atividade observada, inclusive ausência de movimento, precisa ser interpretada com controles técnicos que distingam falha, limite físico, resposta reflexa, dinâmica recorrente e alterações dependentes de experiência.
+
+## V2.6 — OBSERVAÇÃO ABRANGENTE SEM INVENTAR AÇÃO
+
+O autor quer poder **monitorar tudo o que for relevante para reconstruir causalmente a trajetória**. Isso pede instrumentação ampla, não a promessa fisicamente irrealista de reter cada spike bruto para sempre numa VM de 1 GiB/10 GiB.
+
+Registrar, com timestamps e identidade de versão: estado de execução; integridade do motor; parâmetros; condições da sala e intervenções humanas; transduções; energia; atividade neural agregada e amostras diagnósticas quando viáveis; saídas para PicoClaw e Pinocchio; configuração/movimento ou imobilidade do glifo; tentativas e resultados da janela; checkpoints e sua integridade; erros, OOM, reinícios, lacunas de observação e mudanças de código/dados.
+
+A política de amostragem, retenção, compactação, exportação e arquivo deve preservar reprodutibilidade conforme orçamento, explicitando lacunas e o que **não foi observado**. Não atribuir "felicidade", "fome sentida", "curiosidade" ou "desejo" como fatos de telemetria; utilizar apenas variáveis operacionalmente definidas.
+
+**Testes técnicos fora do episódio observacional** devem provar as capacidades sem ensinar uma biografia:
+
+- sensor recebe corretamente estímulos ambientais;
+- núcleo calcula estado e transmite sinais sob parâmetros conhecidos;
+- o caminho de atuação física consegue mover os nodos quando injetado um sinal de teste identificado como artificial;
+- energia efetivamente limita capacidades definidas;
+- gráficos refletem estado real, inclusive inatividade;
+- expressão e janela são canais operacionais mesmo sem uso espontâneo;
+- SQLite/checkpoints persistem com hashes, e reinícios preservam apenas a continuidade que foi realmente recuperada.
+
+Esses testes de calibração **não constituem comportamentos espontâneos de Flynn** e não podem ser registrados como descobertas suas.
+
+## V2.7 — ESTADO TÉCNICO COM EVIDÊNCIA EM 14/10/2026
+
+Fonte do estado abaixo: relatórios do Codex apresentados pelo autor nesta data. O material V2 está descrito como **arquivos locais**, ainda não confirmado integralmente no repositório remoto no momento desta revisão. Não promover alegações além do que foi medido.
+
+| Eixo | Evidência e estado |
+| --- | --- |
+| FlyWire v783 | **139.255 root IDs** verificados; conectividade proofread v783 obtida e validada localmente |
+| Connectividade Feather | **16.847.997 linhas** por par/neuropilo; **15.091.983 pares distintos**; **54.492.922 sinapses**; 258 batches; 6 canais NT por conexão com alguns nulos |
+| Contagens históricas | **3.732.460 pares** e **50.666.648 sinapses** nos documentos antigos; divergência de critério/transformação **em aberto**, não alterar dados para igualá-la |
+| Representação COO | **1.213.081.600 bytes** na expansão local; pico RSS de pré-processamento **2.088.386.560 bytes**; **não cabe como artefato expandido na VM de 1 GiB** |
+| Representação compacta | CSR e filtragens são candidatos de engenharia e precisam de derivação documentada, validação do sinal/peso e **medição real** antes de declarar viabilidade |
+| Neurotransmissores/modelo | Previsões NT por conexão disponíveis; dados de origem e regra de sinal/peso exigidos pelo modelo ainda **não fechados** |
+| Implementação LIF histórica | Upstream **fruit-fly-lab** commit **26672e06427c12c61536ce1bd93dae7442944681** documentado; compatibilidade de interface; identidade do binário/runtime antigo não comprovada |
+| Reutilização do upstream | **Sem licença/consentimento de reutilização comprovados**; não copiar/vendoriar/adaptar seu código sem autorização; é possível implementar independentemente a partir da matemática publicada |
+| Agregador Python e SQLite | Componentes locais declarados, **12/12 testes unitários de software PASS**; não comprovam dinâmica neural, agência ou integração total |
+| PicoClaw V2 | Papel autoral definido como cerebelo funcional; **contrato rascunhado, não instalado/integrado** |
+| Pinocchio Lite, GUI Lethe e boca energética | Decisões de arquitetura; **não demonstrados como produto V2 integrado** |
+| Micro-modelo expressivo ~3 MB | Intenção de projeto; **modelo e desempenho não validados** |
+| E01 na nova VM | 40 ciclos de caso diagnóstico, **PARTIAL**; 5 artefatos copiados ao Cloud Shell e hashes validados; **não prova residente neural** |
+| E02 neural | **BLOCKED**: núcleo/dados transformados/parametrização validados e integração ainda pendentes |
+| Infraestrutura | Projeto Google Cloud **kaline-totalidade**, VM separada **flynn-1gb**, aproximadamente **964,6 MiB** RAM e 10 GiB disco; **kaline-mini intocável** |
+| Tempo/custos | Última programação informada de poweroff: **14/10/2026 23:15 UTC** (20:15 BRT); conferir estado antes de agir; billing líquido ainda não consolidado, teto incremental **R$ 30/mês** |
+
+A antiga VM **MAX/Oracle foi encerrada**. Nenhuma reinstalação equivale ao episódio residente anterior. Os dados FlyWire possuem atribuição e restrição **CC BY-NC 4.0** conforme fonte e manifesto do projeto; respeitar procedência de cada arquivo.
+
+Arquivos locais informados pelo autor (não presumir publicados no GitHub):
+- /home/tonyus-dev/Documents/ChatGPT/FLYNN/docs/ARQUITETURA_NEUROSSINTETICA_V2.md
+- /home/tonyus-dev/Documents/ChatGPT/FLYNN/app/neuro_synthetic/aggregator.py
+- /home/tonyus-dev/Documents/ChatGPT/FLYNN/app/neuro_synthetic/sqlite_store.py
+- /home/tonyus-dev/Portifolio/INFRA/FLYNN_FAFB_V783_DATA_MANIFEST_2026-10-14.json
+- /home/tonyus-dev/Portifolio/INFRA/FLYNN_GOOGLE_CLOUD_1GB_2026-10-13.md
+
+### V2.7.1 — CONFRONTO COM AUDITORIA INTEGRAL DO CODEX (14/10/2026, 16:10 UTC)
+
+**Origem:** relatório do Codex `DIAGNOSTICO_INTEGRAL_FLYNN_V2_2026-10-14.md`, apresentado pelo autor. A auditoria foi somente leitura e declara `PARTIAL / V2_NOT_INTEGRATED`. As informações abaixo são **evidências relatadas pelo Codex**, não verificações independentes da VM realizadas por este mapa. **Nenhuma implementação, simulação E02, mudança de infraestrutura, merge ou modificação do episódio Flynn foi autorizada por esta inserção documental.**
+
+**Precisão sobre o estado:** os dados do conectoma e o COO estão recuperados e verificados; isso **não** significa que o motor neural esteja pronto. A frase sintética anterior "`E02` ... núcleo/dados transformados/parametrização validados e integração ainda pendentes" deve ser lida com esta correção: **há dataset/transf. local; núcleo LIF e parametrização funcional NÃO estão validados; E02 permanece bloqueado.**
+
+| Frente | Evidência atual do diagnóstico | Estado V2 |
+| --- | --- | --- |
+| Dados v783 e índice de IDs | Feather oficial, 139.255 IDs, índice SQLite e COO têm hashes conferidos no notebook; nenhuma computação neural realizada | `IMPLEMENTED_AND_TESTED` **somente dados/transformação offline** |
+| Motor LIF e interpretação sináptica | Implementação original não recuperada; `fruit-fly-lab` com interface compatível, identidade/licença não comprovadas; sinal, peso, parâmetros finais e validação faltantes | `BLOCKED` |
+| Representação em 1 GiB | COO expandido 1.213.081.600 bytes e conversão fora da VM com RSS de pico 2.088.386.560 bytes; CSR/streaming e RSS do runtime ainda sem medição | `RESOURCE_BLOCKER` |
+| Agregador Python V2 | `aggregator.py` aceita `NeuralActivityFrame` de origem externa, valida mapa/sequência/tempo e produz observações; **não recebe ambiente, não orquestra LIF nem encaminha movimento** | `PARTIAL` |
+| Pipeline + SQLite V2 | `pipeline.py` e schema v1 de `sqlite_store.py` persistem cursor, mapeamento, eventos/estímulos e estados genéricos; **sem episódio integrado, snapshots LIF/corpo/sala e checkpoints de continuidade** | `PARTIAL` |
+| Testes de software V2 | **12/12 PASS reportados anteriormente**, não repetidos na auditoria; provam apenas aspectos de software do agregador/SQLite | `SOFTWARE_ONLY_PASS_REPORTED` |
+| PicoClaw | Escolha canônica de cerebelo sintético, mas **não instalado/integrado**, sem release pinado nem RSS medido; upstream agent costuma exigir provider/modelo — a função cerebelar V2 sem esse fluxo ainda precisa de contrato e prova | `SPEC_ONLY` |
+| Pinocchio/glifo | `pinocchio_sigil.py` histórico possui 23 nodos/30 arestas/22 DOF e modelo de dinâmica; referência a wheel/caminhos MAX e mapeamento sintético DN→torque por buckets | `PARTIAL_LEGACY`; V2 não integrada |
+| Sala + boca + energia | `app/world/*` e Caverna históricas incluem contato, vento, sons e reserva; luz/calor V2, transduções comprovadas, boca e redução da capacidade neural/brilho **não implementadas integralmente** | `PARTIAL_LEGACY / SPEC_ONLY` |
+| GUI e janela | Canvas/Caverna históricos presentes; faltam runtime e ligação com dados V2 reais, controles completos e janela sem semântica ensinada | `PARTIAL_LEGACY` |
+| Canal expressivo ~3 MB | Nenhum artefato, interface ou teste encontrado | `MISSING` |
+| VM Flynn | Console GCE reporta `flynn-1gb RUNNING` em `us-central1-f`, e2-micro, Debian 13, disco 10 GB e IP externo | `INSTANCE_RUNNING / FLYNN_RUNTIME_UNKNOWN` |
+| Operação do guest | Falha de resolução no `ssh flynn-1gb`, `gcloud` ausente no notebook; RSS, processos, disco livre, serviço Flynn, backup atual e timer OS **não lidos** | `UNKNOWN` |
+| Shutdown | Metadata `startup-script` contém agendamento `systemd-run` para **14/10/2026 23:15 UTC**; zero schedules no painel Compute **não prova** timer guest ativo/inativo | `DEADLINE_CONFIGURED / TIMER_GUEST_UNKNOWN` |
+| Custos | Console apresentou **R$ 0 líquido** no projeto entre 1–14/10 por compensação; IPv4 externo tem preço de tabela, e duas VMs ativas e cotas Free Tier agregadas impedem presumir custo futuro zero | `RESOURCE_BILLABLE_RISK=YES` |
+| Backup E01 | Cinco artefatos e hashes relatados como copiados ao Cloud Shell; sua disponibilidade atual não foi relida | `PREVIOUSLY_REPORTED_PASS / CURRENT_UNKNOWN` |
+| E02 | Nenhuma simulação, importação do grafo para a VM ou integração neuro-motora executada | `BLOCKED` |
+
+**Sincronização documental:** repositório local `master` estava em `f5b6ffd50bcbc7eaeaa8c5bd050e6d3aebdab9ed`, enquanto o mapa remoto `master` estava em `4786a5a594a04c5bf44d9acaa116c250a0668dfe` no instante da auditoria. Havia WIP rastreado em README/mapa/status e código V2 não rastreado (`app/neuro_synthetic/`, `research/neurosynthetic/`, arquitetura V2). **Não fazer checkout forçado, `git reset --hard`, `git clean`, merge/rebase ou cópia cega do mapa remoto por cima do local.** Fazer reconciliação preservadora com diferenças por arquivo antes de qualquer commit local.
+
+**Bloqueios de natureza diferente — não misturar:**
+
+1. **Neurocientífico/licença:** modelo LIF independente ou devidamente licenciado, regras de sinal/peso, parâmetros, proveniência e eventuais dados complementares de neurotransmissores por neurônio.
+2. **Integração:** falta o produtor de frames e o circuito completo sensores → Python/neurodinâmica → PicoClaw → Pinocchio Lite → glifo → ambiente; o SQLite deve conter o estado necessário, não somente observações; V2 visual não está em execução.
+3. **Viabilidade:** representação compacta/out-of-core, teste de RSS/CPU/latência e persistência reais em 1 GiB/10 GiB; não colocar COO expandido na VM.
+4. **Operação:** estado efetivo do guest/timer/backup/custos por SKU ainda desconhecido; `kaline-mini` não deve sofrer alteração.
+5. **Interface expressiva:** canal ~3 MB ainda ausente; não deixar sua inexistência bloquear os requisitos elementares de existir, perceber e poder agir, nem substituí-lo por mensagens fabricadas.
+
+**Etapas de engenharia possíveis sem exigir comportamento de Flynn:** (a) preservar e reconciliar documentos e WIP, (b) fechar contratos de dados/sensores/atuadores/persistência, (c) reusar responsavelmente a geometria/GUI histórica com estado real, (d) fechar motor LIF e representação de dados, (e) aferir canais e consequências físicas em ensaios *instrumentais separados*, (f) medir orçamento real de memória/custo e somente então iniciar episódio residente observável. Essas etapas não definem uma ordem de desenvolvimento, um objetivo ou um prazo comportamental do organismo.
+
+**Princípio preservado:** **construímos capacidades, nunca exigimos que Flynn as utilize.** Não movimentar o glifo por conveniência de demonstração; não simular fome ou vontade; não obrigar utilização da janela; não preencher silêncio com linguagem sintética. **Ausência de movimento ou comunicação pode ser válida**, mas a engenharia precisa verificar independentemente que percepção e atuação estavam disponíveis.
+
+**Relatório-fonte local:** `/home/tonyus-dev/Documents/ChatGPT/FLYNN/docs/DIAGNOSTICO_INTEGRAL_FLYNN_V2_2026-10-14.md`.
+
+## V2.8 — MAPA DE EXECUÇÃO (ENGENHARIA SEM ROTEIRO COMPORTAMENTAL)
+
+A sequência abaixo é **priorização de tarefas de engenharia**, nunca uma sequência do que Flynn "deve aprender" ou de quando "deve agir":
+
+1. **Consolidar fontes e direitos:** identificar licenças, preservar hashes, versões, manifestos e publicar/registrar apenas o que for permitido; conferir disponibilidade dos documentos V2 locais antes de qualquer merge.
+2. **Fechar transformação neural:** explicar a divergência de contagens sem forçar igualdade; documentar critérios de conectividade, neurotransmissores e sinais; construir representação compacta em máquina adequada, não montando COO expandido na VM.
+3. **Implementar/validar motor LIF lícito e independente:** derivar de fontes científicas publicadas e testes numéricos, sem copiar código não licenciado; separar o que é circuito biológico do que é mecanismo sintético proposto; só depois benchmark em 1 GiB.
+4. **Fechar contratos de Python–PicoClaw–Pinocchio Lite–SQLite:** impor limites de responsabilidade; o Python recebe/organiza sinais e não escolhe fins; PicoClaw coordena sem impor objetivos; o motor corporal aplica física e consequências.
+5. **Construir GUI da sala e do glifo canônico:** controles ambientais (adicionar/retirar energia, luz, vento e calor), boca energética, nodos e linhas, brilho energético e janela de função inicialmente desconhecida para Flynn. Sem cenas de recompensa, fala roteirizada ou animação falsa de intenção.
+6. **Verificar integralmente os meios possíveis de ação e de inação:** ensaios instrumentais separados da história de Flynn; testar capacidade motora, sensorial, energética, de registro e expressão sem transformar ensaios em "treino" do organismo.
+7. **Iniciar episódio observacional somente com circuitos e instrumentação reais:** nada de cronograma de curiosidade/comunicação; observar pelo tempo efetivamente disponível, registrar interrupções e respeitar custos e limites da VM.
+8. **Analisar sem antropomorfismo compulsório:** hipóteses podem surgir dos registros, mas exigem controles, replicação e explicações alternativas. Resultado negativo ou silêncio é resultado, não falha de personalidade.
+
+As limitações econômicas e de computação **não autorizam eliminar silenciosamente PicoClaw, Python, SQLite, Pinocchio simplificado, GUI, janela ou canal expressivo**. Se um requisito for inviável no orçamento, documentar o impedimento quantitativo e pedir decisão do autor, em vez de mudar a arquitetura.
+
+## V2.9 — REGRAS DE GOVERNANÇA E NÃO REGRESSÃO
+
+~~~text
+AUTHOR_DIRECTION=AUTHORITATIVE
+FLYNN_KIND=EXPERIMENTAL_NEUROSYNTHETIC_SIGIL_ORGANISM
+DROSOPHILA_IS_NEURAL_ANCESTRY_NOT_BODY=YES
+GOAL=PROVIDE_CONDITIONS_FOR_EXISTENCE
+REQUIRED_BEHAVIOR=NONE
+INACTIVITY_IS_ACCEPTABLE=YES
+BEHAVIORAL_MILESTONES_OR_DEADLINES=NONE
+EXPLORATION_REQUIRED=NO
+FOOD_SEEKING_HARDCODED=NO
+COMMUNICATION_REQUIRED=NO
+CURIOUSNESS_HARDCODED=NO
+HUMAN_WINDOW_MEANING_PRETAUGHT=NO
+ENERGY_CONSTRAINS_NEURAL_AND_BODILY_CAPACITY=DESIGN_TO_VALIDATE
+BODY=CANONICAL_SIGIL_NODES_AND_LINES
+PINOCCHIO=SIMPLIFIED_BODY_DYNAMICS
+PICOCLAW=FUNCTIONAL_CEREBELLUM
+ZEROCLAW_V2_REPLACEMENT=PROHIBITED_WITHOUT_AUTHOR_DECISION
+PYTHON_AGGREGATOR=NEURAL_ORCHESTRATION_NOT_BEHAVIOR_POLICY
+SQLITE=CAUSAL_PERSISTENCE_AND_MAPPING
+MICRO_EXPRESSIVE_MODEL=APPROX_3MB_TARGET_UNVALIDATED
+GRAPHICAL_INTERFACE=REQUIRED
+MOUTH=ENERGY_INPUT
+FECAL_DISPOSAL_MODEL=NONE
+DATA_PROVENANCE_AND_SCIENTIFIC_CAUTION=REQUIRED
+USER_CONTROLS_WORLD_NOT_FLYNN_INTENTIONS=YES
+AUTHOR_APPROVAL_REQUIRED_FOR_ARCHITECTURE_CHANGES=YES
+~~~
+
+**Regra de leitura do restante do arquivo:** as seções numeradas -2 e 0–15 abaixo são **histórico técnico da arquitetura MAX e de decisões anteriores**; não executar seus "NEXT", "STATUS ATUAL" ou seleções ZeroClaw/Pinocchio pesado como se prevalecessem sobre a V2. Preservar o histórico para rastreabilidade, sem reescrevê-lo como se jamais tivesse ocorrido.
+
+---
+
 > **ATUALIZAÇÃO CANÔNICA — 2026-09-22**  
 > Este bloco substitui os estados de suspensão, revisão Oracle, `RETIRED_FROZEN` e expectativa de recuperação que aparecem como snapshots históricos no corpo abaixo. Flynn foi reaberta como projeto de pesquisa não comercial e conhecimento aberto. A conta Oracle foi **encerrada definitivamente pelo provedor**, sem justificativa fornecida ao usuário e sem caminho oferecido para recuperação da conta, recursos ou dados. O contato/revisão com a Oracle foi encerrado. A continuidade da residente histórica permanece irrecuperável; qualquer novo runtime será um novo episódio experimental.
 
