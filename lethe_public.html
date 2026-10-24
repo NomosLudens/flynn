@@ -13,11 +13,13 @@
     header { display:flex; align-items:center; justify-content:space-between; gap:16px; border-bottom:1px solid #ffffff18; padding-bottom:16px }
     .brand { font:500 12px/1.3 ui-monospace,monospace; letter-spacing:.22em; text-transform:uppercase }
     .brand strong { display:block; color:var(--fg); font-size:16px; letter-spacing:.3em }
-    .status { color:var(--muted); font:600 11px/1.4 ui-monospace,monospace; letter-spacing:.12em }
-    .status::before { content:""; display:inline-block; width:7px; height:7px; margin-right:9px; border-radius:50%; background:#807a72 }
-    .status[data-state="LIVE"]::before { background:#9d8062 }
-    .status[data-state="STALE"]::before { background:#da8d56 }
-    .status[data-state="OFFLINE"]::before { background:#9b5140 }
+    .statuses { display:grid; justify-items:end; gap:5px }
+    .status { color:var(--muted); font:600 10px/1.4 ui-monospace,monospace; letter-spacing:.09em }
+    .status::before { content:""; display:inline-block; width:7px; height:7px; margin-right:8px; border-radius:50%; background:#807a72 }
+    .status[data-state="RESIDENT_ACTIVE"]::before,.status[data-state="OBSERVATION_FRESH"]::before { background:#9d8062 }
+    .status[data-state="RESIDENT_UNCONFIRMED"]::before { background:#807a72 }
+    .status[data-state="OBSERVATION_STALE"]::before { background:#da8d56 }
+    .status[data-state="OFFLINE"]::before,.status[data-state="RESIDENT_STALE"]::before { background:#9b5140 }
     .glyph-wrap { display:grid; place-items:center; min-height:0 }
     svg { display:block; width:min(100%,900px); max-height:66vh; overflow:visible }
     .edge { stroke:#87634f; stroke-opacity:.46; stroke-width:1.2; fill:none }
@@ -36,7 +38,10 @@
   <main>
     <header>
       <div class="brand"><strong>FLYNN</strong>LETHE · OBSERVATÓRIO</div>
-      <div id="status" class="status" data-state="OFFLINE" role="status" aria-live="polite">OFFLINE</div>
+      <div class="statuses" aria-label="Estado da residente e atualidade das observações">
+        <div id="resident-status" class="status" data-state="RESIDENT_UNCONFIRMED" role="status" aria-live="polite">RESIDENT_UNCONFIRMED</div>
+        <div id="observation-status" class="status" data-state="OBSERVATION_STALE">OBSERVATION_STALE</div>
+      </div>
     </header>
     <section class="glyph-wrap" aria-label="Geometria estrutural canônica da LETHE">
       <svg id="glyph" viewBox="0 0 1000 760" role="img" aria-labelledby="glyph-title glyph-desc">
@@ -80,13 +85,30 @@
     for (const [id,[x,y,r]] of Object.entries(modules)) { const [cx,cy]=point([x,y]); const circle=document.createElementNS("http://www.w3.org/2000/svg","circle"); circle.setAttribute("cx",cx); circle.setAttribute("cy",cy); circle.setAttribute("r",Math.max(5,r*34)); circle.setAttribute("class",`node${id==="CENTRAL_EB"?" central":""}`); circle.setAttribute("aria-label",id); document.getElementById("nodes").append(circle); }
     const text = (id,value) => { document.getElementById(id).textContent = value ?? "—"; };
     const ms = value => Number.isFinite(Number(value)) ? `${Number(value).toLocaleString("pt-BR")} ms` : "—";
+    let previousResidentCursor = null;
+    let lastConfirmedProgressAt = null;
     async function refresh() {
       try {
         const response = await fetch("/api/flynn/v2/public-observer", {cache:"no-store", credentials:"omit", headers:{"Accept":"application/json"}});
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
-        const status = ["LIVE","STALE","OFFLINE"].includes(data.status) ? data.status : "OFFLINE";
-        const badge = document.getElementById("status"); badge.dataset.state=status; badge.textContent=status;
+        const observationStatus = data.status === "LIVE" ? "OBSERVATION_FRESH" : data.status === "STALE" ? "OBSERVATION_STALE" : "OFFLINE";
+        const residentBadge = document.getElementById("resident-status");
+        const observationBadge = document.getElementById("observation-status");
+        const tick = Number(data.checkpoint?.neural_tick);
+        const checkpointAge = Number(data.component_observations?.integrated_world_neural_checkpoint?.age_seconds);
+        const cursor = { episode:data.episode_id, generation:data.causal_generation_id, tick };
+        if (previousResidentCursor && cursor.episode === previousResidentCursor.episode && cursor.generation === previousResidentCursor.generation && Number.isFinite(tick) && tick > previousResidentCursor.tick) {
+          lastConfirmedProgressAt = Date.now();
+        } else if (previousResidentCursor && (cursor.episode !== previousResidentCursor.episode || cursor.generation !== previousResidentCursor.generation)) {
+          lastConfirmedProgressAt = null;
+        }
+        if (Number.isFinite(tick)) previousResidentCursor = cursor;
+        const residentStatus = lastConfirmedProgressAt !== null && Date.now() - lastConfirmedProgressAt <= 60000
+          ? "RESIDENT_ACTIVE"
+          : Number.isFinite(checkpointAge) && checkpointAge <= 60 ? "RESIDENT_UNCONFIRMED" : "RESIDENT_STALE";
+        residentBadge.dataset.state=residentStatus; residentBadge.textContent=residentStatus;
+        observationBadge.dataset.state=observationStatus; observationBadge.textContent=observationStatus;
         text("episode",data.episode_id); text("generation",data.causal_generation_id);
         text("checkpoint",data.checkpoint ? `${ms(data.checkpoint.neural_time_ms)} · ${data.checkpoint.checkpoint_sha256 || "hash confirmado"}` : "—");
         text("world-time",ms(data.world?.world_time_ms));
@@ -96,8 +118,16 @@
         text("body", bodyState ? `checkpoint físico · seq ${bodyState.state_seq ?? "—"} · ${ms(physical.neural_time_ms)}` : "Sem estado corporal pareado");
         text("read-at",data.observed_at_utc ? new Date(data.observed_at_utc).toLocaleString("pt-BR",{timeZone:"UTC",hour12:false})+" UTC" : "—");
         const gap=Number(data.checkpoint?.neural_time_ms)-Number(lif.window_end_ms ?? lif.neural_time_ms);
-        text("note", status==="STALE" ? `Último estado confirmado; atualização neural atrasada ${Number.isFinite(gap)?ms(gap):"—"}. A geometria é estrutural, não uma pose.` : status==="OFFLINE" ? "Sem observação disponível. O último estado não é apresentado como atual." : "Observação residente recente. A geometria é estrutural; dados ausentes não são interpolados.");
-      } catch (_) { const badge=document.getElementById("status"); badge.dataset.state="OFFLINE"; badge.textContent="OFFLINE"; text("note","Sem conexão com o observador. Nenhuma atividade é inferida."); }
+        text("note", observationStatus==="OBSERVATION_STALE"
+          ? `${residentStatus}: confirmado somente após avanço de tick entre leituras. OBSERVATION_STALE: a agregação neural foi persistida há ${lifObs?.age_seconds ?? "?"} s de parede e está ${Number.isFinite(gap)?ms(gap):"—"} atrás do checkpoint neural. A persistência agrega janelas de 1.000 ms neurais; o checkpoint não atualiza essa amostra. A geometria é estrutural, não uma pose.`
+          : observationStatus==="OFFLINE"
+            ? "Sem observação disponível. O último estado não é apresentado como atual."
+            : `${residentStatus}: estado operacional separado da atualidade da amostra. A observação está dentro do limite de parede de 60 s. A geometria é estrutural; dados ausentes não são interpolados.`);
+      } catch (_) {
+        const residentBadge=document.getElementById("resident-status"); residentBadge.dataset.state="OFFLINE"; residentBadge.textContent="RESIDENT_UNAVAILABLE";
+        const observationBadge=document.getElementById("observation-status"); observationBadge.dataset.state="OFFLINE"; observationBadge.textContent="OBSERVATION_OFFLINE";
+        text("note","Sem conexão com o observador. Nenhuma atividade é inferida.");
+      }
     }
     refresh(); setInterval(refresh,15000);
   </script>
