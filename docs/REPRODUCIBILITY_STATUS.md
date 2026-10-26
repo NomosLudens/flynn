@@ -24,19 +24,15 @@ REPRODUCIBILITY=UNVERIFIED
 - Body: modelo Pinocchio sintético planar XY/yaw; 22 links dinâmicos, oito arestas somente gráficas.
 - Persistência: schema SQLite versão 1, arquivo em modo DELETE na inspeção; checkpoints NPZ contêm arrays LIF e snapshots de estado. Identidade deve incluir episódio, geração e referência/hash do checkpoint.
 
-## Materiais preservados e ainda pendentes
+## Materiais preservados e pendências de reprodução
 
-1. Episódio 3: banco SQLite, metadados e checkpoints ticks 4.468.200/4.468.400 foram recuperados byte a byte da VM. O banco passou `PRAGMA integrity_check=ok`; hashes de origem e cópia coincidem. Os arquivos estão na Release `v2.0-research-closed`.
-2. Episódio 5: banco SQLite, metadados e checkpoints ticks 87.600/87.800/88.000 foram recuperados. O banco passou `PRAGMA integrity_check=ok`; hashes de origem e cópia coincidem. A fronteira ativa confirmada é 87.800; tick 88.000 foi preservado como estado não confirmado. Os arquivos estão na Release.
-3. Arrays CSR FAFB-v783 (`indptr.npy`, `indices.npy`, `signed_count.npy`, `manifest.json`) foram copiados e os hashes conferem. Estão em `archive/recovered-payloads/2026-10-26/` no workspace local. Não foram publicados porque o manifesto de origem pede esclarecimento da licença antes de redistribuir a matriz.
+1. Episódio 3: banco SQLite, metadados e checkpoints 4.468.200/4.468.400 foram recuperados byte a byte da VM e publicados na Release. `PRAGMA integrity_check=ok`; hashes de origem, cópia e GitHub coincidem.
+2. Episódio 5: banco SQLite, metadados e checkpoints 87.600/87.800/88.000 foram recuperados e publicados. `PRAGMA integrity_check=ok`; hashes coincidem. A fronteira atômica confirmada é 87.800; tick 88.000 foi preservado como não confirmado.
+3. Arrays CSR FAFB-v783 (`indptr.npy`, `indices.npy`, `signed_count.npy`, manifesto) foram copiados e publicados com hashes correspondentes e aviso de atribuição/licença CC BY-NC 4.0 conservador. FlyWire official guidelines declare CC BY-NC 4.0; the Zenodo v783 record lists CC BY 4.0. The discrepancy is documented and no commercial-use permission is claimed.
 4. Ambientes Python completos, wheels/lockfile exato instalado, bibliotecas nativas, configuração integral da unidade systemd e metadados Git do runtime instalado continuam incompletos.
-5. A VM foi consultada em 2026-10-26 através da configuração existente IAP SSH: instância `flynn-1gb` estava `RUNNING`, mas `flynn-v2-resident.service` estava `failed`. Nenhum reinício foi realizado.
+5. A VM `flynn-1gb` foi consultada em 2026-10-26 pelo IAP SSH existente: instância `RUNNING`, `flynn-v2-resident.service` `failed`. Nenhum reinício foi realizado.
 
-A recuperação dos dados melhora a disponibilidade dos artefatos, mas não prova reconstrução independente ponta a ponta nem o ciclo causal neuromotor.
-
-## Licenças e redistribuição
-
-O repositório existente declara CPAL 1.0 para seu código. O manifesto local dos arrays CSR descreve a matriz como derivada FlyWire, uso não comercial local e proíbe redistribuição sem esclarecimento da licença por arquivo. Por isso os arrays permanecem apenas na cópia local verificada. Bancos e checkpoints experimentais do Flynn foram publicados como assets da Release de encerramento, com identidades e hashes no manifesto público. Pinocchio e demais dependências conservam licenças próprias.
+Os assets e seus hashes constam em [`PRESERVATION_MANIFEST_v2.json`](https://github.com/NomosLudens/flynn/releases/download/v2.0-research-closed/PRESERVATION_MANIFEST_v2.json). A recuperação melhora a disponibilidade dos artefatos, mas não comprova reconstrução independente ponta a ponta nem o ciclo causal neuromotor; `REPRODUCIBILITY=UNVERIFIED`.
 
 ## Limites de hospedagem examinados
 
