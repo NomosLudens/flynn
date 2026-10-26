@@ -6,7 +6,7 @@
 >
 > O projeto demonstrou processamento de estímulos simulados, atividade neural e persistência experimental, mas **não demonstrou o ciclo causal neuromotor completo**. Pesquisa encerrada; documentação histórica preservada. O sistema não foi validado como organismo artificial funcional e integrado.
 >
-> **Preservação dos dados identificados: `COMPLETE`.** Bancos, metadados, checkpoints e arrays CSR dos episódios 3 e 5/FAFB-v783 foram recuperados e publicados na [Release final](https://github.com/NomosLudens/flynn/releases/tag/v2.0-research-closed). Hashes SHA-256 de todos os payloads coincidem com a origem e com os digests públicos do GitHub. O tick 88.000 do episódio 5 está preservado, mas continua não confirmado. Os arrays CSR seguem o aviso conservador CC BY-NC 4.0, com a divergência FlyWire/Zenodo documentada.
+> **Preservação dos dados identificados: `COMPLETE`.** Bancos, metadados, checkpoints, arrays CSR FAFB-v783 e todos os 23 objetos do arquivo histórico GCS foram recuperados e publicados na [Release final](https://github.com/NomosLudens/flynn/releases/tag/v2.0-research-closed). Hashes SHA-256/digests e checksums GCS conferem. O tick 88.000 do episódio 5 está preservado, mas continua não confirmado. Os arrays CSR seguem aviso conservador CC BY-NC 4.0, com a divergência FlyWire/Zenodo documentada.
 
 ## Encerramento e documentos finais
 
