@@ -4,7 +4,7 @@
 
 Flynn is an experimental neuro-synthetic research project that studies what can be learned from running a biologically anchored neural core inside a persistent sensorimotor loop.
 
-The preserved architecture links:
+The intended component path was:
 
 ```text
 world → sensory transduction → continuous LIF brain → descending readout
@@ -191,7 +191,7 @@ RESOURCE_DELETION=UNPROVEN
 
 ## Historical continuity note
 
-The historical Flynn resident and any future rehost are scientifically distinct temporal episodes.
+No rehost is planned. If a separate rehost is undertaken in the future, it will be a scientifically distinct temporal episode, not a continuation of the historical resident.
 
 ```text
 SOURCE_CODE_BACKUP != RESIDENT_STATE_BACKUP
