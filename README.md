@@ -1,4 +1,4 @@
-# Flynn — open research archive and rehosting initiative
+# Flynn — final research archive
 
 > **Non-commercial research project · public repository · open knowledge**
 
@@ -17,9 +17,11 @@ The neural substrate is derived from the **FlyWire FAFB v783** adult female *Dro
 
 ```text
 PROJECT=FLYNN
-PROJECT_STATUS=RESEARCH_REOPENING
-RESEARCH_STATUS=ACTIVE_REHOSTING_PREPARATION
-CURRENT_RUNTIME_STATUS=OFFLINE_PENDING_REHOST
+PROJECT_STATUS=ENDED
+RESEARCH_STATUS=ENDED_ARCHIVE_ONLY
+CURRENT_RUNTIME_STATUS=FAILED_AFTER_RESTART_LIMIT
+FULL_CAUSAL_LOOP=NOT_DEMONSTRATED
+ARCHIVE_STATUS=PARTIAL_PENDING_DATA_DECISION
 
 FORMER_AUTHORITATIVE_HOST=MAX
 FORMER_PROVIDER=ORACLE_CLOUD
@@ -28,14 +30,11 @@ RESIDENT_CONTINUITY_INTERRUPTED_EXTERNALLY=YES
 NON_COMMERCIAL=YES
 PUBLIC_REPOSITORY=YES
 OPEN_KNOWLEDGE_COMMITMENT=YES
-HOSTING_SPONSORSHIP=SEEKING
 ```
 
-The original resident runtime became unavailable after the Oracle Cloud tenancy that hosted MAX was suspended. That interruption broke the resident's temporal continuity.
+Development ended on **2026-10-26**. The former Oracle-hosted MAX runtime and the later Flynn V2 runtime on `flynn-1gb` are distinct episodes. The later installation ran, but a complete neural-to-body causal loop was not demonstrated. At final inventory, `flynn-v2-resident.service` was failed after automatic restart attempts; it was not restarted during archival.
 
-**A future rehost will not be presented as uninterrupted continuation of the former resident.** It will be a new research runtime reconstructed from the public code and preserved evidence.
-
-The previous `RETIRED_FROZEN` state remains part of the historical record. On **2026-09-21**, the project was reopened specifically as a non-commercial research and open-knowledge initiative seeking suitable persistent infrastructure.
+The historical reopening on **2026-09-21** remains part of the record. This repository preserves code and research documentation, while essential resident databases, checkpoints and connectome arrays remain unpreserved outside the VM. Do not delete the VM or its disks before those data are preserved at a separately verified destination or their disposition is explicitly decided.
 
 ## Research purpose
 
@@ -53,9 +52,9 @@ The project deliberately distinguishes observed results from interpretation. No 
 
 ## Open knowledge commitment
 
-Flynn is being reopened with a simple principle: **if the infrastructure enables the experiment, the resulting technical knowledge should be shared back.**
+The final archive follows a simple principle: **share the technical knowledge, failures and negative results produced by the experiment.**
 
-The repository is public. We intend to preserve and publish:
+The public repository preserves:
 
 - source code and architecture;
 - reproducible experimental runbooks;
@@ -65,9 +64,24 @@ The repository is public. We intend to preserve and publish:
 - research notes and limitations;
 - improvements required to reproduce the system independently.
 
-The goal is not only to run Flynn again, but to make the work useful as a shared technical research object.
+The goal is to make the historical work reviewable without overstating what the runtime demonstrated.
 
 See [Research rehosting and infrastructure](docs/RESEARCH_REHOSTING.md).
+
+## Final archive — 2026-10-26
+
+`FULL_CAUSAL_LOOP=NOT_DEMONSTRATED`: visual LIF activity was persisted, while descending activity, nonzero actuation, body displacement and effective proprioceptive return were not demonstrated. The installed source snapshot is preserved with per-file SHA-256 hashes and an explicit comparison against the public repository revision. Episode databases and checkpoints are inventoried but not published; they remain on the VM. This is a partial archive, not a complete preservation of resident state.
+
+- [Final research report](docs/FINAL_RESEARCH_REPORT.md)
+- [Final architecture](docs/FINAL_ARCHITECTURE.md)
+- [Neural model](docs/NEURAL_MODEL.md)
+- [Embodiment](docs/EMBODIMENT.md)
+- [Homeostasis V2](docs/HOMEOSTASIS.md)
+- [Persistence and episodes](docs/PERSISTENCE_AND_EPISODES.md)
+- [Experimental results](docs/EXPERIMENTAL_RESULTS.md)
+- [Incident history](docs/INCIDENT_HISTORY.md)
+- [Scientific limitations](docs/SCIENTIFIC_LIMITATIONS.md)
+- [Installed runtime source snapshot and data inventory](archive/runtime-installed/2026-10-26/README.md)
 
 ## Why persistent infrastructure matters
 
