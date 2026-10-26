@@ -6,7 +6,7 @@
 >
 > O projeto demonstrou processamento de estímulos simulados, atividade neural e persistência experimental, mas **não demonstrou o ciclo causal neuromotor completo**. Pesquisa encerrada; documentação histórica preservada. O sistema não foi validado como organismo artificial funcional e integrado.
 >
-> **Preservação dos dados: `PARTIAL`.** Os bancos e checkpoints dos episódios 3 e 5 foram copiados byte a byte e publicados como assets da [Release final](https://github.com/NomosLudens/flynn/releases/tag/v2.0-research-closed), com hashes SHA-256 confirmados pela API do GitHub. Os arrays do conectoma também foram recuperados para uma cópia local, mas não publicados porque o manifesto de origem restringe redistribuição sem esclarecimento da licença. Não excluir VM ou discos antes de decidir a preservação do conectoma.
+> **Preservação dos dados identificados: `COMPLETE`.** Bancos, metadados, checkpoints e arrays CSR dos episódios 3 e 5/FAFB-v783 foram recuperados e publicados na [Release final](https://github.com/NomosLudens/flynn/releases/tag/v2.0-research-closed). Hashes SHA-256 de todos os payloads coincidem com a origem e com os digests públicos do GitHub. O tick 88.000 do episódio 5 está preservado, mas continua não confirmado. Os arrays CSR seguem o aviso conservador CC BY-NC 4.0, com a divergência FlyWire/Zenodo documentada.
 
 ## Encerramento e documentos finais
 
@@ -61,7 +61,7 @@ OPEN_KNOWLEDGE_COMMITMENT=YES
 
 Development ended on **2026-10-26**. The former Oracle-hosted MAX runtime and the later Flynn V2 runtime on `flynn-1gb` are distinct episodes. The later installation ran, but a complete neural-to-body causal loop was not demonstrated. On 2026-10-26 the VM was read through its existing IAP SSH path; `flynn-v2-resident.service` remained failed. The resident was not restarted.
 
-The historical reopening on **2026-09-21** remains part of the record. Episode 3 and episode 5 databases and checkpoints are now downloadable from the final GitHub Release. The connectome CSR arrays have a verified local recovery copy and remain withheld from public redistribution pending license clarification. Preserve the VM and disks until the connectome's final disposition is decided.
+The historical reopening on **2026-09-21** remains part of the record. The recovered episode 3 and episode 5 databases/checkpoints and the FAFB-v783 CSR arrays are downloadable from the final GitHub Release. SHA-256 digests match the source-side and local files. The data notice applies the stricter CC BY-NC 4.0 non-commercial condition and documents the FlyWire/Zenodo metadata discrepancy.
 
 ## Research purpose
 
@@ -97,7 +97,7 @@ See [Research rehosting and infrastructure](docs/RESEARCH_REHOSTING.md).
 
 ## Final archive — 2026-10-26
 
-`FULL_CAUSAL_LOOP=NOT_DEMONSTRATED`: visual LIF activity was persisted, while descending activity, nonzero actuation, body displacement and effective proprioceptive return were not demonstrated. The installed source snapshot is preserved with per-file SHA-256 hashes and an explicit comparison against the public repository revision. Episode 3 and 5 databases and checkpoints are attached to the final Release; the public preservation manifest records episode/generation identity and asset hashes. The derived connectome CSR arrays are locally preserved but withheld from public redistribution pending license clarification. This remains a partial archive.
+`FULL_CAUSAL_LOOP=NOT_DEMONSTRATED`: visual LIF activity was persisted, while descending activity, nonzero actuation, body displacement and effective proprioceptive return were not demonstrated. The installed source snapshot is preserved with per-file SHA-256 hashes and an explicit comparison against the public repository revision. The final Release contains the identified episode databases, metadata, checkpoints and connectome CSR arrays; see `PRESERVATION_MANIFEST_v2.json` and the conservative data-license notice. Tick 88,000 remains an unconfirmed checkpoint, not a verified causal boundary.
 
 - [Final research report](docs/FINAL_RESEARCH_REPORT.md)
 - [Final architecture](docs/FINAL_ARCHITECTURE.md)
