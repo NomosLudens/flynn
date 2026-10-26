@@ -38,7 +38,7 @@ The historical reopening on **2026-09-21** remains part of the record. This repo
 
 ## Research purpose
 
-Flynn exists for academic and technical inquiry, not commercial exploitation.
+Flynn was conducted as a non-commercial academic and technical inquiry.
 
 The research questions include:
 
@@ -83,11 +83,9 @@ See [Research rehosting and infrastructure](docs/RESEARCH_REHOSTING.md).
 - [Scientific limitations](docs/SCIENTIFIC_LIMITATIONS.md)
 - [Installed runtime source snapshot and data inventory](archive/runtime-installed/2026-10-26/README.md)
 
-## Why persistent infrastructure matters
+## Historical infrastructure requirements
 
-This is not a static website. The experimental object depends on **continuous runtime and persistent state**.
-
-A suitable research host allows us to maintain:
+The experiment depended on continuous runtime and persistent state. The following requirements describe the historical rehosting plan; they are not an active request:
 
 - continuous neural time rather than isolated batch replays;
 - persistent world/body/homeostatic state;
@@ -96,7 +94,7 @@ A suitable research host allows us to maintain:
 - long-running observations;
 - reproducible public demonstrations and technical validation.
 
-A modest Linux VPS is sufficient for the first rehosting stage. Our baseline request is:
+The historical baseline proposal for a first rehosting stage was:
 
 ```text
 OS=Linux x86_64
@@ -107,7 +105,7 @@ NETWORK=stable public connectivity
 UPTIME=continuous research runtime
 ```
 
-More resources are useful but not required to begin.
+This proposal was not a validated capacity guarantee and is no longer an active deployment plan.
 
 ## Scientific substrate
 
@@ -127,7 +125,7 @@ The project uses this biological ancestry as a neural anchor while keeping synth
 
 ## English documentation
 
-The English documentation is intended to make the project directly reviewable by hosting sponsors, researchers, students and independent developers:
+The English documentation provides a historical record for researchers and independent developers:
 
 - [Research rehosting and infrastructure](docs/RESEARCH_REHOSTING.md)
 - [Canonical status: closure history + research reopening](docs/STATUS_FINAL_EN.md)
@@ -163,9 +161,9 @@ The original Portuguese documents remain preserved alongside these mirrors as hi
 
 ## Replicability
 
-The repository is both an archive and a basis for renewed research.
+The repository is a historical archive; its contents do not certify a turnkey or independently reproduced runtime.
 
-The isolated E01 experiment has its own preserved kit and runbook. The original resident databases, canonical ledger and checkpoints that existed only on MAX are **not** represented as recovered.
+The isolated E01 experiment has its own preserved kit and runbook. The MAX records were not recovered. Flynn V2 resident databases, checkpoints and connectome arrays are inventoried by hash but remain only on the VM; they are not preserved in this repository or verified external storage.
 
 English: [Replicability and limits](REPLICABILITY_EN.md) · [Replication runbook](docs/REPLICATION_RUNBOOK_EN.md)  
 Portuguese originals: [REPLICABILITY.md](REPLICABILITY.md) · [docs/REPLICATION_RUNBOOK.md](docs/REPLICATION_RUNBOOK.md)
