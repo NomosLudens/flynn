@@ -26,13 +26,14 @@ REPRODUCIBILITY=UNVERIFIED
 
 ## Materiais preservados e pendências de reprodução
 
-1. Episódio 3: banco SQLite, metadados e checkpoints 4.468.200/4.468.400 foram recuperados byte a byte da VM e publicados na Release. `PRAGMA integrity_check=ok`; hashes de origem, cópia e GitHub coincidem.
-2. Episódio 5: banco SQLite, metadados e checkpoints 87.600/87.800/88.000 foram recuperados e publicados. `PRAGMA integrity_check=ok`; hashes coincidem. A fronteira atômica confirmada é 87.800; tick 88.000 foi preservado como não confirmado.
-3. Arrays CSR FAFB-v783 (`indptr.npy`, `indices.npy`, `signed_count.npy`, manifesto) foram copiados e publicados com hashes correspondentes e aviso de atribuição/licença CC BY-NC 4.0 conservador. FlyWire official guidelines declare CC BY-NC 4.0; the Zenodo v783 record lists CC BY 4.0. The discrepancy is documented and no commercial-use permission is claimed.
-4. Ambientes Python completos, wheels/lockfile exato instalado, bibliotecas nativas, configuração integral da unidade systemd e metadados Git do runtime instalado continuam incompletos.
-5. A VM `flynn-1gb` foi consultada em 2026-10-26 pelo IAP SSH existente: instância `RUNNING`, `flynn-v2-resident.service` `failed`. Nenhum reinício foi realizado.
+1. Episódio 3: banco SQLite, metadados e checkpoints 4.468.200/4.468.400 recuperados byte a byte da VM e publicados. `PRAGMA integrity_check=ok`; hashes de origem, cópia e GitHub coincidem.
+2. Episódio 5: banco SQLite, metadados e checkpoints 87.600/87.800/88.000 recuperados e publicados. `PRAGMA integrity_check=ok`; hashes coincidem. A fronteira atômica confirmada é 87.800; tick 88.000 foi preservado como não confirmado.
+3. Arrays CSR FAFB-v783 (`indptr.npy`, `indices.npy`, `signed_count.npy`, manifesto) copiados e publicados com hashes correspondentes e aviso de atribuição/licença CC BY-NC 4.0 conservador. As diretrizes oficiais FlyWire declaram CC BY-NC 4.0; o registro Zenodo v783 lista CC BY 4.0. A divergência está documentada e não se reivindica uso comercial.
+4. O arquivo histórico GCS foi listado e copiado para a Release: 23 objetos (sete segmentos, sete manifestos, sete catálogos e um backup de checkpoint mais manifesto), 62.841.113 bytes. MD5 e tamanhos correspondem aos metadados de origem; oito payloads zstd passaram teste e os sete arquivos tar foram listados. Veja `GCS_HISTORICAL_ARCHIVE_MANIFEST.json`.
+5. Ambientes Python completos, wheels/lockfile exato instalado, bibliotecas nativas e configuração integral da unidade systemd continuam incompletos.
+6. A VM `flynn-1gb` foi consultada em 2026-10-26 pelo IAP SSH existente: instância `RUNNING`, `flynn-v2-resident.service` `failed`. Nenhum reinício foi realizado.
 
-Os assets e seus hashes constam em [`PRESERVATION_MANIFEST_v2.json`](https://github.com/NomosLudens/flynn/releases/download/v2.0-research-closed/PRESERVATION_MANIFEST_v2.json). A recuperação melhora a disponibilidade dos artefatos, mas não comprova reconstrução independente ponta a ponta nem o ciclo causal neuromotor; `REPRODUCIBILITY=UNVERIFIED`.
+Os 37 payloads identificados e seus hashes constam em [`PRESERVATION_MANIFEST_FINAL.json`](https://github.com/NomosLudens/flynn/releases/download/v2.0-research-closed/PRESERVATION_MANIFEST_FINAL.json). A preservação dos arquivos não comprova reconstrução independente ponta a ponta nem o ciclo causal neuromotor; `REPRODUCIBILITY=UNVERIFIED`.
 
 ## Limites de hospedagem examinados
 
