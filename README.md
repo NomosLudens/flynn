@@ -6,7 +6,7 @@
 >
 > O projeto demonstrou processamento de estímulos simulados, atividade neural e persistência experimental, mas **não demonstrou o ciclo causal neuromotor completo**. Pesquisa encerrada; documentação histórica preservada. O sistema não foi validado como organismo artificial funcional e integrado.
 >
-> **Preservação dos dados: `PARTIAL`.** Bancos e checkpoints locais dos episódios 3 e 5, e arrays do conectoma, continuam sem cópia externa recuperável comprovada. O manifesto de hashes publicado não contém esses arquivos. Não excluir VM ou discos enquanto esses dados forem a única cópia.
+> **Preservação dos dados: `PARTIAL`.** Os bancos e checkpoints dos episódios 3 e 5 foram copiados byte a byte e publicados como assets da [Release final](https://github.com/NomosLudens/flynn/releases/tag/v2.0-research-closed), com hashes SHA-256 confirmados pela API do GitHub. Os arrays do conectoma também foram recuperados para uma cópia local, mas não publicados porque o manifesto de origem restringe redistribuição sem esclarecimento da licença. Não excluir VM ou discos antes de decidir a preservação do conectoma.
 
 ## Encerramento e documentos finais
 
@@ -21,7 +21,7 @@
 - [Snapshot dos 31 arquivos instalados](archive/runtime-installed/2026-10-26/README.md)
 - [Hash dos arquivos de código](archive/runtime-installed/2026-10-26/source.sha256)
 - [Manifesto de dados/checkpoints — hashes e caminhos, sem payloads](archive/runtime-installed/2026-10-26/data-preservation/data.sha256)
-- [Estado da preservação e bloqueio de cópia externa](archive/runtime-installed/2026-10-26/data-preservation/STATUS.md)
+- [Estado da preservação dos dados e hashes](archive/runtime-installed/2026-10-26/data-preservation/STATUS.md)
 
 A história original do desenvolvimento permanece acessível nos documentos e registros históricos abaixo. As conclusões finais se referem somente à implementação e às evidências observadas.
 
@@ -59,9 +59,9 @@ PUBLIC_REPOSITORY=YES
 OPEN_KNOWLEDGE_COMMITMENT=YES
 ```
 
-Development ended on **2026-10-26**. The former Oracle-hosted MAX runtime and the later Flynn V2 runtime on `flynn-1gb` are distinct episodes. The later installation ran, but a complete neural-to-body causal loop was not demonstrated. The last archived inventory (15:43:26 UTC) recorded `flynn-v2-resident.service` as failed after five automatic start attempts. This closure pass could not recheck the VM: its SSH hostname did not resolve and `gcloud` was unavailable on the client. No stop or restart was issued.
+Development ended on **2026-10-26**. The former Oracle-hosted MAX runtime and the later Flynn V2 runtime on `flynn-1gb` are distinct episodes. The later installation ran, but a complete neural-to-body causal loop was not demonstrated. On 2026-10-26 the VM was read through its existing IAP SSH path; `flynn-v2-resident.service` remained failed. The resident was not restarted.
 
-The historical reopening on **2026-09-21** remains part of the record. This repository preserves code and research documentation, while essential resident databases, checkpoints and connectome arrays remain unpreserved outside the VM. Do not delete the VM or its disks before those data are preserved at a separately verified destination or their disposition is explicitly decided.
+The historical reopening on **2026-09-21** remains part of the record. Episode 3 and episode 5 databases and checkpoints are now downloadable from the final GitHub Release. The connectome CSR arrays have a verified local recovery copy and remain withheld from public redistribution pending license clarification. Preserve the VM and disks until the connectome's final disposition is decided.
 
 ## Research purpose
 
@@ -97,7 +97,7 @@ See [Research rehosting and infrastructure](docs/RESEARCH_REHOSTING.md).
 
 ## Final archive — 2026-10-26
 
-`FULL_CAUSAL_LOOP=NOT_DEMONSTRATED`: visual LIF activity was persisted, while descending activity, nonzero actuation, body displacement and effective proprioceptive return were not demonstrated. The installed source snapshot is preserved with per-file SHA-256 hashes and an explicit comparison against the public repository revision. Episode databases and checkpoints are inventoried but not published; they remain on the VM. This is a partial archive, not a complete preservation of resident state.
+`FULL_CAUSAL_LOOP=NOT_DEMONSTRATED`: visual LIF activity was persisted, while descending activity, nonzero actuation, body displacement and effective proprioceptive return were not demonstrated. The installed source snapshot is preserved with per-file SHA-256 hashes and an explicit comparison against the public repository revision. Episode 3 and 5 databases and checkpoints are attached to the final Release; the public preservation manifest records episode/generation identity and asset hashes. The derived connectome CSR arrays are locally preserved but withheld from public redistribution pending license clarification. This remains a partial archive.
 
 - [Final research report](docs/FINAL_RESEARCH_REPORT.md)
 - [Final architecture](docs/FINAL_ARCHITECTURE.md)
