@@ -24,20 +24,19 @@ REPRODUCIBILITY=UNVERIFIED
 - Body: modelo Pinocchio sintético planar XY/yaw; 22 links dinâmicos, oito arestas somente gráficas.
 - Persistência: schema SQLite versão 1, arquivo em modo DELETE na inspeção; checkpoints NPZ contêm arrays LIF e snapshots de estado. Identidade deve incluir episódio, geração e referência/hash do checkpoint.
 
-## Materiais ainda ausentes ou não recuperáveis nesta sessão
+## Materiais preservados e ainda pendentes
 
-1. Banco SQLite e checkpoints atuais completos do episódio 5 (cursor confirmado em tick 87.800 e cauda parcial em 88.000).
-2. Banco/checkpoint local do episódio 3 após o último segmento de catálogo em tick 3.786.800 (a base local foi observada até tick 4.468.400).
-3. Arrays locais do conectoma e mapas de população completos. O loader arquivado espera `indptr.npy`, `indices.npy`, `signed_count.npy` e `manifest.json`; a árvore do loader foi instalada em pacote datado, mas a presença, caminho resolvido, tamanhos e bytes desses arquivos não foram confirmados nesta sessão. Um manifesto de população conhecido em workstation local fora do checkout não substitui os arrays do host.
-4. Ambientes Python completos, wheels/lockfile exato instalado, bibliotecas nativas, binário e configuração integral da unidade systemd.
-5. Metadados Git do runtime instalado e commit de origem: não encontrados na árvore capturada.
-6. Estado atual da VM: sem verificação; `gcloud` ausente no cliente e `ssh flynn-1gb` sem resolução DNS nesta sessão.
+1. Episódio 3: banco SQLite, metadados e checkpoints ticks 4.468.200/4.468.400 foram recuperados byte a byte da VM. O banco passou `PRAGMA integrity_check=ok`; hashes de origem e cópia coincidem. Os arquivos estão na Release `v2.0-research-closed`.
+2. Episódio 5: banco SQLite, metadados e checkpoints ticks 87.600/87.800/88.000 foram recuperados. O banco passou `PRAGMA integrity_check=ok`; hashes de origem e cópia coincidem. A fronteira ativa confirmada é 87.800; tick 88.000 foi preservado como estado não confirmado. Os arquivos estão na Release.
+3. Arrays CSR FAFB-v783 (`indptr.npy`, `indices.npy`, `signed_count.npy`, `manifest.json`) foram copiados e os hashes conferem. Estão em `archive/recovered-payloads/2026-10-26/` no workspace local. Não foram publicados porque o manifesto de origem pede esclarecimento da licença antes de redistribuir a matriz.
+4. Ambientes Python completos, wheels/lockfile exato instalado, bibliotecas nativas, configuração integral da unidade systemd e metadados Git do runtime instalado continuam incompletos.
+5. A VM foi consultada em 2026-10-26 através da configuração existente IAP SSH: instância `flynn-1gb` estava `RUNNING`, mas `flynn-v2-resident.service` estava `failed`. Nenhum reinício foi realizado.
 
-Os itens 1–3 continuam somente identificados por manifestos/hashes anteriores e não foram copiados externamente nesta missão. Nenhum dado foi removido. O acesso à VM, ao armazenamento remoto existente e a uma cópia byte a byte com leitura de retorno é necessário antes de mudar `DATA_PRESERVATION=PARTIAL`.
+A recuperação dos dados melhora a disponibilidade dos artefatos, mas não prova reconstrução independente ponta a ponta nem o ciclo causal neuromotor.
 
 ## Licenças e redistribuição
 
-O repositório existente declara CPAL 1.0 para seu código. Os dados FlyWire são associados a CC BY-NC 4.0 conforme documentação histórica, e arquivos derivados Shiu/anotações possuem termos específicos que não foram confirmados para redistribuição de payload nesta missão. Pinocchio e demais dependências conservam licenças próprias. Não publicar arrays, SQLite ou checkpoints em repositório público sem confirmar licença, confidencialidade e adequação do conjunto.
+O repositório existente declara CPAL 1.0 para seu código. O manifesto local dos arrays CSR descreve a matriz como derivada FlyWire, uso não comercial local e proíbe redistribuição sem esclarecimento da licença por arquivo. Por isso os arrays permanecem apenas na cópia local verificada. Bancos e checkpoints experimentais do Flynn foram publicados como assets da Release de encerramento, com identidades e hashes no manifesto público. Pinocchio e demais dependências conservam licenças próprias.
 
 ## Limites de hospedagem examinados
 
