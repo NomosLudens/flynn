@@ -59,7 +59,7 @@ The snapshot was scanned for common token, private-key and embedded-password pat
 
 ## Data and publication status
 
-The paired `data-preservation/data.sha256` manifest inventories SQLite databases, episode markers, checkpoint NPZs and archive manifests/catalogs under `/var/lib/flynn-v2`. It records hashes and VM paths, not data contents. These databases/checkpoints were not uploaded to the public repository because their event telemetry, operational context, source-data licensing and size require a separate publication decision.
+The paired `data-preservation/data.sha256` manifest inventories SQLite databases, episode markers, checkpoint NPZs and archive manifests/catalogs under `/var/lib/flynn-v2`. It records hashes and VM paths, not data contents. [`data-preservation/STATUS.md`](data-preservation/STATUS.md) lists the known preservation boundary, the existing historical Cloud Storage coverage, and the access failure that prevented a new copy in the final closure mission. These databases/checkpoints were not uploaded to the public repository because the remaining payloads were inaccessible from the closure client and require licensing/privacy review.
 
 Historical episode-3 segments are readable in the existing Cloud Storage archive through tick 3,786,800. The local episode-3 database/checkpoint at tick 4,468,400 and current episode 5 through its last durable tick 87,800 (plus an unconfirmed 88,000 state) remain on the VM. They are unpreserved outside the VM. **Do not delete the VM or its disks until the owner chooses an additional durable location and verifies the copy.**
 

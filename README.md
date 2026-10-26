@@ -1,5 +1,30 @@
 # Flynn — final research archive
 
+
+> ## FLYNN V2 — PROJETO EXPERIMENTAL ENCERRADO
+> **Encerrado em 26 de outubro de 2026.**
+>
+> O projeto demonstrou processamento de estímulos simulados, atividade neural e persistência experimental, mas **não demonstrou o ciclo causal neuromotor completo**. Pesquisa encerrada; documentação histórica preservada. O sistema não foi validado como organismo artificial funcional e integrado.
+>
+> **Preservação dos dados: `PARTIAL`.** Bancos e checkpoints locais dos episódios 3 e 5, e arrays do conectoma, continuam sem cópia externa recuperável comprovada. O manifesto de hashes publicado não contém esses arquivos. Não excluir VM ou discos enquanto esses dados forem a única cópia.
+
+## Encerramento e documentos finais
+
+- [Relatório científico final](docs/FINAL_RESEARCH_REPORT.md)
+- [Análise técnica e científica da falha](docs/FINAL_FAILURE_ANALYSIS.md)
+- [Histórico de incidentes](docs/INCIDENT_HISTORY.md)
+- [Postmortem do processo de desenvolvimento](docs/DEVELOPMENT_PROCESS_POSTMORTEM.md)
+- [Resultados experimentais finais](docs/EXPERIMENTAL_RESULTS_FINAL.md)
+- [Arquitetura final](docs/FINAL_ARCHITECTURE.md)
+- [Estado de reprodutibilidade](docs/REPRODUCIBILITY_STATUS.md)
+- [Inventário de descomissionamento — não executado](docs/DECOMMISSION_INVENTORY.md)
+- [Snapshot dos 31 arquivos instalados](archive/runtime-installed/2026-10-26/README.md)
+- [Hash dos arquivos de código](archive/runtime-installed/2026-10-26/source.sha256)
+- [Manifesto de dados/checkpoints — hashes e caminhos, sem payloads](archive/runtime-installed/2026-10-26/data-preservation/data.sha256)
+- [Estado da preservação e bloqueio de cópia externa](archive/runtime-installed/2026-10-26/data-preservation/STATUS.md)
+
+A história original do desenvolvimento permanece acessível nos documentos e registros históricos abaixo. As conclusões finais se referem somente à implementação e às evidências observadas.
+
 > **Non-commercial research project · public repository · open knowledge**
 
 Flynn is an experimental neuro-synthetic research project that studies what can be learned from running a biologically anchored neural core inside a persistent sensorimotor loop.
@@ -19,7 +44,9 @@ The neural substrate is derived from the **FlyWire FAFB v783** adult female *Dro
 PROJECT=FLYNN
 PROJECT_STATUS=ENDED
 RESEARCH_STATUS=ENDED_ARCHIVE_ONLY
-CURRENT_RUNTIME_STATUS=FAILED_AFTER_RESTART_LIMIT
+CURRENT_RUNTIME_STATUS=UNVERIFIED_IN_THIS_SESSION
+LAST_OBSERVED_RUNTIME_STATUS=FAILED_AFTER_RESTART_LIMIT
+LAST_OBSERVED_AT_UTC=2026-10-26T15:43:26Z
 FULL_CAUSAL_LOOP=NOT_DEMONSTRATED
 ARCHIVE_STATUS=PARTIAL_PENDING_DATA_DECISION
 
@@ -32,7 +59,7 @@ PUBLIC_REPOSITORY=YES
 OPEN_KNOWLEDGE_COMMITMENT=YES
 ```
 
-Development ended on **2026-10-26**. The former Oracle-hosted MAX runtime and the later Flynn V2 runtime on `flynn-1gb` are distinct episodes. The later installation ran, but a complete neural-to-body causal loop was not demonstrated. At final inventory, `flynn-v2-resident.service` was failed after automatic restart attempts; it was not restarted during archival.
+Development ended on **2026-10-26**. The former Oracle-hosted MAX runtime and the later Flynn V2 runtime on `flynn-1gb` are distinct episodes. The later installation ran, but a complete neural-to-body causal loop was not demonstrated. The last archived inventory (15:43:26 UTC) recorded `flynn-v2-resident.service` as failed after five automatic start attempts. This closure pass could not recheck the VM: its SSH hostname did not resolve and `gcloud` was unavailable on the client. No stop or restart was issued.
 
 The historical reopening on **2026-09-21** remains part of the record. This repository preserves code and research documentation, while essential resident databases, checkpoints and connectome arrays remain unpreserved outside the VM. Do not delete the VM or its disks before those data are preserved at a separately verified destination or their disposition is explicitly decided.
 
