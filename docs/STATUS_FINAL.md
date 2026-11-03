@@ -1,20 +1,25 @@
 # FLYNN — STATUS HISTÓRICO DE ENCERRAMENTO + REABERTURA DE PESQUISA
 
 > Este documento preserva o estado pós-interrupção da VM MAX e a decisão posterior de congelamento.  
-> Em **2026-09-21**, esse estado foi sucedido por uma decisão explícita de **reabrir Flynn como projeto de pesquisa não comercial e conhecimento aberto**, condicionado à obtenção de infraestrutura adequada.
+> Em **2026-09-21**, esse estado foi sucedido pela decisão de reabrir a pesquisa. A etapa posterior da **FLYNN V2 foi encerrada em 26/10/2026**; uma nova fase de desenvolvimento experimental foi iniciada em **03/11/2026**, com infraestrutura patrocinada pela RackGenius.
 
-## Estado atual — reabertura para pesquisa
+## Estado atual — EM DESENVOLVIMENTO (nova fase experimental)
 
 ```text
 PROJECT=FLYNN
-PROJECT_STATUS=RESEARCH_REOPENING
-RESEARCH_STATUS=ACTIVE_REHOSTING_PREPARATION
-CURRENT_RUNTIME_STATUS=OFFLINE_PENDING_REHOST
+PROJECT_STATUS=EM_DESENVOLVIMENTO
+RESEARCH_STATUS=NEW_EXPERIMENTAL_PHASE_PREPARATION
+CURRENT_RUNTIME_STATUS=NOT_VALIDATED_ON_RACKGENIUS
+NEW_PHASE_STARTED=2026-11-03
 
 NON_COMMERCIAL=YES
 PUBLIC_REPOSITORY=YES
 OPEN_KNOWLEDGE_COMMITMENT=YES
-HOSTING_SPONSORSHIP=SEEKING
+HOSTING_SPONSORSHIP=RACKGENIUS_GENIUS_IMPACT_APPROVED
+SPONSORED_VPS=2GB_VALUE_KVM_VPS_DETROIT
+SPONSORED_VPS_OS_INSTALL=PENDING
+SPONSORED_VPS_SSH=PENDING
+SPONSORSHIP_NEXT_DUE=2027-11-03
 
 ORIGINAL_RESIDENT_CONTINUITY_RECOVERABLE=NO
 FUTURE_REHOST_IS_NEW_TEMPORAL_EPISODE=YES
@@ -23,6 +28,9 @@ FUTURE_REHOST_IS_NEW_TEMPORAL_EPISODE=YES
 A reabertura **não restaura retroativamente a continuidade temporal da residente original**. Qualquer nova instância deverá ser identificada como novo episódio experimental, reconstruído a partir dos artefatos públicos preservados.
 
 O objetivo atual é acadêmico e técnico: estudar dinâmica neural contínua, persistência, homeostase, acoplamento sensório-motor, mecanismos de memória/plasticidade e os limites epistemológicos das inferências possíveis, publicando código, protocolos, falhas, resultados negativos e evidências reproduzíveis.
+
+
+A VPS de 2 GB da [RackGenius](https://rackgenius.com/) foi ativada com fatura de US$ 0,00. Após um ano, a elegibilidade poderá ser revalidada ou ocorrer renovação paga; não há garantia de renovação gratuita. Instalação do Linux, SSH e experimentos reais nessa máquina ainda estão pendentes. O encerramento da FLYNN V2 em 26/10/2026 e seus resultados negativos continuam válidos.
 
 Ver [RESEARCH_REHOSTING.md](RESEARCH_REHOSTING.md).
 

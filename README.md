@@ -1,14 +1,14 @@
-# Flynn — final research archive
+# FLYNN — EM DESENVOLVIMENTO
 
-
-> ## FLYNN V2 — PROJETO EXPERIMENTAL ENCERRADO
-> **Encerrado em 26 de outubro de 2026.**
+> **Estado atual (03/11/2026): EM DESENVOLVIMENTO — nova fase experimental.**
 >
-> O projeto demonstrou processamento de estímulos simulados, atividade neural e persistência experimental, mas **não demonstrou o ciclo causal neuromotor completo**. Pesquisa encerrada; documentação histórica preservada. O sistema não foi validado como organismo artificial funcional e integrado.
+> A **FLYNN V2 foi encerrada em 26/10/2026** e seus resultados permanecem preservados. A implementação demonstrou processamento de estímulos simulados, atividade neural e persistência experimental, mas **não demonstrou o ciclo causal neuromotor completo**. O encerramento daquela fase não equivale ao encerramento definitivo da pesquisa.
+>
+> **Retomada com apoio da [RackGenius](https://rackgenius.com/):** VPS de 2 GB concedida por um ano para a pesquisa independente, não comercial e aberta da FLYNN. O serviço foi criado em 03/11/2026; instalação do sistema operacional, acesso SSH e execução científica na nova máquina **ainda não foram validados**. Uma nova execução será um **novo episódio experimental**, jamais a continuidade fictícia da residente antiga.
 >
 > **Preservação dos dados identificados: `COMPLETE`.** Bancos, metadados, checkpoints, arrays CSR FAFB-v783 e todos os 23 objetos do arquivo histórico GCS foram recuperados e publicados na [Release final](https://github.com/NomosLudens/flynn/releases/tag/v2.0-research-closed). Hashes SHA-256/digests e checksums GCS conferem. O tick 88.000 do episódio 5 está preservado, mas continua não confirmado. Os arrays CSR seguem aviso conservador CC BY-NC 4.0, com a divergência FlyWire/Zenodo documentada.
 
-## Encerramento e documentos finais
+## Arquivo histórico — encerramento da FLYNN V2 em 26/10/2026
 
 - [Relatório científico final](docs/FINAL_RESEARCH_REPORT.md)
 - [Análise técnica e científica da falha](docs/FINAL_FAILURE_ANALYSIS.md)
@@ -38,15 +38,36 @@ world → sensory transduction → continuous LIF brain → descending readout
 
 The neural substrate is derived from the **FlyWire FAFB v783** adult female *Drosophila melanogaster* connectome. The historical runtime used a continuous LIF implementation, a persistent world, homeostatic state, an append-only causal ledger and a synthetic body represented by the Lethe sigil.
 
+## Acknowledgment — RackGenius infrastructure support
+
+On **2026-11-03**, [RackGenius](https://rackgenius.com/), through its **Genius Impact** initiative, approved one year of sponsored infrastructure for Flynn's independent, non-commercial, open research. Special thanks to **Ethan Boucon**, founder and co-owner, for supporting the project.
+
+- **Provisioned service:** 2GB Value KVM VPS in **Detroit, Michigan, USA** (Detroit replaced the initially proposed Grand Rapids location due to inventory).
+- **Commercial terms confirmed by email:** US$0.00 at activation, annual billing cycle, next due date **2027-11-03**. At the end of the year, eligibility may be re-verified through RackGenius or a paid renewal chosen; **no free renewal is assumed**.
+- **Operational boundary:** the hosting account and VPS service were activated, but Linux installation, SSH access, network reachability, persistence and the research runtime have **not yet been tested on this VPS**.
+- **Capacity boundary:** this 2 GB plan is below the historical 4 GB RAM baseline proposal. Suitability for the full neural workload must be measured; infrastructure sponsorship does not establish scientific or product functionality.
+
+This support enables a new experimental development stage; it does not restore the temporal continuity of any previous resident. Historical failures, negative results and reports remain available and unchanged.
+
+See [Research rehosting and infrastructure](docs/RESEARCH_REHOSTING.md).
+
 ## Current status
 
 ```text
 PROJECT=FLYNN
-PROJECT_STATUS=ENDED
-RESEARCH_STATUS=ENDED_ARCHIVE_ONLY
-CURRENT_RUNTIME_STATUS=UNVERIFIED_IN_THIS_SESSION
-LAST_OBSERVED_RUNTIME_STATUS=FAILED_AFTER_RESTART_LIMIT
-LAST_OBSERVED_AT_UTC=2026-10-26T15:43:26Z
+PROJECT_STATUS=EM_DESENVOLVIMENTO
+RESEARCH_STATUS=NEW_EXPERIMENTAL_PHASE_PREPARATION
+CURRENT_RUNTIME_STATUS=NOT_VALIDATED_ON_RACKGENIUS
+NEW_PHASE_STARTED=2026-11-03
+INFRASTRUCTURE_SPONSOR=RACKGENIUS
+RACKGENIUS_VPS=2GB_VALUE_KVM_VPS_PROVISIONED
+RACKGENIUS_LOCATION=DETROIT_MI_USA
+RACKGENIUS_OS_INSTALL=PENDING
+RACKGENIUS_SSH=PENDING
+RACKGENIUS_NEXT_DUE_DATE=2027-11-03
+HISTORICAL_FLYNN_V2_STATUS=ENDED_2026-10-26
+HISTORICAL_V2_LAST_OBSERVED_RUNTIME_STATUS=FAILED_AFTER_RESTART_LIMIT
+HISTORICAL_V2_LAST_OBSERVED_AT_UTC=2026-10-26T15:43:26Z
 FULL_CAUSAL_LOOP=NOT_DEMONSTRATED
 ARCHIVE_STATUS=PARTIAL_PENDING_DATA_DECISION
 
@@ -59,13 +80,13 @@ PUBLIC_REPOSITORY=YES
 OPEN_KNOWLEDGE_COMMITMENT=YES
 ```
 
-Development ended on **2026-10-26**. The former Oracle-hosted MAX runtime and the later Flynn V2 runtime on `flynn-1gb` are distinct episodes. The later installation ran, but a complete neural-to-body causal loop was not demonstrated. On 2026-10-26 the VM was read through its existing IAP SSH path; `flynn-v2-resident.service` remained failed. The resident was not restarted.
+The historical FLYNN V2 phase ended on **2026-10-26**; a **new development stage began on 2026-11-03**. The former Oracle-hosted MAX runtime, the later Flynn V2 runtime on `flynn-1gb` and any future RackGenius runtime are separate experimental episodes. The V2 installation ran, but a complete neural-to-body causal loop was not demonstrated. On 2026-10-26 the VM was read through its existing IAP SSH path; `flynn-v2-resident.service` remained failed. The resident was not restarted. Nothing in the new infrastructure award changes that historical conclusion.
 
 The historical reopening on **2026-09-21** remains part of the record. The recovered episode 3 and episode 5 databases/checkpoints and the FAFB-v783 CSR arrays are downloadable from the final GitHub Release. SHA-256 digests match the source-side and local files. The data notice applies the stricter CC BY-NC 4.0 non-commercial condition and documents the FlyWire/Zenodo metadata discrepancy.
 
 ## Research purpose
 
-Flynn was conducted as a non-commercial academic and technical inquiry.
+Flynn is an independent, non-commercial academic and technical inquiry, now entering a new experimental stage.
 
 The research questions include:
 
@@ -79,7 +100,7 @@ The project deliberately distinguishes observed results from interpretation. No 
 
 ## Open knowledge commitment
 
-The final archive follows a simple principle: **share the technical knowledge, failures and negative results produced by the experiment.**
+The historical archive and renewed research follow a simple principle: **share the technical knowledge, failures and negative results produced by the experiment.**
 
 The public repository preserves:
 
@@ -95,7 +116,7 @@ The goal is to make the historical work reviewable without overstating what the 
 
 See [Research rehosting and infrastructure](docs/RESEARCH_REHOSTING.md).
 
-## Final archive — 2026-10-26
+## Historical FLYNN V2 archive — 2026-10-26
 
 `FULL_CAUSAL_LOOP=NOT_DEMONSTRATED`: visual LIF activity was persisted, while descending activity, nonzero actuation, body displacement and effective proprioceptive return were not demonstrated. The installed source snapshot is preserved with per-file SHA-256 hashes and an explicit comparison against the public repository revision. The final Release contains the identified episode databases, metadata, checkpoints and connectome CSR arrays; see `PRESERVATION_MANIFEST_v2.json` and the conservative data-license notice. Tick 88,000 remains an unconfirmed checkpoint, not a verified causal boundary.
 
@@ -188,7 +209,7 @@ The original Portuguese documents remain preserved alongside these mirrors as hi
 
 ## Replicability
 
-The repository is a historical archive; its contents do not certify a turnkey or independently reproduced runtime.
+The repository preserves the historical research archive and documents a new development phase; its contents do not certify a turnkey or independently reproduced runtime.
 
 The isolated E01 experiment has its own preserved kit and runbook. The MAX records were not recovered. Flynn V2 resident databases, checkpoints and connectome arrays are inventoried by hash but remain only on the VM; they are not preserved in this repository or verified external storage.
 
@@ -218,7 +239,7 @@ RESOURCE_DELETION=UNPROVEN
 
 ## Historical continuity note
 
-No rehost is planned. If a separate rehost is undertaken in the future, it will be a scientifically distinct temporal episode, not a continuation of the historical resident.
+A new experimental rehost is planned on the RackGenius VPS. If deployed, it will be a scientifically distinct temporal episode, not a continuation of the historical resident. No new running resident has been validated as of 2026-11-03.
 
 ```text
 SOURCE_CODE_BACKUP != RESIDENT_STATE_BACKUP
