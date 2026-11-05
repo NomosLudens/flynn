@@ -1,6 +1,8 @@
 # FLYNN — EM DESENVOLVIMENTO
 
-> **Estado atual (03/11/2026): EM DESENVOLVIMENTO — nova fase experimental.**
+> **Atualização científica e operacional — 05/11/2026.** Acesso SSH estrito à RackGenius validado; 20/20 bancos científicos conferidos; [observatório histórico somente de leitura](https://flynn.nomosludens.ia.br/) publicado por HTTPS. Nos ensaios instrumentais com a fonte FAFB v783, houve resposta LIF à luz e caminhos anatômicos até 1.299/1.303 neurônios descendentes, mas **zero disparos descendentes, nenhum comando motor e nenhum ciclo neural-corporal fechado**. **Residente OFFLINE, sem episódio canônico ou residência contínua.** [Leia o relatório técnico das Missões 12–18](docs/FLYNN_RACKGENIUS_PROGRESS_2026-11-05.md). O quadro de 03/11 abaixo é preservado como registro histórico de preparação.
+
+> **Estado na preparação de 03/11/2026 (registro histórico): EM DESENVOLVIMENTO — nova fase experimental.**
 >
 > A **FLYNN V2 foi encerrada em 26/10/2026** e seus resultados permanecem preservados. A implementação demonstrou processamento de estímulos simulados, atividade neural e persistência experimental, mas **não demonstrou o ciclo causal neuromotor completo**. O encerramento daquela fase não equivale ao encerramento definitivo da pesquisa.
 >
@@ -51,7 +53,7 @@ This support enables a new experimental development stage; it does not restore t
 
 See [Research rehosting and infrastructure](docs/RESEARCH_REHOSTING.md).
 
-## Current status
+## Initial rehosting status (2026-11-03 snapshot)
 
 ```text
 PROJECT=FLYNN
@@ -239,7 +241,7 @@ RESOURCE_DELETION=UNPROVEN
 
 ## Historical continuity note
 
-A new experimental rehost is planned on the RackGenius VPS. If deployed, it will be a scientifically distinct temporal episode, not a continuation of the historical resident. No new running resident has been validated as of 2026-11-03.
+The RackGenius rehost was initially planned on 2026-11-03. Subsequent isolated instrumental experiments and an independent historical observer were validated by 2026-11-05, as recorded in the [missions 12–18 progress report](docs/FLYNN_RACKGENIUS_PROGRESS_2026-11-05.md). **No continuous resident or canonical episode has started**. These experiments remain scientifically distinct from the historical resident.
 
 ```text
 SOURCE_CODE_BACKUP != RESIDENT_STATE_BACKUP
