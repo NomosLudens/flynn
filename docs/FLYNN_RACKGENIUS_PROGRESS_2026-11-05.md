@@ -2,13 +2,15 @@
 
 **Data da consolidação original:** 05/11/2026  
 **Última atualização:** 07/11/2026  
-**Escopo:** missões 12 a 27, com contexto mínimo das etapas anteriores  
+**Escopo:** missões 12 a 28, com contexto mínimo das etapas anteriores  
 **Fase:** pesquisa independente, experimental e não comercial  
 **Infraestrutura:** RackGenius, com apoio da iniciativa Genius Impact  
 **Estado do projeto:** EM DESENVOLVIMENTO  
 **Estado da residente:** OFFLINE; nenhuma residência contínua ou episódio canônico iniciado
 
 > **Conclusão executiva.** O observatório público independente foi publicado e validado com uma amostra histórica verificável, sem acesso de escrita aos dados científicos. Ensaios instrumentais posteriores demonstraram resposta LIF à estimulação visual real sobre o mapeamento FlyWire FAFB v783. As Missões 19 e 20 acrescentaram evidência temporal de **eventos sinápticos efetivamente entregues e de respostas de membrana sub-limiares em DN selecionados**, e a Missão 21 comprovou, em cinco caminhos positivos pré-registrados, um relé compartilhado que recebeu **64 eventos mas não disparou**. A Missão 22 explicou o silêncio do relé na amostra: saldo assinado de −6, potencial máximo de −52,124738 mV e reprodução matemática de 1.000 estados, **sem validação fisiológica dos parâmetros**. A Missão 23 encontrou fidelidade **parcial do experimento completo** em relação ao trabalho de Shiu, embora o núcleo LIF auditado corresponda à referência; a validade fisiológica para a FLYNN permanece **não demonstrada**. A Missão 24 definiu **um benchmark futuro, ainda não executado**: sugar GRNs a 100 Hz, 30 trials de 1 s e readout MN9, como comparação computacional com Shiu. A Missão 25 terminou **BLOCKED** sem iniciar trials; a Missão 26 foi **PASS para recuperação dos resultados de referência**, sem simular: identificou 21 IDs `sugar_l_*`, readout `MN9_r` e a inversão de lateralidade FAFB; separou os **30 trials da Figura 1 (MN9: 65,700 ± 3,308071 Hz, DP populacional; 30/30 ativos)** da execução de exemplo (**67,033 ± 6,595369 Hz**). A referência computacional está quantificada, mas o custo estimado de **150 minutos de CPU** continua fora do limite de **30 minutos CPU / 45 minutos de parede** para reproduzi-la independentemente. A Missão 27 encerrou o pré-registro como **PARTIAL**, sem trials: a referência v630 está identificada, mas **somente 20 de 21 IDs sugar GRN aparecem na v783**, com diferenças adicionais de entrada e readout que impedem comparar diretamente as respostas; a reprodução completa continua fora do orçamento. **A decisão autoral entre reprodução completa com orçamento maior, ensaio reduzido com escopo modificado ou comparador documental permanece aberta.** Ainda não houve **spikes DN, comandos motores ou retorno proprioceptivo efetivo**. O ciclo causal percepção–rede neural–corpo continua **NÃO DEMONSTRADO**. Os resultados são experimentais, não sinais de residência ativa, aprendizagem, consciência ou comportamento autônomo.
+
+> **Atualização M28 — `BLOCKED` (incidente do ACK Pinocchio):** em cópia isolada, o checkpoint M17 foi restaurado em 40 ms e a observação alcançou 60 ms, com **11.552** e **11.445 spikes LIF** nos dois frames, mas **0 spikes DN** em ambos. O ACK do frame de 60 ms falhou ao exigir uma amostra **Homeostasis V2**. Não houve retry, novo checkpoint nem medição de torque ou movimento nesse limite. O ciclo completo permanece **NÃO DEMONSTRADO**; a residente permaneceu inativa. Esta missão de integração sensorimotora **não executou o benchmark Shiu**.
 
 ## 1. Estatuto deste documento
 
@@ -186,7 +188,17 @@ Na base **FAFB v783**, o levantamento encontrou **20 dos 21 IDs de sugar GRNs da
 
 O relatório primário local `FLYNN_RACKGENIUS_SHIU_COMPARABILITY_PREFLIGHT_27.md` não esteve acessível nesta consolidação; foram registrados apenas os resultados explicitamente enviados pelo autor. Nem o `PARTIAL` da Missão 27 nem a referência documentada estabelecem **validade fisiológica**, **spikes DN**, atuação, propriocepção ou ciclo sensório-motor fechado.
 
-### 5.12 Onde a cadeia causal está demonstrada
+### 5.12 Incidente no contrato sensorimotor Pinocchio — Missão 28
+
+**Resultado reportado: `VERDICT=BLOCKED`.** A Missão 28 retomou o checkpoint M17 de **40 ms**, sem modificar seu original, em uma **cópia isolada**. A observação avançou até **60 ms**. Foram contados **11.552 spikes LIF no primeiro frame** e **11.445 no segundo**, mas **zero spikes dos neurônios descendentes (DN)** em ambos. Os dois frames indicam atividade da rede; por si sós, não provam sinal motor funcional.
+
+**Ponto exato de interrupção:** o ACK do frame de 60 ms não foi concluído porque o pacote Pinocchio **exigia uma amostra Homeostasis V2**. A ausência da amostra requerida no caminho do pacote é o sintoma operacional descrito; a **causa-raiz de produção, transporte ou validação dessa amostra ainda precisa ser demonstrada no código e nos recibos**. Não houve retry, checkpoint novo nem conclusão do ciclo. **Torque e movimento não foram medidos nesse limite:** a ausência de leitura não equivale a medição de valor zero.
+
+**Preservação reportada:** a candidata parcial está na VPS privada, em `/home/flynnadmin/flynn/data/sensorimotor-integration-28-20261107T121957Z`. A integridade SQLite passou, os hashes dos originais M17 foram preservados, havia aproximadamente **19,01 GiB livres** e não foram encontrados temporários abandonados. O pico de **RSS/CPU não pôde ser lido** depois da falha; não inferir uso máximo nem extrapolar consumo. A residente permaneceu **inativa**. O WIP e o código científico local não foram alterados.
+
+**Próximo gate, antes de qualquer novo ensaio:** inspecionar o recibo de 60 ms pendente e reconciliar o estado causal/ACK, identificar e disponibilizar uma **amostra factual e compatível de Homeostasis V2** proveniente do mesmo episódio, geração e instante; só então autorizar uma continuação limitada. **É proibido inventar uma amostra, usar fallback fictício ou confirmar ACK sem recebimento real.** O silêncio DN permanece uma questão científica distinta do erro de contrato Pinocchio. O relatório primário local `FLYNN_RACKGENIUS_REAL_SENSORIMOTOR_INTEGRATION_28.md` não esteve acessível nesta consolidação; os dados aqui documentados provêm da síntese enviada pelo autor, não de nova auditoria direta dos bancos.
+
+### 5.13 Onde a cadeia causal está demonstrada
 
 | Elo | Situação reportada até 07/11/2026 |
 | --- | --- |
@@ -201,8 +213,9 @@ O relatório primário local `FLYNN_RACKGENIUS_SHIU_COMPARABILITY_PREFLIGHT_27.m
 | Fidelidade do núcleo LIF ao modelo Shiu | **Correspondência na recorrência e no escalonamento auditados**; **IMPLEMENTATION_FIDELITY_PARTIAL** no experimento completo |
 | Validade fisiológica dos parâmetros para FLYNN v783 | **Não demonstrada**; suporte do artigo de referência não é prova transferível para o protocolo e readout da FLYNN |
 | Condição sugar GRNs 100 Hz / MN9 (30 × 1 s) | **Referência publicada recuperada na M26**: 30/30 ativos, 65,700 ± 3,308071 Hz (DP populacional). **M27 PARTIAL**: v783 contém 20/21 IDs GRN identificados e usa entrada/readout distintos; **nenhuma reprodução independente** e orçamento CPU incompatível |
-| Disparos DN | **Não observados** (0/1.303) |
-| DN → comando motor → torque → movimento | **Não demonstrado** no ensaio |
+| Disparos DN | **Não observados** (0/1.303 no recorte anterior); na M28, **0 em cada um dos dois frames observados**, apesar dos 11.552 e 11.445 spikes LIF |
+| ACK de integração Pinocchio / Homeostasis V2 (M28) | **BLOCKED** no frame de 60 ms; amostra Homeostasis V2 exigida, recibo pendente, sem retry | 
+| DN → comando motor → torque → movimento | **Não demonstrado**; na M28, torque e movimento **não foram medidos**, não se presumem zeros |
 | Corpo Pinocchio → sinal proprioceptivo → LIF | **Não demonstrado** no ensaio |
 | Ciclo causal cérebro–corpo fechado | **NÃO DEMONSTRADO** |
 
@@ -226,7 +239,11 @@ Não há base para diagnosticar uma única causa global. A conectividade estrutu
 
 **Missão 27 — `PARTIAL` no pré-registro:** referência v630 identificada e dados publicados preservados; **20/21 IDs de GRN encontrados na v783**. Entrada e readout da FLYNN diferem; **nenhum trial foi executado**, e o custo integral excede o orçamento vigente.
 
-**Próxima decisão autoral — antes da Missão 28:** escolher explicitamente **A** (reprodução integral v630 com orçamento ampliado e controle de insumos), **B** (trial real isolado, com escopo científico reduzido e sem equivalência estatística a 30 trials) ou **C** (usar apenas comparador documental, sem novos ensaios). **Sem decisão, nenhuma missão experimental deve começar.** Os limites de 30 min CPU / 45 min parede permanecem até modificação expressa.
+**Missão 28 — `BLOCKED` na integração sensorimotora:** checkpoint M17 restaurado na cópia isolada em 40 ms; a janela de 60 ms teve 11.552/11.445 spikes LIF, mas **zero DN nos dois frames**. O ACK Pinocchio exigiu Homeostasis V2 e falhou; não houve retry, checkpoint nem medição de torque/movimento. SQLite e originais M17 preservados; RSS/CPU máximo não obtido. A residente seguiu OFFLINE. Isso **não representa trial Shiu**.
+
+**Próximo gate técnico (potencial Missão 29):** inspecionar em modo somente leitura o recibo pendente de 60 ms, confrontar produtores/consumidores de Homeostasis V2 e identificar amostra **real, compatível e do mesmo episódio/instante**. Corrigir apenas a causa demonstrada no contrato/ponte, se houver prova e autorização dentro do escopo; não forçar ACK, não sintetizar dados, não fazer replay cego nem iniciar residente. Qualquer nova simulação ou continuação que consuma CPU exige autorização explícita e limite predefinido. **Zero DN** é resultado observado diferente de **torque e movimento não medidos**.
+
+**Decisão autoral ainda aberta, exclusivamente para o benchmark Shiu:** escolher **A** (30 trials v630 com orçamento ampliado), **B** (trial reduzido com escopo diferente) ou **C** (comparador documental). A M28 não homologou nenhuma dessas alternativas; o limite **30 min CPU / 45 min parede** segue vigente para ensaios, salvo decisão expressa.
 
 **Pendências independentes:** fechar o caminho de propriocepção com prova causal; resolver ou arquivar a origem legada do hostname `lethe` sem afetar o novo observatório; manter a preservação externa dos dados científicos como decisão separada. Nenhuma dessas pendências autoriza substituição silenciosa do protocolo neural.
 
@@ -250,9 +267,12 @@ Os seguintes nomes identificam relatórios locais mantidos no projeto. Esta cons
 - `FLYNN_RACKGENIUS_SHIU_BENCHMARK_REPLICATION_25.md` — bloqueio por divergência de hemisfério e orçamento computacional; nenhum trial executado.
 - `FLYNN_RACKGENIUS_SHIU_REFERENCE_EVIDENCE_26.md` — reconciliação de lateralidade, identidade dos GRNs/MN9 e estatísticas das séries já existentes; sem novos trials.
 - `FLYNN_RACKGENIUS_SHIU_COMPARABILITY_PREFLIGHT_27.md` — pré-registro PARTIAL: referência v630 identificada, 20/21 IDs GRN presentes v783, protocolo/readout diferentes e orçamento insuficiente; sem trials.
+- `FLYNN_RACKGENIUS_REAL_SENSORIMOTOR_INTEGRATION_28.md` — BLOCKED: restauração M17 isolada, observações LIF/DN até 60 ms e ACK Pinocchio pendente por exigência Homeostasis V2; sem torque/movimento medidos.
 
 Arquivos históricos versionados e arquitetura: [`docs/MAPA_DE_PERCURSO_FLYNN.md`](https://github.com/NomosLudens/flynn/blob/master/docs/MAPA_DE_PERCURSO_FLYNN.md) e [README do projeto](https://github.com/NomosLudens/flynn). Os relatórios técnicos históricos continuam preservados. A etapa concluída em 26/10/2026 e os novos ensaios RackGenius são **fases experimentais distintas**; seus episódios não podem ser fundidos retrospectivamente.
 
 ---
+
+**Síntese M28, independente do benchmark:** os dois frames de 40–60 ms da cópia isolada tiveram atividade LIF e **nenhum spike DN**. O Pinocchio bloqueou o ACK em 60 ms por requisito de Homeostasis V2, logo **não há medição de torque, movimento ou ciclo fechado nessa fronteira**. Diagnóstico causal da amostra/recibo permanece pendente; residente OFFLINE, banco parcial íntegro conforme relato. A M28 não executou trials de Shiu.
 
 **Síntese responsável:** o observatório público histórico funciona, e a rede LIF responde à estimulação instrumental derivada da FAFB v783. As Missões 21 e 22 localizaram e explicaram operacionalmente o silêncio de um relé compartilhado (64 eventos, saldo de −6, máximo de −52,124738 mV), com correspondência matemática aos registros auditados. **A Missão 23 confirmou correspondência do núcleo LIF auditado ao modelo de Shiu, mas classificou a fidelidade do experimento completo como `IMPLEMENTATION_FIDELITY_PARTIAL`** por diferenças de conectoma, estímulo e readout. **A validade fisiológica da aplicação atual da FLYNN não está demonstrada**, tampouco spikes DN, comando motor, propriocepção efetiva, ciclo fechado, residência contínua ou consciência. A Missão 24 escolheu um benchmark futuro (sugar GRNs 100 Hz, 30 × 1 s, MN9), **ainda não executado**; a Missão 25 bloqueou a tentativa antes de executar qualquer trial. **A Missão 26 recuperou as estatísticas MN9 dos autores** (30 ensaios: média 65,700 Hz; DP populacional 3,308071 Hz; 30/30 ativos), reconciliou a lateralidade por IDs e rótulos FAFB e separou o exemplo independente. **A Missão 27 mostrou que somente 20/21 IDs de GRNs de referência aparecem na v783 e que entrada e readout da FLYNN diferem do modelo original. Nenhuma reprodução neural da FLYNN foi executada; o orçamento de cerca de 150 min CPU segue incompatível com o teto de 30 min CPU/45 min parede. A decisão A/B/C sobre reprodução integral, ensaio reduzido ou comparador documental é autoral e permanece aberta.**
